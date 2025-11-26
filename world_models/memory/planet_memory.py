@@ -82,6 +82,33 @@ class Memory(deque):
                 f"No episodes with length >= {tracelen} available to sample."
             )
 
+        # Quick memory usage estimation to avoid large unexpected allocations.
+        # Estimate bytes required for stacked observations: N * (tracelen+1) * prod(obs_shape) * bytes_per_elem
+        try:
+            sample_ep = self.episodes[valid_idxs[0]]
+            if isinstance(sample_ep.x, np.ndarray):
+                obs_shape = sample_ep.x.shape[1:]  # (C,H,W)
+                obs_dtype = sample_ep.x.dtype
+            else:
+                obs0 = np.asarray(sample_ep.x[0])
+                obs_shape = obs0.shape
+                obs_dtype = obs0.dtype
+            bytes_per_elem = np.dtype(obs_dtype).itemsize
+            est_bytes = int(
+                batch_size * (tracelen + 1) * np.prod(obs_shape) * bytes_per_elem
+            )
+            MAX_BYTES = 200 * 1024 * 1024  # 200 MiB threshold (tunable)
+            if est_bytes > MAX_BYTES:
+                est_mb = est_bytes / (1024 * 1024)
+                raise MemoryError(
+                    f"Sampling would allocate ~{est_mb:.1f} MiB for observations "
+                    f"(N={batch_size}, H={tracelen}, obs_shape={obs_shape}, dtype={obs_dtype}). "
+                    "Reduce batch_size or trace length (H) or downsample images."
+                )
+        except Exception:
+            # If anything goes wrong in estimation, continue and let later code raise the original error.
+            pass
+
         episode_idx = choice(valid_idxs, batch_size)
 
         init_st_idx = []
