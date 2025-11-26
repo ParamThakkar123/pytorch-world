@@ -1,6 +1,5 @@
-import os
 from functools import partial
-
+import os
 import torch
 import numpy as np
 
@@ -37,7 +36,15 @@ class Planet:
         embedding_size=1024,
         memory_size=100,
         policy_cfg=None,
+        headless=False,
+        max_episode_steps=None,
+        action_repeats=1,
+        results_dir=None,
     ):
+        # allow running without opening windows (useful on servers/CI)
+        if headless:
+            os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+
         self.device = device or (
             torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         )
@@ -45,7 +52,8 @@ class Planet:
 
         # if env is a string id, wrap it to the TorchImageEnvWrapper, otherwise assume it's already env-like
         if isinstance(env, str):
-            self.env = TorchImageEnvWrapper(env, bit_depth)
+            # pass action_repeats into the wrapper (4th positional param in wrapper)
+            self.env = TorchImageEnvWrapper(env, bit_depth, None, action_repeats)
         else:
             self.env = env
 
@@ -67,19 +75,22 @@ class Planet:
             device=self.device,
         )
 
-        # rollout generator
+        env_max_steps = (
+            max_episode_steps or getattr(self.env, "max_episode_steps", None) or 100
+        )
         self.rollout_gen = RolloutGenerator(
             self.env,
             self.device,
             policy=self.policy,
             episode_gen=lambda: Episode(partial(postprocess_img, depth=self.bit_depth)),
-            max_episode_steps=getattr(self.env, "max_episode_steps", None),
+            max_episode_steps=env_max_steps,
         )
 
         # memory / logging
         self.memory = Memory(memory_size)
         self.summary = None
-        self.results_dir = "results/planet"
+        # allow user to set results directory at construction time
+        self.results_dir = results_dir or "results/planet"
 
     def warmup(self, n_episodes=1, random_policy=True):
         """Collect n_episodes of rollouts into memory (used as warmup)."""
@@ -95,16 +106,19 @@ class Planet:
         beta=1.0,
         save_every=25,
         record_grads=False,
+        results_dir=None,
     ):
         """
         High-level training loop. Delegates single-step training to the existing `train` function.
 
         This mirrors the behavior in world_models/training/train_planet.py but wrapped as a class method.
         """
+        # allow caller to override results dir for this training run
+        if results_dir is not None:
+            self.results_dir = results_dir
         os.makedirs(self.results_dir, exist_ok=True)
         self.summary = TensorBoardMetrics(self.results_dir)
 
-        # warmup 1 episode if memory empty
         if len(self.memory.episodes) == 0:
             self.warmup(n_episodes=1, random_policy=True)
 

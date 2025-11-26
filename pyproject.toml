@@ -1,6 +1,6 @@
 [project]
 name = "pytorch-world"
-version = "0.0.1"
+version = "0.0.3"
 description = "A Pytorch Based library for training world models"
 readme = "README.md"
 requires-python = ">=3.13"
