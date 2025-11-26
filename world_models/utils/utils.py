@@ -72,19 +72,99 @@ def get_combined_params(*models):
 def save_video(frames, path, name):
     """
     Saves a video containing frames.
+
+    Accepts frames in either:
+      - (T, C, H, W) float in [0,1]
+      - (T, H, W, C) float in [0,1]
+
+    Produces {path}/{name}.mp4 and a debug PNG {path}/{name}_debug_frame.png
+    with per-channel statistics printed to stdout.
     """
-    frames = (frames * 255).clip(0, 255).astype("uint8").transpose(0, 2, 3, 1)
-    _, H, W, _ = frames.shape
+    import numpy as _np
+
+    frames = _np.asarray(frames)
+    if frames.ndim != 4:
+        raise ValueError(
+            f"Expected frames with 4 dims (T, C, H, W) or (T, H, W, C), got shape {frames.shape}"
+        )
+
+    # detect layout
+    if frames.shape[1] in (1, 3, 4):
+        # (T, C, H, W)
+        is_chw = True
+    elif frames.shape[-1] in (1, 3, 4):
+        # (T, H, W, C)
+        is_chw = False
+    else:
+        raise ValueError(f"Can't infer channel axis from frames.shape={frames.shape}")
+
+    # convert floats -> uint8 and to HWC format for OpenCV
+    if is_chw:
+        # (T, C, H, W) -> (T, H, W, C)
+        frames_u8 = (frames * 255.0).clip(0, 255).astype("uint8").transpose(0, 2, 3, 1)
+    else:
+        frames_u8 = (frames * 255.0).clip(0, 255).astype("uint8")
+
+    # Basic per-frame / per-channel sanity checks on first frame
+    if frames_u8.shape[-1] not in (1, 3, 4):
+        raise ValueError(f"Unexpected channel count: {frames_u8.shape[-1]}")
+
+    first = frames_u8[0]
+    ch = first.shape[-1]
+    stats = {"min": [], "max": [], "mean": []}
+    for c in range(ch):
+        stats["min"].append(int(first[..., c].min()))
+        stats["max"].append(int(first[..., c].max()))
+        stats["mean"].append(float(first[..., c].mean()))
+    equal_ch = False
+    if ch >= 3:
+        equal_ch = _np.all(first[..., 0] == first[..., 1]) and _np.all(
+            first[..., 1] == first[..., 2]
+        )
+
+    out_dir = pathlib.Path(path)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    debug_path = out_dir / f"{name}_debug_frame.png"
+    try:
+        to_write = first
+        if first.ndim == 2 or first.shape[-1] == 1:
+            to_write = _np.repeat(first[..., None], 3, axis=-1)
+        cv2.imwrite(str(debug_path), to_write[..., ::-1])
+    except Exception as e:
+        print(f"Failed to write debug frame PNG: {e}")
+
+    print(
+        f"[save_video] frames.shape={frames.shape} inferred_chw={is_chw} -> written_frame_shape={frames_u8.shape}"
+    )
+    print(
+        f"[save_video] first_frame stats min={stats['min']} max={stats['max']} mean={stats['mean']} equal_rgb_channels={equal_ch}"
+    )
+    print(f"[save_video] debug PNG saved to: {debug_path}")
+
+    # Write video with OpenCV (expecting HWC uint8 BGR)
+    H, W = (None, None)
+    if frames_u8.ndim == 4:
+        H, W = frames_u8.shape[1], frames_u8.shape[2]
+    else:
+        raise RuntimeError("Unexpected frames_u8 shape after conversion")
+
     writer = cv2.VideoWriter(
-        str(pathlib.Path(path) / f"{name}.mp4"),
+        str(out_dir / f"{name}.mp4"),
         cv2.VideoWriter_fourcc(*"mp4v"),
         25.0,
         (W, H),
         True,
     )
-    for frame in frames[..., ::-1]:
-        writer.write(frame)
-    writer.release()
+    try:
+        for frame in frames_u8:
+            # ensure contiguous HWC uint8
+            if not frame.flags["C_CONTIGUOUS"]:
+                frame = _np.ascontiguousarray(frame)
+            # OpenCV expects BGR
+            writer.write(frame[..., ::-1])
+    finally:
+        writer.release()
+    return str(out_dir / f"{name}.mp4")
 
 
 def combine_videos(
@@ -293,6 +373,40 @@ def flatten_dict(data, sep=".", prefix=""):
         else:
             x[f"{prefix}{sep}{key}"] = val
     return x
+
+
+def normalize_frames_for_saving(frames):
+    """
+    Ensure frames are in shape (T, H, W, 3) with float values in [0,1].
+    Handles inputs in (T, C, H, W) or (T, H, W, C), repeats single-channel -> RGB,
+    drops alpha if present, and maps [-0.5,0.5] -> [0,1] when detected.
+    """
+    import numpy as _np
+
+    frames = _np.asarray(frames).astype(_np.float32)
+    if frames.ndim != 4:
+        raise ValueError(f"Expected 4D frames array, got shape {frames.shape}")
+
+    if frames.shape[1] in (1, 3, 4):
+        frames = frames.transpose(0, 2, 3, 1)
+    elif frames.shape[-1] in (1, 3, 4):
+        pass
+    else:
+        raise ValueError(f"Can't infer channel axis from frames.shape={frames.shape}")
+
+    ch = frames.shape[-1]
+    if ch == 1:
+        frames = _np.repeat(frames, 3, axis=-1)
+    elif ch == 4:
+        frames = frames[..., :3]
+
+    mn, mx = float(frames.min()), float(frames.max())
+    if mn >= -0.6 and mx <= 0.6:
+        frames = (frames + 0.5).clip(0.0, 1.0)
+    else:
+        frames = frames.clip(0.0, 1.0)
+
+    return frames
 
 
 class TensorBoardMetrics:

@@ -17,6 +17,7 @@ from world_models.utils.utils import (
     save_video,
     flatten_dict,
     postprocess_img,
+    normalize_frames_for_saving,
 )
 from world_models.memory.planet_memory import Memory, Episode
 from world_models.models.rssm import RecurrentStateSpaceModel
@@ -127,7 +128,7 @@ def main():
     res_dir = "results/"
     summary = TensorBoardMetrics(f"{res_dir}/")
 
-    for i in trange(10, desc="Epoch", leave=False):
+    for i in trange(2, desc="Epoch", leave=False):
         metrics = {}
         for _ in trange(150, desc="Iter ", leave=False):
             train_metrics = train(mem, rssm_model.train(), optimizer, device)
@@ -140,8 +141,41 @@ def main():
         summary.update(metrics)
         mem.append(rollout_gen.rollout_once(explore=True))
         eval_episode, eval_frames, eval_metrics = rollout_gen.rollout_eval()
+        print("\n===== EVAL FRAME DEBUG =====")
+
+        ef = eval_frames
+
+        if torch.is_tensor(ef):
+            print("eval_frames is a TORCH tensor, converting to numpy...")
+            ef_np = ef.detach().cpu().numpy()
+        else:
+            ef_np = np.asarray(ef)
+
+        print("eval_frames.shape =", ef_np.shape)
+        print("dtype =", ef_np.dtype)
+        print("min =", float(ef_np.min()), "max =", float(ef_np.max()))
+
+        first = ef_np[0]
+        print("first_frame.shape =", first.shape)
+
+        if first.ndim == 3:
+            print(
+                "channel count =",
+                first.shape[0] if first.shape[0] <= 4 else first.shape[-1],
+            )
+            print("channel dims =", first.shape)
+            # Print min/max per channel (up to 8 channels)
+            C = first.shape[0] if first.shape[0] <= 8 else first.shape[-1]
+            for c in range(min(C, 8)):
+                ch = first[c] if first.shape[0] <= 8 else first[..., c]
+                print(f"channel[{c}] min={ch.min()} max={ch.max()} mean={ch.mean()}")
+
+        print("===== END DEBUG =====\n")
+
         mem.append(eval_episode)
-        save_video(eval_frames, res_dir, f"vid_{i+1}")
+        # normalize frames to (T,H,W,3) float in [0,1] before saving
+        safe_frames = normalize_frames_for_saving(eval_frames)
+        save_video(safe_frames, res_dir, f"vid_{i+1}")
         summary.update(eval_metrics)
 
         if (i + 1) % 25 == 0:
