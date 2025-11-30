@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Normal
-from world_models.vision.encoder import CNNEncoder
-from world_models.vision.decoder import CNNDecoder
+from world_models.vision.planet_encoder import CNNEncoder
+from world_models.vision.planet_decoder import CNNDecoder
 
 
 class RecurrentStateSpaceModel(nn.Module):
