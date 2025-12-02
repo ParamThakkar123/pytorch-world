@@ -140,7 +140,7 @@ class Dreamer:
 
         observation_loss = (
             F.mse_loss(
-                bottle(self.observation_model, (beliefs, posterior_states)),
+                bottle(self.observation_model, beliefs, posterior_states),
                 observations,
                 reduction="none",
             )
@@ -149,7 +149,9 @@ class Dreamer:
         )
 
         reward_loss = F.mse_loss(
-            bottle(self.reward_model, (beliefs, posterior_states)),
+            bottle(
+                self.reward_model, beliefs, posterior_states
+            ),  # Removed extra parentheses
             rewards,
             reduction="none",
         ).mean(
@@ -167,7 +169,8 @@ class Dreamer:
 
         if self.args.pcont:
             pcont_loss = F.binary_cross_entropy(
-                bottle(self.pcont_model, (beliefs, posterior_states)), nonterminals
+                bottle(self.pcont_model, beliefs, posterior_states),
+                nonterminals,  # Removed extra parentheses
             )
         return (
             observation_loss,
@@ -178,12 +181,12 @@ class Dreamer:
 
     def _compute_loss_actor(self, imag_beliefs, imag_states, imag_ac_logps=None):
         # reward and value prediction of imagined trajectories
-        imag_rewards = bottle(self.reward_model, (imag_beliefs, imag_states))
-        imag_values = bottle(self.value_model, (imag_beliefs, imag_states))
+        imag_rewards = bottle(self.reward_model, imag_beliefs, imag_states)
+        imag_values = bottle(self.value_model, imag_beliefs, imag_states)
 
         with torch.no_grad():
             if self.args.pcont:
-                pcont = bottle(self.pcont_model, (imag_beliefs, imag_states))
+                pcont = bottle(self.pcont_model, imag_beliefs, imag_states)
             else:
                 pcont = self.args.discount * torch.ones_like(imag_rewards)
         pcont = pcont.detach()
@@ -211,12 +214,18 @@ class Dreamer:
         with torch.no_grad():
             # calculate the target with the target nn
             target_imag_values = bottle(
-                self.target_value_model, (imag_beliefs, imag_states)
+                self.target_value_model,
+                imag_beliefs,
+                imag_states,  # Removed extra parentheses
             )
-            imag_rewards = bottle(self.reward_model, (imag_beliefs, imag_states))
+            imag_rewards = bottle(
+                self.reward_model, imag_beliefs, imag_states
+            )  # Removed extra parentheses
 
             if self.args.pcont:
-                pcont = bottle(self.pcont_model, (imag_beliefs, imag_states))
+                pcont = bottle(
+                    self.pcont_model, imag_beliefs, imag_states
+                )  # Removed extra parentheses
             else:
                 pcont = self.args.discount * torch.ones_like(imag_rewards)
 
@@ -232,7 +241,9 @@ class Dreamer:
         )
         target_return = returns.detach()
 
-        value_pred = bottle(self.value_model, (imag_beliefs, imag_states))[:-1]
+        value_pred = bottle(self.value_model, imag_beliefs, imag_states)[
+            :-1
+        ]  # Removed extra parentheses
 
         value_loss = F.mse_loss(value_pred, target_return, reduction="none").mean(
             dim=(0, 1)
@@ -307,7 +318,7 @@ class Dreamer:
                 init_state,
                 actions,
                 init_belief,
-                bottle(self.encoder, (observations,)),
+                bottle(self.encoder, observations),
                 nonterminals,
             )  # TODO: 4
 
