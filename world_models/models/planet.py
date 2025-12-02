@@ -60,7 +60,9 @@ class Planet:
         self.rssm = RecurrentStateSpaceModel(
             self.env.action_size, state_size, latent_size, embedding_size
         ).to(self.device)
-        self.optimizer = torch.optim.Adam(self.rssm.parameters(), lr=1e-4, eps=1e-4)
+        self.optimizer = torch.optim.Adam(
+            self.rssm.parameters(), lr=3e-4, eps=1e-4, weight_decay=1e-5
+        )
 
         policy_cfg = policy_cfg or {}
         self.policy = RSSMPolicy(
@@ -189,11 +191,15 @@ class Planet:
         save_every=25,
         record_grads=False,
         results_dir=None,
+        scheduler_type="step",
+        scheduler_kwargs=None,
     ):
         """
         High-level training loop. Delegates single-step training to the existing `train` function.
 
-        This mirrors the behavior in world_models/training/train_planet.py but wrapped as a class method.
+        Args:
+            scheduler_type (str): Type of scheduler to use ("step", "cosine", "exponential", "plateau", None)
+            scheduler_kwargs (dict): Additional arguments for the scheduler
         """
         # allow caller to override results dir for this training run
         if results_dir is not None:
@@ -201,11 +207,51 @@ class Planet:
         os.makedirs(self.results_dir, exist_ok=True)
         self.summary = TensorBoardMetrics(self.results_dir)
 
+        # Initialize learning rate scheduler
+        scheduler = None
+        if scheduler_type is not None and scheduler_type.lower() != "none":
+            scheduler_kwargs = scheduler_kwargs or {}
+
+            if scheduler_type.lower() == "step":
+                # Default: reduce LR by factor of 0.5 every 50 epochs
+                step_size = scheduler_kwargs.get("step_size", 50)
+                gamma = scheduler_kwargs.get("gamma", 0.5)
+                scheduler = torch.optim.lr_scheduler.StepLR(
+                    self.optimizer, step_size=step_size, gamma=gamma
+                )
+            elif scheduler_type.lower() == "cosine":
+                # Cosine annealing with warm restarts
+                T_max = scheduler_kwargs.get("T_max", epochs)
+                eta_min = scheduler_kwargs.get("eta_min", 1e-6)
+                scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                    self.optimizer, T_max=T_max, eta_min=eta_min
+                )
+            elif scheduler_type.lower() == "exponential":
+                # Exponential decay
+                gamma = scheduler_kwargs.get("gamma", 0.95)
+                scheduler = torch.optim.lr_scheduler.ExponentialLR(
+                    self.optimizer, gamma=gamma
+                )
+            elif scheduler_type.lower() == "plateau":
+                # Reduce on plateau (based on loss)
+                mode = scheduler_kwargs.get("mode", "min")
+                factor = scheduler_kwargs.get("factor", 0.5)
+                patience = scheduler_kwargs.get("patience", 10)
+                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                    self.optimizer, mode=mode, factor=factor, patience=patience
+                )
+            else:
+                print(
+                    f"Warning: Unknown scheduler type '{scheduler_type}'. No scheduler will be used."
+                )
+
         if len(self.memory.episodes) == 0:
             self.warmup(n_episodes=1, random_policy=True)
 
         for ep in range(epochs):
             metrics = {}
+            epoch_loss = 0  # Track average loss for ReduceLROnPlateau
+
             for _ in range(steps_per_epoch):
                 train_metrics = planet_train(
                     self.memory,
@@ -232,7 +278,34 @@ class Planet:
                     compact[k] = np.mean(vs)
                 except Exception:
                     compact[k] = vs
+
+            # Calculate total loss for ReduceLROnPlateau
+            if "losses/kl" in compact and "losses/reconstruction" in compact:
+                epoch_loss = compact["losses/kl"] + compact["losses/reconstruction"]
+                if "losses/reward_pred" in compact:
+                    epoch_loss += compact["losses/reward_pred"]
+
+            # Add current learning rate to metrics
+            current_lr = self.optimizer.param_groups[0]["lr"]
+            compact["learning_rate"] = current_lr
+
             self.summary.update(compact)
+
+            # Step the scheduler
+            if scheduler is not None:
+                if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                    # ReduceLROnPlateau needs the metric to track
+                    scheduler.step(epoch_loss)
+                else:
+                    # Other schedulers just need step()
+                    scheduler.step()
+
+            # Log learning rate changes
+            new_lr = self.optimizer.param_groups[0]["lr"]
+            if new_lr != current_lr:
+                print(
+                    f"Epoch {ep+1}: Learning rate changed from {current_lr:.2e} to {new_lr:.2e}"
+                )
 
             self.memory.append(self.rollout_gen.rollout_once(explore=True))
             eval_episode, eval_frames, eval_metrics = self.rollout_gen.rollout_eval()

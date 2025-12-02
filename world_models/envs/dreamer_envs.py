@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import gymnasium as gym
 from world_models.utils.utils import preprocess_img, to_tensor_obs
-from envs.ale_atari_env import list_available_atari_envs
+from world_models.envs.ale_atari_env import list_available_atari_envs
 
 # Constants for action repeats (tuned for different environment types)
 ACTION_REPEATS = {
@@ -143,7 +143,6 @@ class UniversalGymEnv:
                     if frame is not None:
                         return _images_to_observation(frame, self.bit_depth)
                 except Exception:
-                    pass
                     pass
 
             # if state is already an image

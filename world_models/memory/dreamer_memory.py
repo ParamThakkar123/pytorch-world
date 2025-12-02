@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from utils.utils import preprocess_img, postprocess_img
+from world_models.utils.utils import preprocess_img, postprocess_img
 
 
 class ExperienceReplay:
@@ -30,9 +30,9 @@ class ExperienceReplay:
             self.observations[self.idx] = observation.numpy()
         else:
             self.observations[self.idx] = postprocess_img(
-                observation.numpy(), self.bit_depth
+                observation.detach().numpy(), self.bit_depth
             )
-        self.actions[self.idx] = action.numpy()
+        self.actions[self.idx] = action.detach().numpy()
         self.rewards[self.idx] = reward
         self.nonterminals[self.idx] = not done
         self.idx = (self.idx + 1) % self.size
