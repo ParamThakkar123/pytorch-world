@@ -1,439 +1,161 @@
-import torch
-import numpy as np
-import gymnasium as gym
-from world_models.utils.utils import preprocess_img, to_tensor_obs
-from world_models.envs.ale_atari_env import list_available_atari_envs
 import cv2
+import numpy as np
+import torch
+from world_models.utils.dreamer_utils import _images_to_observation
 
-try:
-    from dm_control import suite
-    from dm_control.suite.wrappers import pixels
-
-    DM_CONTROL_AVAILABLE = True
-except ImportError:
-    DM_CONTROL_AVAILABLE = False
-
-
-# Constants for action repeats (tuned for different environment types)
-ACTION_REPEATS = {
+CONTROL_SUITE_ENVS = [
+    "cartpole-balance",
+    "cartpole-swingup",
+    "reacher-easy",
+    "finger-spin",
+    "cheetah-run",
+    "ball_in_cup-catch",
+    "walker-walk",
+    "reacher-hard",
+    "walker-run",
+    "humanoid-stand",
+    "humanoid-walk",
+    "fish-swim",
+    "acrobot-swingup",
+]
+CONTROL_SUITE_ACTION_REPEATS = {
     "cartpole": 8,
-    "pendulum": 2,
-    "mountaincar": 4,
-    "acrobot": 4,
-    "lunarlander": 4,
-    "bipedal": 2,
-    "humanoid": 2,
-    "halfcheetah": 2,
-    "ant": 2,
-    "walker2d": 2,
-    "hopper": 2,
     "reacher": 4,
-    "pusher": 4,
-    "striker": 4,
-    "thrower": 4,
-    # dm_control
-    "ball_in_cup": 8,
-    "cheetah": 4,
     "finger": 2,
+    "cheetah": 4,
+    "ball_in_cup": 6,
     "walker": 2,
+    "humanoid": 2,
+    "fish": 2,
+    "acrobot": 4,
 }
 
-# List of supported environments
-GYM_ENVS = [
-    # Classic Control
-    "CartPole-v1",
-    "Pendulum-v1",
-    "MountainCarContinuous-v0",
-    "Acrobot-v1",
-    # Box2D
-    "LunarLander-v2",
-    "LunarLanderContinuous-v2",
-    "BipedalWalker-v3",
-    "BipedalWalkerHardcore-v3",
-    # MuJoCo
-    "Humanoid-v4",
-    "HalfCheetah-v4",
-    "Ant-v4",
-    "Walker2d-v4",
-    "Hopper-v4",
-    "Reacher-v4",
-    "Pusher-v4",
-    "Striker-v4",
-    "Thrower-v4",
-]
 
-if DM_CONTROL_AVAILABLE:
-    DM_CONTROL_ENVS = [
-        "ball_in_cup-catch",
-        "cartpole-balance",
-        "cartpole-swingup",
-        "cheetah-run",
-        "finger-spin",
-        "reacher-easy",
-        "walker-walk",
-    ]
-else:
-    DM_CONTROL_ENVS = []
-
-
-ATARI_ENVS = list_available_atari_envs()
-print(f"Found {len(ATARI_ENVS)} available Atari environments")
-
-ALL_ENVS = GYM_ENVS + ATARI_ENVS + DM_CONTROL_ENVS
-
-
-def _get_action_repeat(env_id):
-    """Get recommended action repeat for environment."""
-    env_id_lower = env_id.lower()
-
-    for key, repeat in ACTION_REPEATS.items():
-        if key in env_id_lower:
-            return repeat
-
-    if any(atari in env_id for atari in ["ALE/", "Atari"]):
-        return 4  # Standard for Atari
-    elif any(
-        classic in env_id_lower
-        for classic in ["cartpole", "pendulum", "mountaincar", "acrobot"]
-    ):
-        return 4  # Classic control
-    elif any(box2d in env_id_lower for box2d in ["lunar", "bipedal"]):
-        return 4  # Box2D
-    elif any(
-        mujoco in env_id_lower
-        for mujoco in ["humanoid", "cheetah", "ant", "walker", "hopper"]
-    ):
-        return 2  # MuJoCo
-    else:
-        return 2  # Default
-
-
-def _images_to_observation(image, bit_depth):
-    """Convert image to tensor observation using existing utils."""
-    # Ensure image is 64x64
-    if image.shape[0] != 64 or image.shape[1] != 64:
-        image = cv2.resize(image, (64, 64), interpolation=cv2.INTER_LINEAR)
-
-    image_tensor = to_tensor_obs(image)
-
-    # Preprocess using existing function
-    preprocess_img(image_tensor, bit_depth)
-    return image_tensor.unsqueeze(0)  # Add batch dimension
-
-
-class DMCEnv:
+class ControlSuiteEnv:
     def __init__(
         self, env, symbolic, seed, max_episode_length, action_repeat, bit_depth
     ):
-        assert isinstance(env, tuple), "dm_control env must be ('domain', 'task')"
-        domain, task = env
+        from dm_control import suite
+        from dm_control.suite.wrappers import pixels
 
+        domain, task = env.split("-")
         self.symbolic = symbolic
-        self.max_episode_length = max_episode_length
-        self.action_repeat = action_repeat
-        self.bit_depth = bit_depth
-
         self._env = suite.load(
             domain_name=domain, task_name=task, task_kwargs={"random": seed}
         )
-
         if not symbolic:
-            # always use official pixel wrapper
-            self._env = pixels.Wrapper(
-                self._env,
-                pixels_only=True,
-                render_kwargs={"height": 64, "width": 64, "camera_id": 0},
+            self._env = pixels.Wrapper(self._env)
+        self.max_episode_length = max_episode_length
+        self.action_repeat = action_repeat
+        if action_repeat != CONTROL_SUITE_ACTION_REPEATS[domain]:
+            print(
+                "Using action repeat %d; recommended action repeat for domain is %d"
+                % (action_repeat, CONTROL_SUITE_ACTION_REPEATS[domain])
             )
+        self.bit_depth = bit_depth
 
     def reset(self):
-        self.t = 0
-        ts = self._env.reset()
-
+        self.t = 0  # Reset internal timer
+        state = self._env.reset()
         if self.symbolic:
-            obs = np.concatenate([v.ravel() for v in ts.observation.values()])
-            return torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
-
-        # pixel obs
-        img = ts.observation["pixels"]
-        img = to_tensor_obs(img)
-        preprocess_img(img, self.bit_depth)
-        return img.unsqueeze(0)
+            return torch.tensor(
+                np.concatenate(
+                    [
+                        np.asarray([obs]) if isinstance(obs, float) else obs
+                        for obs in state.observation.values()
+                    ],
+                    axis=0,
+                ),
+                dtype=torch.float32,
+            ).unsqueeze(dim=0)
+        else:
+            return _images_to_observation(
+                self._env.physics.render(camera_id=0), self.bit_depth
+            )
 
     def step(self, action):
-        if isinstance(action, torch.Tensor):
-            action = action.detach().numpy()
-
+        action = action.detach().numpy()
         reward = 0
-        done = False
-
-        for _ in range(self.action_repeat):
-            ts = self._env.step(action)
-            reward += ts.reward
-            self.t += 1
-            done = ts.last() or self.t >= self.max_episode_length
+        for k in range(self.action_repeat):
+            state = self._env.step(action)
+            reward += state.reward
+            self.t += 1  # Increment internal timer
+            done = state.last() or self.t == self.max_episode_length
             if done:
                 break
-
         if self.symbolic:
-            obs = np.concatenate([v.ravel() for v in ts.observation.values()])
-            obs = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
+            observation = torch.tensor(
+                np.concatenate(
+                    [
+                        np.asarray([obs]) if isinstance(obs, float) else obs
+                        for obs in state.observation.values()
+                    ],
+                    axis=0,
+                ),
+                dtype=torch.float32,
+            ).unsqueeze(dim=0)
         else:
-            img = ts.observation["pixels"]
-            img = to_tensor_obs(img)
-            preprocess_img(img, self.bit_depth)
-            obs = img.unsqueeze(0)
+            observation = _images_to_observation(
+                self._env.physics.render(camera_id=0), self.bit_depth
+            )
+        return observation, reward, done
 
-        return obs, reward, done
+    def render(self):
+        cv2.imshow("screen", self._env.physics.render(camera_id=0)[:, :, ::-1])
+        cv2.waitKey(1)
 
     def close(self):
+        cv2.destroyAllWindows()
         self._env.close()
 
     @property
     def observation_size(self):
-        if self.symbolic:
-            return sum([v.shape[0] for v in self._env.observation_spec().values()])
-        else:
-            return (3, 64, 64)
+        return (
+            sum(
+                [
+                    (1 if len(obs.shape) == 0 else obs.shape[0])
+                    for obs in self._env.observation_spec().values()
+                ]
+            )
+            if self.symbolic
+            else (3, 64, 64)
+        )
 
     @property
     def action_size(self):
         return self._env.action_spec().shape[0]
 
+    # Sample an action randomly from a uniform distribution over all valid actions
     def sample_random_action(self):
         spec = self._env.action_spec()
         return torch.from_numpy(
             np.random.uniform(spec.minimum, spec.maximum, spec.shape)
-        ).float()
+        )
 
 
-class UniversalGymEnv:
-    def __init__(
-        self, env, symbolic, seed, max_episode_length, action_repeat, bit_depth
-    ):
-        self.symbolic = symbolic
-
-        # Try to make environment with render mode
-        try:
-            self._env = gym.make(env, render_mode="rgb_array" if not symbolic else None)
-        except Exception:
-            # Fall back to creating env without render_mode for older gym versions or unexpected errors
-            self._env = gym.make(env)
-
-        # Set seed
-        if hasattr(self._env, "seed"):
-            self._env.seed(seed)
-        else:
-            # For newer gym versions
-            self._env.reset(seed=seed)
-
-        self.max_episode_length = max_episode_length
-        self.action_repeat = action_repeat or _get_action_repeat(env)
-        self.bit_depth = bit_depth
-        self.env_id = env
-
-        # Print action repeat info
-        recommended = _get_action_repeat(env)
-        if action_repeat and action_repeat != recommended:
-            print(
-                f"Using action repeat {action_repeat}; recommended action repeat for {env} is {recommended}"
-            )
-
-    def reset(self):
-        self.t = 0  # Reset internal timer
-
-        # Handle different gym return formats
-        reset_result = self._env.reset()
-        if isinstance(reset_result, tuple) and len(reset_result) == 2:
-            state, _ = reset_result
-        else:
-            state = reset_result
-
-        if self.symbolic:
-            # For state-based environments
-            if isinstance(state, np.ndarray):
-                return torch.tensor(state, dtype=torch.float32).unsqueeze(dim=0)
-            else:
-                return torch.tensor([state], dtype=torch.float32).unsqueeze(dim=0)
-        else:
-            if hasattr(self._env, "render"):
-                try:
-                    frame = self._env.render()
-                    if frame is not None:
-                        return _images_to_observation(frame, self.bit_depth)
-                except Exception:
-                    pass
-
-            # if state is already an image
-            if isinstance(state, np.ndarray) and len(state.shape) == 3:
-                return _images_to_observation(state, self.bit_depth)
-            else:
-                # Create synthetic image from state vector
-                return self._state_to_image(state)
-
-    def step(self, action):
-        if isinstance(action, torch.Tensor):
-            action = action.detach().cpu().numpy()
-
-        # Handle different action space types
-        if hasattr(self._env.action_space, "n"):
-            # Discrete action space
-            action = int(
-                np.clip(
-                    action.item() if hasattr(action, "item") else action[0],
-                    0,
-                    self._env.action_space.n - 1,
-                )
-            )
-        else:
-            # Continuous action space
-            action = np.array(action).flatten()
-
-        reward = 0
-        for _ in range(self.action_repeat):
-            step_result = self._env.step(action)
-
-            # Handle different gym return formats
-            if len(step_result) == 4:
-                state, reward_k, done, info = step_result
-                truncated = False
-            else:  # len == 5 for newer gym
-                state, reward_k, terminated, truncated, info = step_result
-                done = terminated or truncated
-
-            reward += reward_k
-            self.t += 1  # Increment internal timer
-            done = done or self.t >= self.max_episode_length
-            if done:
-                break
-
-        if self.symbolic:
-            # For state-based environments
-            if isinstance(state, np.ndarray):
-                observation = torch.tensor(state, dtype=torch.float32).unsqueeze(dim=0)
-            else:
-                observation = torch.tensor([state], dtype=torch.float32).unsqueeze(
-                    dim=0
-                )
-        else:
-            if hasattr(self._env, "render"):
-                try:
-                    frame = self._env.render()
-                    if frame is not None:
-                        observation = _images_to_observation(frame, self.bit_depth)
-                    else:
-                        observation = self._state_to_image(state)
-                except Exception:
-                    observation = self._state_to_image(state)
-            else:
-                observation = self._state_to_image(state)
-
-        return observation, reward, done
-
-    def _state_to_image(self, state):
-        """Convert state vector to synthetic 64x64 RGB image."""
-        if isinstance(state, (int, float)):
-            state = np.array([state])
-        elif not isinstance(state, np.ndarray):
-            state = np.array(state)
-
-        # Normalize state values
-        if state.size > 0:
-            state_norm = (state - state.min()) / (state.max() - state.min() + 1e-8)
-        else:
-            state_norm = np.zeros(1)
-
-        # Create 64x64 image from state
-        image = np.zeros((64, 64, 3), dtype=np.uint8)
-
-        # Fill image with patterns based on state values
-        for i, val in enumerate(state_norm[: min(len(state_norm), 8)]):
-            color_val = int(255 * val)
-            x_start = (i % 4) * 16
-            y_start = (i // 4) * 32
-            image[y_start : y_start + 32, x_start : x_start + 16, i % 3] = color_val
-
-        return _images_to_observation(image, self.bit_depth)
-
-    def close(self):
-        if hasattr(self._env, "close"):
-            self._env.close()
-
-    @property
-    def observation_size(self):
-        if self.symbolic:
-            if hasattr(self._env.observation_space, "shape"):
-                return (
-                    self._env.observation_space.shape[0]
-                    if len(self._env.observation_space.shape) > 0
-                    else 1
-                )
-            else:
-                return 1
-        else:
-            return (3, 64, 64)
-
-    @property
-    def action_size(self):
-        if (
-            hasattr(self._env.action_space, "shape")
-            and len(self._env.action_space.shape) > 0
-        ):
-            return self._env.action_space.shape[0]
-        elif hasattr(self._env.action_space, "n"):
-            return 1  # Discrete action space
-        else:
-            return 1
-
-    def sample_random_action(self):
-        action = self._env.action_space.sample()
-        if isinstance(action, np.ndarray):
-            return torch.from_numpy(action.astype(np.float32))
-        else:
-            return torch.tensor([float(action)])
-
-
-def Env(env, symbolic, seed, max_episode_length, action_repeat, bit_depth):
-    """Universal environment factory."""
-    if isinstance(env, tuple):
-        return DMCEnv(env, symbolic, seed, max_episode_length, action_repeat, bit_depth)
-    return UniversalGymEnv(
-        env, symbolic, seed, max_episode_length, action_repeat, bit_depth
-    )
-
-
-def is_supported_env(env_id):
-    """Check if environment is supported."""
-    return env_id in ALL_ENVS
-
-
-def list_supported_envs():
-    """List all supported environments."""
-    return {
-        "gym": GYM_ENVS,
-        "atari": ATARI_ENVS,
-        "dm_control": DM_CONTROL_ENVS,
-        "all": ALL_ENVS,
-    }
-
-
-# Wrapper for batching environments together
 class EnvBatcher:
     def __init__(self, env_class, env_args, env_kwargs, n):
         self.n = n
         self.envs = [env_class(*env_args, **env_kwargs) for _ in range(n)]
         self.dones = [True] * n
 
+    # Resets every environment and returns observation
     def reset(self):
         observations = [env.reset() for env in self.envs]
         self.dones = [False] * self.n
         return torch.cat(observations)
 
+    # Steps/resets every environment and returns (observation, reward, done)
     def step(self, actions):
-        done_mask = torch.nonzero(torch.tensor(self.dones), as_tuple=False)[:, 0]
+        done_mask = torch.nonzero(torch.tensor(self.dones), as_tuple=False)[
+            :, 0
+        ]  # Done mask to blank out observations and zero rewards for previously terminated environments
         observations, rewards, dones = zip(
             *[env.step(action) for env, action in zip(self.envs, actions)]
         )
-        dones = [d or prev_d for d, prev_d in zip(dones, self.dones)]
+        dones = [
+            d or prev_d for d, prev_d in zip(dones, self.dones)
+        ]  # Env should remain terminated if previously terminated
         self.dones = dones
         observations, rewards, dones = (
             torch.cat(observations),

@@ -690,39 +690,3 @@ class TorchImageEnvWrapper:
         ):
             return int(self.env.spec.max_episode_steps)
         return 1000
-
-
-def cal_returns(reward, value, bootstrap, pcont, lambda_):
-    """
-    Calculate lambda-returns for a given trajectory.
-      Args:
-          reward: Tensor of shape [horizon, (chunk-1)*B, 1]
-          value: Tensor of shape [horizon, (chunk-1)*B, 1]
-          bootstrap: Tensor of shape [(chunk-1)*B, 1]
-          pcont: float or Tensor of shape [horizon, (chunk-1)*B, 1]
-          lambda_: float scalar in [0, 1]
-
-      Returns:
-          returns: Tensor of shape [horizon, (chunk-1)*B, 1]
-    """
-    assert list(reward.shape) == list(
-        value.shape
-    ), "The shape of reward and value should be similar"
-    if isinstance(pcont, (int, float)):
-        pcont = pcont * torch.ones_like(reward)
-
-    next_value = torch.cat(
-        (value[1:], bootstrap[None]), 0
-    )  # bootstrap[None] is used to extend additional dim
-    inputs = reward + pcont * next_value * (
-        1 - lambda_
-    )  # dim=[horizon, (chuck-1)*B, 1]
-    outputs = []
-    last = bootstrap
-
-    for t in reversed(range(reward.shape[0])):  # for t in horizon
-        inp = inputs[t]
-        last = inp + pcont[t] * lambda_ * last
-        outputs.append(last)
-    returns = torch.flip(torch.stack(outputs), [0])
-    return returns

@@ -4,6 +4,8 @@ import torch.nn.functional as F
 
 
 class PCONTModel(nn.Module):
+    """predict the prob of whether a state is a terminal state."""
+
     def __init__(
         self, belief_size, state_size, hidden_size, activation_function="relu"
     ):

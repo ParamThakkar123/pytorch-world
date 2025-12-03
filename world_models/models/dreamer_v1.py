@@ -1,448 +1,302 @@
 import os
-import torch
 import numpy as np
-from collections import namedtuple
+import torch
+import tqdm
+from torchvision.utils import make_grid, save_image
 
-from world_models.envs.dreamer_envs import Env
-from world_models.controller.dreamer_v1_agent import Dreamer
 from world_models.memory.dreamer_memory import ExperienceReplay
-from world_models.utils.utils import TensorBoardMetrics, save_video
-
-# Configuration for DreamerV1
-DreamerConfig = namedtuple(
-    "DreamerConfig",
-    [
-        "device",
-        "symbolic",
-        "observation_size",
-        "action_size",
-        "bit_depth",
-        "belief_size",
-        "state_size",
-        "hidden_size",
-        "embedding_size",
-        "dense_act",
-        "cnn_act",
-        "reward_scale",
-        "pcont",
-        "pcont_scale",
-        "world_lr",
-        "actor_lr",
-        "value_lr",
-        "free_nats",
-        "batch_size",
-        "planning_horizon",
-        "discount",
-        "disclam",
-        "temp",
-        "with_logprob",
-        "grad_clip_norm",
-        "expl_amount",
-        "action_noise",
-    ],
-)
+from world_models.controller.dreamer_v1_agent import Dreamer
+from world_models.envs.dreamer_envs import EnvBatcher
+from world_models.utils.dreamer_utils import lineplot, write_video
 
 
 class DreamerV1:
-    """
-    High-level DreamerV1 wrapper similar to Planet.
-
-    Usage example:
-      from world_models.models.dreamer_v1 import DreamerV1
-      d = DreamerV1(env='HalfCheetah-v4', symbolic=False)
-      d.train(episodes=1000)
-    """
-
     def __init__(
         self,
         env,
-        symbolic=False,
-        bit_depth=5,
+        *,
         device=None,
-        belief_size=200,
+        bit_depth=5,
         state_size=30,
-        hidden_size=200,
+        belief_size=200,
         embedding_size=1024,
-        max_episode_length=1000,
+        hidden_size=300,
+        memory_size=100000,
+        batch_size=50,
+        actor_lr=8e-5,
+        value_lr=8e-5,
+        world_lr=6e-4,
+        free_nats=3.0,
+        reward_scale=5.0,
+        pcont_scale=5.0,
+        grad_clip_norm=100.0,
+        planning_horizon=15,
+        discount=0.99,
+        disclam=0.95,
         action_repeat=2,
-        results_dir=None,
-        **kwargs,
+        results_dir="results/dreamer_v1",
+        headless=True,
+        render=False,
+        seed=1,
+        pcont=False,
+        with_logprob=False,
+        symbolic=False,
+        dense_act="elu",
+        cnn_act="relu",
+        expl_amount=0.3,
     ):
-        self.device = device or (
-            torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        """
+        Minimal, clean, Planet-style DreamerV1 interface.
+        """
+
+        self.env = env
+        self.seed = seed
+        self.bit_depth = bit_depth
+        self.render = render
+        self.results_dir = results_dir
+        os.makedirs(results_dir, exist_ok=True)
+
+        # Device
+        if device is None:
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device
+
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        # Observation & Action sizes from env
+        self.observation_size = env.observation_size
+        self.action_size = env.action_size
+
+        # Replay buffer
+        self.replay = ExperienceReplay(
+            memory_size,
+            False,
+            self.observation_size,
+            self.action_size,
+            bit_depth,
+            device,
         )
 
-        # Create environment
-        if isinstance(env, str):
-            self.env = Env(
-                env=env,
-                symbolic=symbolic,
-                seed=42,
-                max_episode_length=max_episode_length,
-                action_repeat=action_repeat,
-                bit_depth=bit_depth,
-            )
-        else:
-            self.env = env
+        # Dreamer agent
+        class Args:
+            pass
 
-        # Create agent configuration with more conservative settings
-        self.config = DreamerConfig(
-            device=self.device,
-            symbolic=symbolic,
-            observation_size=self.env.observation_size,
-            action_size=self.env.action_size,
-            bit_depth=bit_depth,
-            belief_size=belief_size,
-            state_size=state_size,
-            hidden_size=hidden_size,
-            embedding_size=embedding_size,
-            dense_act=kwargs.get("dense_act", "elu"),
-            cnn_act=kwargs.get("cnn_act", "relu"),
-            reward_scale=kwargs.get("reward_scale", 1.0),
-            pcont=kwargs.get("pcont", True),
-            pcont_scale=kwargs.get("pcont_scale", 10.0),
-            world_lr=kwargs.get("world_lr", 6e-4),  # Reduced from 6e-4
-            actor_lr=kwargs.get("actor_lr", 8e-5),  # Reduced from 8e-5
-            value_lr=kwargs.get("value_lr", 8e-5),  # Reduced from 8e-5
-            free_nats=kwargs.get("free_nats", 3.0),
-            batch_size=kwargs.get("batch_size", 50),
-            planning_horizon=kwargs.get("planning_horizon", 12),  # Reduced from 15
-            discount=kwargs.get("discount", 0.99),
-            disclam=kwargs.get("disclam", 0.95),
-            temp=kwargs.get("temp", 0.5),
-            with_logprob=kwargs.get("with_logprob", True),
-            grad_clip_norm=kwargs.get("grad_clip_norm", 10.0),  # Reduced from 100.0
-            expl_amount=kwargs.get("expl_amount", 0.3),
-            action_noise=kwargs.get("action_noise", 0.3),
-        )
+        args = Args()
+        args.belief_size = belief_size
+        args.state_size = state_size
+        args.embedding_size = embedding_size
+        args.hidden_size = hidden_size
+        args.observation_size = self.observation_size
+        args.action_size = self.action_size
+        args.batch_size = batch_size
+        args.reward_scale = reward_scale
+        args.pcont_scale = pcont_scale
+        args.bit_depth = bit_depth
+        args.world_lr = world_lr
+        args.actor_lr = actor_lr
+        args.value_lr = value_lr
+        args.grad_clip_norm = grad_clip_norm
+        args.free_nats = free_nats
+        args.discount = discount
+        args.disclam = disclam
+        args.planning_horizon = planning_horizon
+        args.pcont = pcont
+        args.with_logprob = with_logprob
+        args.device = device
+        args.learning_rate_schedule = 0
+        args.adam_epsilon = 1e-7
+        args.symbolic = symbolic
+        args.dense_act = dense_act
+        args.cnn_act = cnn_act
+        args.expl_amount = expl_amount
 
-        # Create agent
-        self.agent = Dreamer(self.config)
+        self.agent = Dreamer(args)
+        self.action_repeat = action_repeat
+        self.max_episode_steps = env.max_episode_length
 
-        # Create experience replay buffer
-        self.memory = ExperienceReplay(
-            size=kwargs.get("memory_size", 1000000),
-            symbolic_env=symbolic,
-            observation_size=self.env.observation_size,
-            action_size=self.env.action_size,
-            bit_depth=bit_depth,
-            device=self.device,
-        )
-
-        # Results directory
-        env_name = env if isinstance(env, str) else "custom_env"
-        self.results_dir = results_dir or f"results/dreamer_v1_{env_name}"
-        os.makedirs(self.results_dir, exist_ok=True)
-
-        print("DreamerV1 initialized:")
-        print(f"  Environment: {env_name}")
-        print(f"  Action size: {self.env.action_size}")
-        print(f"  Observation size: {self.env.observation_size}")
-        print(f"  Device: {self.device}")
-        print(f"  Results dir: {self.results_dir}")
-
-    def warmup(self, episodes=5):
-        """Collect random episodes to initialize the replay buffer."""
-        print(f"Collecting {episodes} random episodes for warmup...")
-
-        for ep in range(episodes):
-            self.env.reset()
-            episode_reward = 0
-            step_count = 0
-
-            while True:
-                action = self.env.sample_random_action()
-                next_observation, reward, done = self.env.step(action)
-
-                self.memory.append(next_observation, action.cpu(), reward, done)
-                episode_reward += reward
-                step_count += 1
-
-                if done or step_count >= 1000:
-                    break
-
-            print(f"  Episode {ep+1}: {step_count} steps, reward: {episode_reward:.2f}")
-
-        print(
-            f"Warmup complete. Buffer size: {self.memory.episodes}"
-        )  # Changed from len(self.memory)
-
-    def collect_episode(self, deterministic=False):
-        """Collect one episode using current policy."""
-        observation = self.env.reset()
-        belief = torch.zeros(1, self.config.belief_size, device=self.device)
-        state = torch.zeros(1, self.config.state_size, device=self.device)
-        action = torch.zeros(1, self.env.action_size, device=self.device)
-
-        episode_reward = 0
-        step_count = 0
-        frames = []
-
-        while True:
-            # Infer state
-            belief, state = self.agent.infer_state(
-                observation.to(self.device), belief, state, action
-            )
-
-            # Select action
-            action = self.agent.select_action(
-                belief, state, deterministic=deterministic
-            )
-
-            # Take step
-            next_observation, reward, done = self.env.step(action[0].cpu())
-
-            # Store experience (only during training)
-            if not deterministic:
-                # detach/clone to avoid sharing storage with current computation graph
-                obs_to_store = (
-                    next_observation.detach().cpu().clone()
-                    if isinstance(next_observation, torch.Tensor)
-                    else next_observation
-                )
-                act_to_store = action.detach().cpu().clone()
-                self.memory.append(obs_to_store, act_to_store, reward, done)
-
-            # Save frame for video - postprocess to restore brightness
-            if not self.config.symbolic:
-                frame = observation.cpu()
-                if isinstance(frame, torch.Tensor):
-                    frame = frame.numpy()
-                frame = np.clip(frame + 0.5, 0.0, 1.0)
-                frames.append(frame)
-
-            episode_reward += reward
-            step_count += 1
-            observation = next_observation
-
-            if done or step_count >= self.env.max_episode_length:
-                break
-
-        return episode_reward, step_count, frames
-
-    def evaluate(self, episodes=10):
-        """Evaluate current policy."""
-        print(f"Evaluating policy over {episodes} episodes...")
-
-        # Set to eval mode
-        self.agent.transition_model.eval()
-        self.agent.observation_model.eval()
-        self.agent.reward_model.eval()
-        self.agent.encoder.eval()
-        self.agent.actor_model.eval()
-        self.agent.value_model.eval()
-
-        rewards = []
-        lengths = []
-
-        with torch.no_grad():
-            for ep in range(episodes):
-                reward, length, frames = self.collect_episode(deterministic=True)
-                rewards.append(reward)
-                lengths.append(length)
-
-                # Save video for first episode
-                if ep == 0 and frames:
-                    # ensure frames array has shape (T, C, H, W) or (T, H, W, C)
-                    import numpy as _np
-                    import torch as _torch
-
-                    # stack if list of tensors/arrays
-                    if isinstance(frames, list) and len(frames) > 0:
-                        first = frames[0]
-                        if isinstance(first, _torch.Tensor):
-                            frames_arr = _torch.stack(frames, dim=0).cpu()
-                        else:
-                            frames_arr = _np.stack(frames, axis=0)
-                    else:
-                        frames_arr = frames
-
-                    # convert to numpy if torch tensor
-                    if isinstance(frames_arr, _torch.Tensor):
-                        frames_arr = frames_arr.detach().cpu().numpy()
-
-                    # remove singleton extra dim (e.g. (T, 1, C, H, W) -> (T, C, H, W))
-                    if frames_arr.ndim == 5 and frames_arr.shape[1] == 1:
-                        frames_arr = frames_arr.squeeze(1)
-
-                    # now save (works for (T,C,H,W) or (T,H,W,C))
-                    save_video(frames_arr, self.results_dir, "eval_episode")
-
-        # Set back to train mode
-        self.agent.transition_model.train()
-        self.agent.observation_model.train()
-        self.agent.reward_model.train()
-        self.agent.encoder.train()
-        self.agent.actor_model.train()
-        self.agent.value_model.train()
-
-        return {
-            "reward_mean": np.mean(rewards),
-            "reward_std": np.std(rewards),
-            "length_mean": np.mean(lengths),
-            "episodes": episodes,
+        self.metrics = {
+            "train_rewards": [],
+            "test_rewards": [],
+            "episodes": [],
+            "env_steps": [],
         }
 
+    # -------------------------------------------------------------------------
+    # Warmup with random policy
+    # -------------------------------------------------------------------------
+    def warmup(self, n_episodes=5, random_policy=True):
+        print(f"\n[Warmup] Collecting {n_episodes} episodes…")
+
+        for _ in tqdm.tqdm(range(1, n_episodes + 1)):
+            _ = self.env.reset()
+            done = False
+
+            while not done:
+                if random_policy:
+                    action = self.env.sample_random_action()
+                else:
+                    action = torch.zeros(1, self.action_size).to(self.device)
+
+                next_obs, reward, done = self.env.step(action)
+                self.replay.append(next_obs, action.cpu(), reward, done)
+
+        print("[Warmup] Done.\n")
+
+    # -------------------------------------------------------------------------
+    # Training Loop
+    # -------------------------------------------------------------------------
     def train(
         self,
-        episodes=1000,
-        warmup_episodes=5,
-        collect_interval=100,
-        train_steps_per_collect=50,
-        eval_interval=100,
-        save_interval=100,
+        *,
+        epochs=200,
+        steps_per_epoch=150,
+        batch_size=50,
         chunk_size=50,
+        save_every=25,
     ):
-        """
-        Main training loop.
+        print("\n=== TRAINING DreamerV1 ===")
 
-        Args:
-            episodes: Total number of episodes to train
-            warmup_episodes: Number of random episodes for warmup
-            collect_interval: Steps between training updates
-            train_steps_per_collect: Training steps per update
-            eval_interval: Episodes between evaluations
-            save_interval: Episodes between model saves
-            chunk_size: Sequence length for training
-        """
-        metrics = TensorBoardMetrics(self.results_dir)
+        for epoch in range(1, epochs + 1):
 
-        # Warmup
-        if self.memory.episodes == 0:  # Changed from len(self.memory) == 0
-            self.warmup(warmup_episodes)
+            # --------------------------
+            # Optimize Dreamer world model + actor + value
+            # --------------------------
+            for _ in tqdm.tqdm(range(steps_per_epoch), desc=f"Epoch {epoch}"):
+                batch = self.replay.sample(batch_size, chunk_size)
+                self.agent.update_parameters(batch)
 
-        print(f"Starting training for {episodes} episodes...")
+            # --------------------------
+            # Collect rollout
+            # --------------------------
+            reward = self._collect_episode()
+            self.metrics["train_rewards"].append(reward)
+            self.metrics["episodes"].append(epoch)
 
-        total_steps = 0
-        for episode in range(1, episodes + 1):
-            # Collect episode
-            train_reward, train_length, _ = self.collect_episode(deterministic=False)
-            total_steps += train_length
-
-            # Training update
-            if (
-                total_steps >= collect_interval
-                and self.memory.episodes >= self.config.batch_size
-            ):
-                loss_info = []
-                for _ in range(train_steps_per_collect):
-                    # Sample batch
-                    batch = self.memory.sample(self.config.batch_size, chunk_size)
-
-                    # Update agent
-                    losses = self.agent.update_parameters(batch, 1)
-                    loss_info.extend(losses)
-
-                total_steps %= collect_interval  # Reset step counter
-
-                # Log training losses
-                if loss_info:
-                    avg_losses = np.mean(loss_info, axis=0)
-                    loss_metrics = {
-                        "losses/observation": avg_losses[0],
-                        "losses/reward": avg_losses[1],
-                        "losses/kl": avg_losses[2],
-                        "losses/pcont": avg_losses[3],
-                        "losses/actor": avg_losses[4],
-                        "losses/value": avg_losses[5],
-                    }
-                    metrics.update(loss_metrics)
-
-            # Log episode metrics
-            episode_metrics = {
-                "train/reward": train_reward,
-                "train/length": train_length,
-                "train/episode": episode,
-                "memory/size": self.memory.episodes,  # Changed from len(self.memory)
-            }
-            metrics.update(episode_metrics)
-
-            print(
-                f"Episode {episode}: Reward={train_reward:.2f}, Length={train_length}"
+            # lineplot: training reward curve
+            lineplot(
+                self.metrics["episodes"],
+                self.metrics["train_rewards"],
+                "train_reward",
+                self.results_dir,
             )
 
-            # Evaluation
-            if episode % eval_interval == 0:
-                eval_metrics = self.evaluate()
-                eval_metrics_prefixed = {
-                    f"eval/{k}": v for k, v in eval_metrics.items()
-                }
-                metrics.update(eval_metrics_prefixed)
+            print(f"[Epoch {epoch}] Reward = {reward}")
 
-                print(
-                    f"Eval at episode {episode}: "
-                    f"Reward={eval_metrics['reward_mean']:.2f}±{eval_metrics['reward_std']:.2f}"
-                )
+            # --------------------------
+            # Save model checkpoint
+            # --------------------------
+            if epoch % save_every == 0:
+                self._save_checkpoint(epoch)
 
-            # Save model
-            if episode % save_interval == 0:
-                self.save_checkpoint(episode)
+                # Also save reconstructed frames (for debugging)
+                self._save_reconstruction()
 
-                # collect one deterministic episode (does not append to memory)
-                _, _, frames = self.collect_episode(deterministic=True)
-                if frames:
-                    # stack if list of tensors/arrays
-                    if isinstance(frames, list) and len(frames) > 0:
-                        first = frames[0]
-                        if isinstance(first, torch.Tensor):
-                            frames_arr = torch.stack(frames, dim=0).cpu().numpy()
-                        else:
-                            frames_arr = np.stack(frames, axis=0)
-                    else:
-                        frames_arr = frames
+        print("\n=== TRAINING COMPLETE ===")
 
-                    # convert to numpy if torch tensor
-                    if isinstance(frames_arr, torch.Tensor):
-                        frames_arr = frames_arr.detach().cpu().numpy()
+    # -------------------------------------------------------------------------
+    # Collect a training episode
+    # -------------------------------------------------------------------------
+    def _collect_episode(self):
+        obs = self.env.reset()
+        total_reward = 0
 
-                    # remove singleton extra dim (e.g. (T, 1, C, H, W) -> (T, C, H, W))
-                    if frames_arr.ndim == 5 and frames_arr.shape[1] == 1:
-                        frames_arr = frames_arr.squeeze(1)
+        belief = torch.zeros(1, self.agent.args.belief_size, device=self.device)
+        state = torch.zeros(1, self.agent.args.state_size, device=self.device)
+        action = torch.zeros(1, self.action_size, device=self.device)
 
-                    # Save with unique name per episode
-                    save_video(frames_arr, self.results_dir, f"episode_{episode}")
+        for _ in range(self.max_episode_steps // self.action_repeat):
+            belief, state = self.agent.infer_state(
+                obs.to(self.device), action, belief, state
+            )
+            action = self.agent.select_action((belief, state), deterministic=False)
 
-        print("Training completed!")
-        return self.results_dir
+            next_obs, reward, done = self.env.step(action.cpu())
 
-    def save_checkpoint(self, episode):
-        """Save model checkpoint."""
-        checkpoint = {
+            self.replay.append(next_obs, action.cpu(), reward, done)
+            total_reward += reward
+            obs = next_obs
+
+            if done:
+                break
+
+        return total_reward
+
+    # -------------------------------------------------------------------------
+    # Save grid reconstruction using make_grid + save_image
+    # -------------------------------------------------------------------------
+    def _save_reconstruction(self):
+        """Save last batch of reconstructed frames for debugging."""
+        obs = self.env.reset().unsqueeze(0).to(self.device)
+        belief = torch.zeros(1, self.agent.args.belief_size, device=self.device)
+        state = torch.zeros(1, self.agent.args.state_size, device=self.device)
+        action = torch.zeros(1, self.action_size, device=self.device)
+
+        belief, state = self.agent.infer_state(obs, action, belief, state)
+        recon = self.agent.observation_model(belief, state).cpu()
+
+        grid = make_grid(torch.cat([obs.cpu(), recon], dim=3), nrow=1)
+        save_image(grid + 0.5, os.path.join(self.results_dir, "reconstruction.png"))
+
+    # -------------------------------------------------------------------------
+    # Evaluation using EnvBatcher + write_video
+    # -------------------------------------------------------------------------
+    def evaluate(self, episodes=5):
+        batch_env = EnvBatcher(
+            type(self.env),  # same env class
+            self.env.init_args,  # args to recreate env
+            self.env.init_kwargs,
+            episodes,
+        )
+
+        frames = []
+        rewards = np.zeros(episodes)
+
+        obs = batch_env.reset()
+
+        belief = torch.zeros(episodes, self.agent.args.belief_size, device=self.device)
+        state = torch.zeros(episodes, self.agent.args.state_size, device=self.device)
+        action = torch.zeros(episodes, self.action_size, device=self.device)
+
+        for _ in tqdm.tqdm(range(self.max_episode_steps // self.action_repeat)):
+            belief, state = self.agent.infer_state(
+                obs.to(self.device), action, belief, state
+            )
+            action = self.agent.select_action((belief, state), deterministic=True)
+
+            next_obs, reward, done = batch_env.step(action.cpu())
+            rewards += reward.numpy()
+
+            # write video frames
+            recon = self.agent.observation_model(belief, state).cpu()
+            frame = make_grid(torch.cat([obs, recon], dim=3) + 0.5, nrow=5)
+            frames.append(frame.numpy())
+
+            obs = next_obs
+            if done.sum().item() == episodes:
+                break
+
+        write_video(frames, "eval_rollout", self.results_dir)
+        batch_env.close()
+
+        avg_reward = rewards.mean()
+        print(f"[Eval] Reward = {avg_reward}")
+
+        return avg_reward
+
+    # -------------------------------------------------------------------------
+    # Save model checkpoint
+    # -------------------------------------------------------------------------
+    def _save_checkpoint(self, epoch):
+        ckpt = {
             "transition_model": self.agent.transition_model.state_dict(),
             "observation_model": self.agent.observation_model.state_dict(),
             "reward_model": self.agent.reward_model.state_dict(),
             "encoder": self.agent.encoder.state_dict(),
             "actor_model": self.agent.actor_model.state_dict(),
             "value_model": self.agent.value_model.state_dict(),
-            "world_optimizer": self.agent.world_optimizer.state_dict(),
-            "actor_optimizer": self.agent.actor_optimizer.state_dict(),
-            "value_optimizer": self.agent.value_optimizer.state_dict(),
-            "episode": episode,
-            "config": self.config._asdict(),
         }
 
-        checkpoint_path = os.path.join(self.results_dir, f"checkpoint_{episode}.pth")
-        torch.save(checkpoint, checkpoint_path)
-        print(f"Checkpoint saved: {checkpoint_path}")
-
-    def load_checkpoint(self, checkpoint_path):
-        """Load model checkpoint."""
-        checkpoint = torch.load(checkpoint_path, map_location=self.device)
-
-        self.agent.transition_model.load_state_dict(checkpoint["transition_model"])
-        self.agent.observation_model.load_state_dict(checkpoint["observation_model"])
-        self.agent.reward_model.load_state_dict(checkpoint["reward_model"])
-        self.agent.encoder.load_state_dict(checkpoint["encoder"])
-        self.agent.actor_model.load_state_dict(checkpoint["actor_model"])
-        self.agent.value_model.load_state_dict(checkpoint["value_model"])
-
-        if "world_optimizer" in checkpoint:
-            self.agent.world_optimizer.load_state_dict(checkpoint["world_optimizer"])
-            self.agent.actor_optimizer.load_state_dict(checkpoint["actor_optimizer"])
-            self.agent.value_optimizer.load_state_dict(checkpoint["value_optimizer"])
-
-        print(f"Checkpoint loaded from episode {checkpoint.get('episode', 'unknown')}")
-
-    def close(self):
-        """Clean up resources."""
-        self.env.close()
+        path = os.path.join(self.results_dir, f"model_{epoch}.pth")
+        torch.save(ckpt, path)
+        print(f"[Checkpoint] Saved model at {path}")

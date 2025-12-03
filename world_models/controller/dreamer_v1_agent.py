@@ -1,26 +1,19 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.distributions import Independent, Normal
+from torch.distributions.kl import kl_divergence
 from copy import deepcopy
 import cv2
-import numpy as np
-import torch
-from torch import nn, optim
-from torch.distributions import Normal
-from torch.distributions.independent import Independent
-from torch.distributions.kl import kl_divergence
-from torch.nn import functional as F
-from tqdm import tqdm
-from world_models.utils.utils import bottle, cal_returns
-from world_models.vision.dreamer_v1_encoder import Encoder
+from world_models.controller.dreamer_v1_transition import TransitionModel
 from world_models.observations.dreamer_v1_obs import ObservationModel
 from world_models.reward.dreamer_v1_reward import RewardModel
-from world_models.controller.dreamer_v1_transition import TransitionModel
 from world_models.reward.dreamer_v1_value import ValueModel
-from world_models.controller.dreamer_v1_actor import ActorModel
+from world_models.vision.dreamer_v1_encoder import Encoder
 from world_models.controller.dreamer_v1_pcont import PCONTModel
-
-
-def count_vars(module):
-    """count parameters number of module"""
-    return sum([np.prod(p.shape) for p in module.parameters()])
+from world_models.controller.dreamer_v1_actor import ActorModel
+from world_models.utils.dreamer_utils import bottle, cal_returns
 
 
 class Dreamer:
@@ -31,7 +24,6 @@ class Dreamer:
         """
         super().__init__()
         self.args = args
-        # Initialise model parameters randomly
         self.transition_model = TransitionModel(
             args.belief_size,
             args.state_size,
@@ -79,7 +71,6 @@ class Dreamer:
         for p in self.target_value_model.parameters():
             p.requires_grad = False
 
-        # setup the paras to update
         self.world_param = (
             list(self.transition_model.parameters())
             + list(self.observation_model.parameters())
@@ -89,36 +80,30 @@ class Dreamer:
         if args.pcont:
             self.world_param += list(self.pcont_model.parameters())
 
-        # setup optimizer
         self.world_optimizer = optim.Adam(self.world_param, lr=args.world_lr)
         self.actor_optimizer = optim.Adam(
             self.actor_model.parameters(), lr=args.actor_lr
         )
         self.value_optimizer = optim.Adam(
-            self.value_model.parameters(), lr=args.value_lr
+            list(self.value_model.parameters()), lr=args.value_lr
         )
 
-        # setup the free_nat
-        self.free_nats = torch.tensor([args.free_nats]).to(device=args.device)
+        self.free_nats = torch.full(
+            (1,), args.free_nats, dtype=torch.float32, device=args.device
+        )  # Allowed deviation in KL divergence
 
     def process_im(self, image):
-        # Resize, put channel first, convert it to a tensor, centre it to [-0.5, 0.5] and add batch dimenstion.
 
         def preprocess_observation_(observation, bit_depth):
-            # Preprocesses an observation inplace (from float32 Tensor [0, 255] to [-0.5, 0.5])
-            observation.div_(2 ** (8 - bit_depth)).floor_().div_(2**bit_depth).sub_(
-                0.5
-            )  # Quantise to given bit depth and centre
-            observation.add_(
-                torch.rand_like(observation).div_(2**bit_depth)
-            )  # Dequantise (to approx. match likelihood of PDF of continuous images vs. PMF of discrete images)
+            observation.div_(2 ** (8 - bit_depth)).floor_().div_(2**bit_depth).sub_(0.5)
+            observation.add_(torch.rand_like(observation).div_(2**bit_depth))
 
         image = torch.tensor(
             cv2.resize(image, (64, 64), interpolation=cv2.INTER_LINEAR).transpose(
                 2, 0, 1
             ),
             dtype=torch.float32,
-        )  # Resize and put channel first
+        )
 
         preprocess_observation_(image, self.args.bit_depth)
         return image.unsqueeze(dim=0)
@@ -128,299 +113,273 @@ class Dreamer:
             beliefs,
             prior_states,
             prior_means,
-            prior_std,
-            post_states,
-            post_means,
-            post_std_devs,
+            prior_std_devs,
+            posterior_states,
+            posterior_means,
+            posterior_std_devs,
         ) = state
-        obs, rewards, nonterms = data
+        observations, rewards, nonterminals = data
 
-        obs_pred = bottle(self.observation_model, beliefs, post_states)
-
-        recon_loss_unmasked = ((obs_pred - obs) ** 2).sum(
-            dim=(2, 3, 4) if not self.args.symbolic else 2
+        observation_loss = (
+            F.mse_loss(
+                bottle(self.observation_model, (beliefs, posterior_states)),
+                observations,
+                reduction="none",
+            )
+            .sum(dim=2 if self.args.symbolic else (2, 3, 4))
+            .mean(dim=(0, 1))
         )
 
-        mask = nonterms.squeeze(-1)  # -> [T, B]
+        reward_loss = F.mse_loss(
+            bottle(self.reward_model, (beliefs, posterior_states)),
+            rewards,
+            reduction="none",
+        ).mean(
+            dim=(0, 1)
+        )  # TODO: 5
 
-        if mask.shape != recon_loss_unmasked.shape:
-            mask = mask.expand_as(recon_loss_unmasked)
-
-        obs_loss = (recon_loss_unmasked * mask).sum() / mask.sum().clamp(min=1)
-
-        # Reward prediction loss
-        rew_pred = bottle(self.reward_model, beliefs, post_states)
-        rew_loss = F.mse_loss(rew_pred, rewards, reduction="none")
-        rew_loss = (rew_loss * mask).sum() / mask.sum().clamp(min=1)
-
-        # KL loss
-        prior = Independent(Normal(prior_means, prior_std), 1)
-        post = Independent(Normal(post_means, post_std_devs), 1)
-
-        kl = kl_divergence(post, prior)
-        kl = torch.max(kl, self.free_nats)  # free nats before averaging
-        kl_loss = kl.mean()
+        kl_loss = torch.max(
+            kl_divergence(
+                Independent(Normal(posterior_means, posterior_std_devs), 1),
+                Independent(Normal(prior_means, prior_std_devs), 1),
+            ),
+            self.free_nats,
+        ).mean(dim=(0, 1))
 
         if self.args.pcont:
-            pcont_pred = bottle(self.pcont_model, beliefs, post_states)
-            # pcont_pred shape: [T*B] needs to be reshaped to [T, B]
-            pcont_target = self.args.discount * nonterms.squeeze(-1)  # [L, B]
-            pcont_loss = F.binary_cross_entropy(pcont_pred, pcont_target)
-        else:
-            pcont_loss = torch.tensor(0.0, device=self.args.device)
-
-        total = (
-            obs_loss
-            + self.args.reward_scale * rew_loss
-            + kl_loss
-            + self.args.pcont_scale * pcont_loss
+            pcont_loss = F.binary_cross_entropy(
+                bottle(self.pcont_model, (beliefs, posterior_states)), nonterminals
+            )
+        return (
+            observation_loss,
+            self.args.reward_scale * reward_loss,
+            kl_loss,
+            (self.args.pcont_scale * pcont_loss if self.args.pcont else 0),
         )
-        return total, obs_loss, rew_loss, kl_loss, pcont_loss
 
     def _compute_loss_actor(self, imag_beliefs, imag_states, imag_ac_logps=None):
-        values = bottle(self.value_model, imag_beliefs, imag_states)  # [H+1, B]
-
-        # Predict rewards for steps 1 to H (no reward at t=0)
-        rewards = bottle(self.reward_model, imag_beliefs[1:], imag_states[1:])  # [H, B]
-
-        # Predict continuation probability (pcont)
-        if self.args.pcont:
-            pcont = bottle(
-                self.pcont_model, imag_beliefs[1:], imag_states[1:]
-            )  # [H, B]
-        else:
-            pcont = self.args.discount * torch.ones_like(rewards)
-
-        # Bootstrap value from the last imagined state
-        bootstrap = values[-1]  # [1, B] — value of final state
-
-        # Compute lambda-returns using your correct cal_returns function
-        lambda_returns = cal_returns(
-            reward=rewards.unsqueeze(-1),  # [H, B, 1]
-            value=values[:-1].unsqueeze(-1),  # [H, B, 1] — values at steps 0 to H-1
-            bootstrap=bootstrap.unsqueeze(-1),  # [1, B, 1]
-            pcont=pcont.unsqueeze(-1).detach(),  # [H, B, 1]
-            lambda_=self.args.disclam,  # λ from config
-        )  # → [H, B, 1]
-
-        # Advantage = lambda_return - value (detach value for stability)
-        advantage = (lambda_returns - values[:-1].unsqueeze(-1)).squeeze(-1).detach()
-
-        # Actor loss: -E[log π(a|s) * A]
-        # imag_logps: [H, B] from imagination
-        # Scale advantage by temperature
-        actor_loss = -(imag_ac_logps * advantage).mean()
-
-        return actor_loss
-
-    def _compute_loss_critic(self, imag_beliefs, imag_states):
-        # Detach inputs to ensure critic loss does not affect world model
-        imag_beliefs = imag_beliefs.detach()
-        imag_states = imag_states.detach()
+        imag_rewards = bottle(self.reward_model, (imag_beliefs, imag_states))
+        imag_values = bottle(self.value_model, (imag_beliefs, imag_states))
 
         with torch.no_grad():
-            # Use the target value model for more stable targets
-            values = bottle(
-                self.target_value_model, imag_beliefs, imag_states
-            )  # [H+1, B]
-            rewards = bottle(
-                self.reward_model, imag_beliefs[1:], imag_states[1:]
-            )  # [H, B]
+            if self.args.pcont:
+                pcont = bottle(self.pcont_model, (imag_beliefs, imag_states))
+            else:
+                pcont = self.args.discount * torch.ones_like(imag_rewards)
+        pcont = pcont.detach()
+
+        if imag_ac_logps is not None:
+            imag_values[1:] -= self.args.temp * imag_ac_logps
+
+        returns = cal_returns(
+            imag_rewards[:-1],
+            imag_values[:-1],
+            imag_values[-1],
+            pcont[:-1],
+            lambda_=self.args.disclam,
+        )
+
+        discount = torch.cumprod(
+            torch.cat([torch.ones_like(pcont[:1]), pcont[:-2]], 0), 0
+        ).detach()
+
+        actor_loss = -torch.mean(discount * returns)
+        return actor_loss
+
+    def _compute_loss_critic(self, imag_beliefs, imag_states, imag_ac_logps=None):
+
+        with torch.no_grad():
+            target_imag_values = bottle(
+                self.target_value_model, (imag_beliefs, imag_states)
+            )
+            imag_rewards = bottle(self.reward_model, (imag_beliefs, imag_states))
 
             if self.args.pcont:
-                pcont = bottle(
-                    self.pcont_model, imag_beliefs[1:], imag_states[1:]
-                )  # [H, B]
+                pcont = bottle(self.pcont_model, (imag_beliefs, imag_states))
             else:
-                pcont = self.args.discount * torch.ones_like(rewards)
+                pcont = self.args.discount * torch.ones_like(imag_rewards)
 
-            bootstrap = values[-1]  # [1, B] — value of final state
+            if imag_ac_logps is not None:
+                target_imag_values[1:] -= self.args.temp * imag_ac_logps
 
-            lambda_returns = cal_returns(
-                reward=rewards.unsqueeze(-1),  # [H, B, 1]
-                value=values[:-1].unsqueeze(-1),  # [H, B, 1] — values at steps 0 to H-1
-                bootstrap=bootstrap.unsqueeze(-1),  # [1, B, 1]
-                pcont=pcont.unsqueeze(-1),  # [H, B, 1]
-                lambda_=self.args.disclam,  # λ from config
-            ).squeeze(
-                -1
-            )  # → [H, B]
+        returns = cal_returns(
+            imag_rewards[:-1],
+            target_imag_values[:-1],
+            target_imag_values[-1],
+            pcont[:-1],
+            lambda_=self.args.disclam,
+        )
+        target_return = returns.detach()
 
-        # Value loss: MSE between predicted values (at steps 0 to H-1) and lambda targets
-        values_pred = bottle(self.value_model, imag_beliefs[:-1], imag_states[:-1])
-        critic_loss = F.mse_loss(values_pred, lambda_returns.detach())
+        value_pred = bottle(self.value_model, (imag_beliefs, imag_states))[:-1]
 
-        return critic_loss
+        value_loss = F.mse_loss(value_pred, target_return, reduction="none").mean(
+            dim=(0, 1)
+        )
 
-    def _latent_imagination(self, beliefs, posterior_means, with_logprob=False):
-        # Rollout to generate imagined trajectories
+        return value_loss
 
-        # we always start from the final posterior state of the real-sequence
-        start_belief = beliefs[-1]  # [B, D]
-        start_state = posterior_means[-1]  # [B, S]
+    def _latent_imagination(self, beliefs, posterior_states, with_logprob=False):
 
-        imag_beliefs = [start_belief]
-        imag_states = [start_state]
-        imag_logps = [] if with_logprob else None
+        chunk_size, batch_size, _ = list(posterior_states.size())
+        flatten_size = chunk_size * batch_size
 
-        for _ in range(self.args.planning_horizon):
-            action, logp = self.actor_model(
-                imag_beliefs[-1],
-                imag_states[-1],
+        posterior_states = posterior_states.detach().reshape(flatten_size, -1)
+        beliefs = beliefs.detach().reshape(flatten_size, -1)
+
+        imag_beliefs, imag_states, imag_ac_logps = [beliefs], [posterior_states], []
+
+        for i in range(self.args.planning_horizon):
+            imag_action, imag_ac_logp = self.actor_model(
+                imag_beliefs[-1].detach(),
+                imag_states[-1].detach(),
                 deterministic=False,
                 with_logprob=with_logprob,
             )
+            imag_action = imag_action.unsqueeze(dim=0)
+
+            imag_belief, imag_state, _, _ = self.transition_model(
+                imag_states[-1], imag_action, imag_beliefs[-1]
+            )
+            imag_beliefs.append(imag_belief.squeeze(dim=0))
+            imag_states.append(imag_state.squeeze(dim=0))
 
             if with_logprob:
-                imag_logps.append(logp)
+                imag_ac_logps.append(imag_ac_logp.squeeze(dim=0))
 
-            action_seq = action.unsqueeze(0)
-
-            belief_seq, _, prior_means, _ = self.transition_model(
-                prev_state=imag_states[-1],  # [B, S]
-                actions=action_seq,  # [1, B, A]
-                prev_belief=imag_beliefs[-1],  # [B, D]
-                observations=None,
-                nonterminals=None,
-            )
-
-            next_belief = belief_seq[0]
-            next_state = prior_means[0]
-
-            imag_beliefs.append(next_belief)
-            imag_states.append(next_state)
-
-        imag_beliefs = torch.stack(imag_beliefs, dim=0)  # [H+1, B, D]
-        imag_states = torch.stack(imag_states, dim=0)
+        imag_beliefs = torch.stack(imag_beliefs, dim=0).to(self.args.device)
+        imag_states = torch.stack(imag_states, dim=0).to(self.args.device)
 
         if with_logprob:
-            imag_logps = torch.stack(imag_logps, dim=0)  # [H, B]
-            return imag_beliefs, imag_states, imag_logps
+            imag_ac_logps = torch.stack(imag_ac_logps, dim=0).to(self.args.device)
 
-        return imag_beliefs, imag_states, None
+        return imag_beliefs, imag_states, imag_ac_logps if with_logprob else None
 
-    def select_action(self, belief, state, deterministic=False):
-        """
-        Select an action given observation, belief, and state.
-        """
-        act, _ = self.actor_model(
-            belief, state, deterministic=deterministic, with_logprob=False
+    def update_parameters(self, data):
+        observations, actions, rewards, nonterminals = data
+
+        init_belief = torch.zeros(
+            self.args.batch_size, self.args.belief_size, device=self.args.device
         )
-        return act
-
-    def infer_state(self, observation, belief, state, action):
-        """
-        Infer updated belief and state from observation, previous belief/state, and action.
-        Uses the transition model to perform posterior update.
-        """
-        enc = self.encoder(observation).unsqueeze(0)
-        act = action.unsqueeze(0)
-        nt = torch.ones(observation.shape[0], 1, device=self.args.device).unsqueeze(0)
-
-        # Update belief/state using posterior
-        beliefs, _, _, _, post_states, _, _ = self.transition_model(
-            state, act, belief, enc, nt
+        init_state = torch.zeros(
+            self.args.batch_size, self.args.state_size, device=self.args.device
         )
-        return beliefs.squeeze(0), post_states.squeeze(0)
 
-    def _soft_update(self):
-        """
-        Docstring for _soft_update
+        (
+            beliefs,
+            prior_states,
+            prior_means,
+            prior_std_devs,
+            posterior_states,
+            posterior_means,
+            posterior_std_devs,
+        ) = self.transition_model(
+            init_state,
+            actions,
+            init_belief,
+            bottle(self.encoder, (observations,)),
+            nonterminals,
+        )  # TODO: 4
 
-        :param self: Description
-        """
-        tau = self.args.tau  # Use tau from args
-        for p, tp in zip(
-            self.value_model.parameters(), self.target_value_model.parameters()
-        ):
-            tp.data.mul_(1 - tau)
-            tp.data.add_(tau * p.data)
-
-    def update_parameters(self, batch, gradient_steps):
-        obs, actions, rewards, nonterms = batch
-        loss_log = []
-        for _ in tqdm(range(gradient_steps)):
-            init_belief = torch.zeros(
-                self.args.batch_size, self.args.belief_size, device=self.args.device
-            )
-            init_state = torch.zeros(
-                self.args.batch_size, self.args.state_size, device=self.args.device
-            )
-
-            (
+        world_model_loss = self._compute_loss_world(
+            state=(
                 beliefs,
                 prior_states,
                 prior_means,
                 prior_std_devs,
-                post_states,
-                post_means,
-                post_std_devs,
-            ) = self.transition_model(
-                init_state,
-                actions,
-                init_belief,
-                bottle(self.encoder, obs),
-                nonterms,
-            )
+                posterior_states,
+                posterior_means,
+                posterior_std_devs,
+            ),
+            data=(observations, rewards, nonterminals),
+        )
+        observation_loss, reward_loss, kl_loss, pcont_loss = world_model_loss
+        self.world_optimizer.zero_grad()
+        (observation_loss + reward_loss + kl_loss + pcont_loss).backward()
+        nn.utils.clip_grad_norm_(
+            self.world_param, self.args.grad_clip_norm, norm_type=2
+        )
+        self.world_optimizer.step()
 
-            world_total, obs_loss, rew_loss, kl_loss, pcont_loss = (
-                self._compute_loss_world(
-                    state=(
-                        beliefs,
-                        prior_states,
-                        prior_means,
-                        prior_std_devs,
-                        post_states,
-                        post_means,
-                        post_std_devs,
-                    ),
-                    data=(obs, rewards, nonterms),
-                )
-            )
+        for p in self.world_param:
+            p.requires_grad = False
+        for p in self.value_model.parameters():
+            p.requires_grad = False
 
-            self.world_optimizer.zero_grad()
-            world_total.backward()
-            nn.utils.clip_grad_norm_(self.world_param, self.args.grad_clip_norm)
-            self.world_optimizer.step()
+        imag_beliefs, imag_states, imag_ac_logps = self._latent_imagination(
+            beliefs, posterior_states, with_logprob=self.args.with_logprob
+        )
 
-            imag_b, imag_s, imag_logps = self._latent_imagination(
-                beliefs, post_means, with_logprob=True
-            )
+        actor_loss = self._compute_loss_actor(
+            imag_beliefs, imag_states, imag_ac_logps=imag_ac_logps
+        )
 
-            imag_b = imag_b.detach()
-            imag_s = imag_s.detach()
+        self.actor_optimizer.zero_grad()
+        actor_loss.backward()
+        nn.utils.clip_grad_norm_(
+            self.actor_model.parameters(), self.args.grad_clip_norm, norm_type=2
+        )
+        self.actor_optimizer.step()
 
-            # ===== 4. Actor update =====
-            actor_loss = self._compute_loss_actor(imag_b, imag_s, imag_logps)
-            self.actor_optimizer.zero_grad()
-            actor_loss.backward()
-            nn.utils.clip_grad_norm_(
-                self.actor_model.parameters(), self.args.grad_clip_norm
-            )
-            self.actor_optimizer.step()
+        for p in self.world_param:
+            p.requires_grad = True
+        for p in self.value_model.parameters():
+            p.requires_grad = True
 
-            # ===== 5. Critic update =====
-            # The critic loss is calculated using the same trajectory but with detached states
-            critic_loss = self._compute_loss_critic(imag_b, imag_s)
-            self.value_optimizer.zero_grad()
-            critic_loss.backward()
-            nn.utils.clip_grad_norm_(
-                self.value_model.parameters(), self.args.grad_clip_norm
-            )
-            self.value_optimizer.step()
+        imag_beliefs = imag_beliefs.detach()
+        imag_states = imag_states.detach()
 
-            # ===== 6. Soft update target value =====
-            self._soft_update()
+        critic_loss = self._compute_loss_critic(
+            imag_beliefs, imag_states, imag_ac_logps=imag_ac_logps
+        )
 
-            loss_log.append(
-                [
-                    float(obs_loss.detach()),
-                    float(rew_loss.detach()),
-                    float(kl_loss.detach()),
-                    float(pcont_loss.detach()),
-                    float(actor_loss.detach()),
-                    float(critic_loss.detach()),
-                ]
-            )
+        self.value_optimizer.zero_grad()
+        critic_loss.backward()
+        nn.utils.clip_grad_norm_(
+            self.value_model.parameters(), self.args.grad_clip_norm, norm_type=2
+        )
+        self.value_optimizer.step()
 
-        return loss_log
+        with torch.no_grad():
+            for p, p_t in zip(
+                self.value_model.parameters(), self.target_value_model.parameters()
+            ):
+                p_t.data.mul_(0.99)
+                p_t.data.add_((1 - 0.99) * p.data)
+
+        loss_info = [
+            observation_loss.item(),
+            reward_loss.item(),
+            kl_loss.item(),
+            pcont_loss.item() if self.args.pcont else 0,
+            actor_loss.item(),
+            critic_loss.item(),
+        ]
+        return loss_info
+
+    def infer_state(self, observation, action, belief=None, state=None):
+        """Infer belief over current state q(s_t|o≤t,a<t) from the history,
+        return updated belief and posterior_state at time t
+        returned shape: belief/state [belief/state_dim] (remove the time_dim)
+        """
+        belief, _, _, _, posterior_state, _, _ = self.transition_model(
+            state,
+            action.unsqueeze(dim=0),
+            belief,
+            self.encoder(observation).unsqueeze(dim=0),
+        )
+
+        belief, posterior_state = belief.squeeze(dim=0), posterior_state.squeeze(dim=0)
+
+        return belief, posterior_state
+
+    def select_action(self, state, deterministic=False):
+        belief, posterior_state = state
+        action, _ = self.actor_model(
+            belief, posterior_state, deterministic=deterministic, with_logprob=False
+        )
+
+        if not deterministic and not self.args.with_logprob:
+            action = Normal(action, self.args.expl_amount).rsample()
+            action = torch.clamp(action, -1, 1)
+        return action

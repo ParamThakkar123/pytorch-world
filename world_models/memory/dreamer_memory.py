@@ -1,6 +1,9 @@
 import numpy as np
 import torch
-from world_models.utils.utils import preprocess_img, postprocess_img
+from world_models.utils.dreamer_utils import (
+    postprocess_observation,
+    preprocess_observation_,
+)
 
 
 class ExperienceReplay:
@@ -29,10 +32,10 @@ class ExperienceReplay:
         if self.symbolic_env:
             self.observations[self.idx] = observation.numpy()
         else:
-            self.observations[self.idx] = postprocess_img(
-                observation.detach().numpy(), self.bit_depth
-            )
-        self.actions[self.idx] = action.detach().numpy()
+            self.observations[self.idx] = postprocess_observation(
+                observation.numpy(), self.bit_depth
+            )  # Decentre and discretise visual observations (to save memory)
+        self.actions[self.idx] = action.numpy()
         self.rewards[self.idx] = reward
         self.nonterminals[self.idx] = not done
         self.idx = (self.idx + 1) % self.size
@@ -54,7 +57,7 @@ class ExperienceReplay:
         vec_idxs = idxs.transpose().reshape(-1)  # Unroll indices
         observations = torch.as_tensor(self.observations[vec_idxs].astype(np.float32))
         if not self.symbolic_env:
-            preprocess_img(
+            preprocess_observation_(
                 observations, self.bit_depth
             )  # Undo discretisation for visual observations
         return (
