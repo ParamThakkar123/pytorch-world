@@ -96,24 +96,24 @@ class TransitionModel(nn.Module):
             else:
                 state = prior_sample
 
-            beliefs = torch.stack(beliefs, dim=0)
-            prior_states = torch.stack(prior_states, dim=0)
-            prior_means = torch.stack(prior_means, dim=0)
-            prior_std_devs = torch.stack(prior_std_devs, dim=0)
+        beliefs = torch.stack(beliefs, dim=0)
+        prior_states = torch.stack(prior_states, dim=0)
+        prior_means = torch.stack(prior_means, dim=0)
+        prior_std_devs = torch.stack(prior_std_devs, dim=0)
 
-            if observations is None:
-                return [beliefs, prior_states, prior_means, prior_std_devs]
+        if observations is None:
+            return [beliefs, prior_states, prior_means, prior_std_devs]
 
-            post_states = torch.stack(post_states, dim=0)
-            post_means = torch.stack(post_means, dim=0)
-            post_std_devs = torch.stack(post_std_devs, dim=0)
+        post_states = torch.stack(post_states, dim=0)
+        post_means = torch.stack(post_means, dim=0)
+        post_std_devs = torch.stack(post_std_devs, dim=0)
 
-            return [
-                beliefs,
-                prior_states,
-                prior_means,
-                prior_std_devs,
-                post_states,
-                post_means,
-                post_std_devs,
-            ]
+        return [
+            beliefs,
+            prior_states,
+            prior_means,
+            prior_std_devs,
+            post_states,
+            post_means,
+            post_std_devs,
+        ]

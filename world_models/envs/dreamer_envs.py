@@ -4,6 +4,15 @@ import gymnasium as gym
 from world_models.utils.utils import preprocess_img, to_tensor_obs
 from world_models.envs.ale_atari_env import list_available_atari_envs
 
+try:
+    from dm_control import suite
+    from dm_control.suite.wrappers import pixels
+
+    DM_CONTROL_AVAILABLE = True
+except ImportError:
+    DM_CONTROL_AVAILABLE = False
+
+
 # Constants for action repeats (tuned for different environment types)
 ACTION_REPEATS = {
     "cartpole": 8,
@@ -21,6 +30,11 @@ ACTION_REPEATS = {
     "pusher": 4,
     "striker": 4,
     "thrower": 4,
+    # dm_control
+    "ball_in_cup": 8,
+    "cheetah": 4,
+    "finger": 2,
+    "walker": 2,
 }
 
 # List of supported environments
@@ -47,10 +61,24 @@ GYM_ENVS = [
     "Thrower-v4",
 ]
 
+if DM_CONTROL_AVAILABLE:
+    DM_CONTROL_ENVS = [
+        "ball_in_cup-catch",
+        "cartpole-balance",
+        "cartpole-swingup",
+        "cheetah-run",
+        "finger-spin",
+        "reacher-easy",
+        "walker-walk",
+    ]
+else:
+    DM_CONTROL_ENVS = []
+
+
 ATARI_ENVS = list_available_atari_envs()
 print(f"Found {len(ATARI_ENVS)} available Atari environments")
 
-ALL_ENVS = GYM_ENVS + ATARI_ENVS
+ALL_ENVS = GYM_ENVS + ATARI_ENVS + DM_CONTROL_ENVS
 
 
 def _get_action_repeat(env_id):
@@ -86,6 +114,95 @@ def _images_to_observation(image, bit_depth):
     # Preprocess using existing function
     preprocess_img(image_tensor, bit_depth)
     return image_tensor.unsqueeze(0)  # Add batch dimension
+
+
+class DMCEnv:
+    def __init__(
+        self, env, symbolic, seed, max_episode_length, action_repeat, bit_depth
+    ):
+        if not DM_CONTROL_AVAILABLE:
+            raise ImportError(
+                "dm_control not available. Please install with `pip install dm_control`"
+            )
+
+        domain_name, task_name = env
+        self.symbolic = symbolic
+        self._env = suite.load(
+            domain_name=domain_name,
+            task_name=task_name,
+            task_kwargs={"random": seed},
+        )
+
+        if not symbolic:
+            self._env = pixels.Wrapper(
+                self._env,
+                pixels_only=True,
+                render_kwargs={"height": 64, "width": 64, "camera_id": 0},
+            )
+
+        self.max_episode_length = max_episode_length
+        self.action_repeat = action_repeat or _get_action_repeat(domain_name)
+        self.bit_depth = bit_depth
+        self.env_id = f"{domain_name}-{task_name}"
+
+    def reset(self):
+        self.t = 0
+        time_step = self._env.reset()
+        if self.symbolic:
+            observation = torch.tensor(
+                np.concatenate([v.flatten() for v in time_step.observation.values()]),
+                dtype=torch.float32,
+            ).unsqueeze(0)
+        else:
+            observation = _images_to_observation(
+                time_step.observation["pixels"], self.bit_depth
+            )
+        return observation
+
+    def step(self, action):
+        if isinstance(action, torch.Tensor):
+            action = action.detach().cpu().numpy()
+
+        reward = 0
+        for _ in range(self.action_repeat):
+            time_step = self._env.step(action)
+            reward += time_step.reward
+            self.t += 1
+            done = time_step.last() or self.t >= self.max_episode_length
+            if done:
+                break
+
+        if self.symbolic:
+            observation = torch.tensor(
+                np.concatenate([v.flatten() for v in time_step.observation.values()]),
+                dtype=torch.float32,
+            ).unsqueeze(0)
+        else:
+            observation = _images_to_observation(
+                time_step.observation["pixels"], self.bit_depth
+            )
+
+        return observation, reward, done
+
+    def close(self):
+        self._env.close()
+
+    @property
+    def observation_size(self):
+        if self.symbolic:
+            return sum([v.shape[0] for v in self._env.observation_spec().values()])
+        else:
+            return (3, 64, 64)
+
+    @property
+    def action_size(self):
+        return self._env.action_spec().shape[0]
+
+    def sample_random_action(self):
+        spec = self._env.action_spec()
+        return torch.from_numpy(
+            np.random.uniform(spec.minimum, spec.maximum, spec.shape)
+        ).float()
 
 
 class UniversalGymEnv:
@@ -283,6 +400,8 @@ class UniversalGymEnv:
 
 def Env(env, symbolic, seed, max_episode_length, action_repeat, bit_depth):
     """Universal environment factory."""
+    if isinstance(env, tuple):
+        return DMCEnv(env, symbolic, seed, max_episode_length, action_repeat, bit_depth)
     return UniversalGymEnv(
         env, symbolic, seed, max_episode_length, action_repeat, bit_depth
     )
@@ -295,7 +414,12 @@ def is_supported_env(env_id):
 
 def list_supported_envs():
     """List all supported environments."""
-    return {"gym": GYM_ENVS, "atari": ATARI_ENVS, "all": ALL_ENVS}
+    return {
+        "gym": GYM_ENVS,
+        "atari": ATARI_ENVS,
+        "dm_control": DM_CONTROL_ENVS,
+        "all": ALL_ENVS,
+    }
 
 
 # Wrapper for batching environments together

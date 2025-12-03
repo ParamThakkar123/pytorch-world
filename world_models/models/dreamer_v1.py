@@ -317,7 +317,8 @@ class DreamerV1:
 
             # Training update
             if (
-                self.memory.episodes >= self.config.batch_size
+                episode % collect_interval == 0
+                and self.memory.episodes >= self.config.batch_size
             ):  # Changed from len(self.memory)
                 loss_info = []
                 for _ in range(train_steps_per_collect):

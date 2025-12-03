@@ -131,7 +131,7 @@ class Dreamer:
             prior_std,
             post_states,
             post_means,
-            post_std,
+            post_std_devs,
         ) = state
         obs, rewards, nonterms = data
 
@@ -149,7 +149,7 @@ class Dreamer:
 
         # KL loss
         prior = Independent(Normal(prior_means, prior_std), 1)
-        post = Independent(Normal(post_means, post_std), 1)
+        post = Independent(Normal(post_means, post_std_devs), 1)
 
         kl = kl_divergence(post, prior)
         kl = torch.max(kl, self.free_nats)  # free nats before averaging
@@ -158,10 +158,9 @@ class Dreamer:
         if self.args.pcont:
             pcont_pred = bottle(self.pcont_model, beliefs, post_states)
             # pcont_pred shape: [T*B] needs to be reshaped to [T, B]
-            pcont_pred = pcont_pred.view(beliefs.shape[0], beliefs.shape[1])
-            pcont_loss = F.binary_cross_entropy(
-                pcont_pred[:-1], nonterms[:-1].squeeze(-1)
-            )
+            pcont_target = nonterms.squeeze(-1)  # [L, B]
+            pcont_loss = F.binary_cross_entropy(pcont_pred, pcont_target)
+            pcont_loss = pcont_loss * self.args.pcont_scale
         else:
             pcont_loss = torch.tensor(0.0, device=self.args.device)
 
@@ -174,60 +173,64 @@ class Dreamer:
         return total, obs_loss, rew_loss, kl_loss, pcont_loss
 
     def _compute_loss_actor(self, imag_beliefs, imag_states, imag_ac_logps=None):
-        # reward and value prediction of imagined trajectories
-        imag_rewards = bottle(self.reward_model, imag_beliefs, imag_states)
-        imag_values = bottle(self.value_model, imag_beliefs, imag_states)
+        values = bottle(self.value_model, imag_beliefs, imag_states)  # [H+1, B]
 
+        # Predict rewards for steps 1 to H (no reward at t=0)
+        rewards = bottle(self.reward_model, imag_beliefs[1:], imag_states[1:])  # [H, B]
+
+        # Predict continuation probability (pcont)
         if self.args.pcont:
-            pcont = bottle(self.pcont_model, imag_beliefs, imag_states)
+            pcont = bottle(
+                self.pcont_model, imag_beliefs[1:], imag_states[1:]
+            )  # [H, B]
         else:
-            pcont = self.args.discount * torch.ones_like(imag_rewards)
+            pcont = self.args.discount * torch.ones_like(rewards)
 
-        # temperature term
-        if imag_ac_logps is not None:
-            imag_values = imag_values - self.args.temp * imag_ac_logps
+        # Bootstrap value from the last imagined state
+        bootstrap = values[-1]  # [1, B] — value of final state
 
-        returns = cal_returns(
-            imag_rewards[:-1],  # r_1...r_H
-            imag_values[:-1],  # v_1...v_H
-            imag_values[-1],  # bootstrap v_{H+1}
-            pcont[:-1],
-            lambda_=self.args.disclam,
-        )
+        # Compute lambda-returns using your correct cal_returns function
+        lambda_returns = cal_returns(
+            reward=rewards,  # [H, B, 1]
+            value=values[:-1],  # [H, B, 1] — values at steps 0 to H-1
+            bootstrap=bootstrap,  # [1, B, 1]
+            pcont=pcont,  # [H, B, 1]
+            lambda_=self.args.disclam,  # λ from config
+        )  # → [H, B, 1]
 
-        actor_loss = -returns.mean()
+        # Advantage = lambda_return - value (detach value for stability)
+        advantage = lambda_returns - values[:-1].detach()
+
+        # Actor loss: -E[log π(a|s) * A]
+        # imag_logps: [H, B] from imagination
+        actor_loss = -(imag_ac_logps * advantage).mean()
+
         return actor_loss
 
     def _compute_loss_critic(self, imag_beliefs, imag_states, imag_ac_logps=None):
 
-        with torch.no_grad():
-            # calculate the target with the target nn
-            target_imag_values = bottle(
-                self.target_value_model,
-                imag_beliefs,
-                imag_states,
-            )
-            imag_rewards = bottle(self.reward_model, imag_beliefs, imag_states)
+        values = bottle(self.value_model, imag_beliefs, imag_states)  # [H+1, B]
+        rewards = bottle(self.reward_model, imag_beliefs[1:], imag_states[1:])  # [H, B]
 
-            if self.args.pcont:
-                pcont = bottle(self.pcont_model, imag_beliefs, imag_states)
-            else:
-                pcont = self.args.discount * torch.ones_like(imag_rewards)
+        if self.args.pcont:
+            pcont = bottle(
+                self.pcont_model, imag_beliefs[1:], imag_states[1:]
+            )  # [H, B]
+        else:
+            pcont = self.args.discount * torch.ones_like(rewards)
 
-            if imag_ac_logps is not None:
-                target_imag_values = target_imag_values - self.args.temp * imag_ac_logps
+        bootstrap = values[-1]  # [1, B] — value of final state
 
-            returns = cal_returns(
-                imag_rewards[:-1],
-                target_imag_values[:-1],
-                target_imag_values[-1],
-                pcont[:-1],
-                lambda_=self.args.disclam,
-            )
-            target_returns = returns.detach()
+        lambda_returns = cal_returns(
+            reward=rewards,  # [H, B, 1]
+            value=values[:-1],  # [H, B, 1] — values at steps 0 to H-1
+            bootstrap=bootstrap,  # [1, B, 1]
+            pcont=pcont,  # [H, B, 1]
+            lambda_=self.args.disclam,  # λ from config
+        )  # → [H, B, 1]
 
-        value_pred = bottle(self.value_model, imag_beliefs, imag_states)[:-1]
-        critic_loss = F.mse_loss(value_pred, target_returns, reduction="mean")
+        # Value loss: MSE between predicted values (at steps 0 to H-1) and lambda targets
+        critic_loss = F.mse_loss(values[:-1], lambda_returns.detach())
 
         return critic_loss
 
@@ -249,6 +252,9 @@ class Dreamer:
                 deterministic=False,
                 with_logprob=with_logprob,
             )
+
+            if with_logprob:
+                imag_logps.append(logp)
 
             action_seq = action.unsqueeze(0)
 
@@ -313,7 +319,7 @@ class Dreamer:
             tp.data.add_(tau * p.data)
 
     def update_parameters(self, batch, gradient_steps):
-        obs, actions, rewards, nonterm = batch
+        obs, actions, rewards, nonterms = batch
         loss_log = []
         for s in tqdm(range(gradient_steps)):
             init_belief = torch.zeros(
@@ -330,13 +336,13 @@ class Dreamer:
                 prior_std_devs,
                 post_states,
                 post_means,
-                post_std,
+                post_std_devs,
             ) = self.transition_model(
                 init_state,
                 actions,
                 init_belief,
                 bottle(self.encoder, obs),
-                nonterm,
+                nonterms,
             )
 
             world_total, obs_loss, rew_loss, kl_loss, pcont_loss = (
@@ -348,9 +354,9 @@ class Dreamer:
                         prior_std_devs,
                         post_states,
                         post_means,
-                        post_std,
+                        post_std_devs,
                     ),
-                    data=(obs, rewards, nonterm),
+                    data=(obs, rewards, nonterms),
                 )
             )
 
@@ -362,6 +368,11 @@ class Dreamer:
             imag_b, imag_s, imag_logps = self._latent_imagination(
                 beliefs, post_states, self.args.with_logprob
             )
+
+            imag_b = imag_b.detach()
+            imag_s = imag_s.detach()
+            if imag_logps is not None:
+                imag_logps = imag_logps.detach()
 
             # ===== 4. Actor update =====
             actor_loss = self._compute_loss_actor(imag_b, imag_s, imag_logps)
@@ -386,12 +397,12 @@ class Dreamer:
 
             loss_log.append(
                 [
-                    float(obs_loss),
-                    float(rew_loss),
-                    float(kl_loss),
-                    float(pcont_loss),
-                    float(actor_loss),
-                    float(critic_loss),
+                    float(obs_loss.detach()),
+                    float(rew_loss.detach()),
+                    float(kl_loss.detach()),
+                    float(pcont_loss.detach()),
+                    float(actor_loss.detach()),
+                    float(critic_loss.detach()),
                 ]
             )
 
