@@ -1,0 +1,18 @@
+# Add 'agent:dreamer' to any changes within the dreamer agent directory
+agent:dreamer:
+  - world_models/controller/dreamer_v1_*.py
+  - dreamer_v1_eval.py
+
+# Add 'environment' to any changes to environment files
+environment:
+  - world_models/envs/*
+
+# Add 'CI/CD' to any changes to GitHub workflows
+'CI/CD':
+  - .github/workflows/*
+
+# Add 'documentation' to any changes to documentation files
+documentation:
+  - README.md
+  - CITATION.cff
+  - LICENSE
