@@ -11,7 +11,7 @@ README = (
 
 setup(
     name="pytorch-world",
-    version="0.0.1",
+    version="0.1.0",
     description="A Pytorch Based library for training world models",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -21,12 +21,17 @@ setup(
     include_package_data=True,
     python_requires=">=3.13",
     install_requires=[
+        "ale-py>=0.11.2",
         "gym>=0.26.2",
+        "gymnasium>=1.2.2",
+        "mlagents-envs>=0.28.0",
+        "moviepy>=2.2.1",
         "opencv-python>=4.12.0.88",
         "plotly>=6.5.0",
         "pre-commit>=4.5.0",
         "pygame>=2.6.1",
         "tensorboard>=2.20.0",
+        "tensorboardx>=2.6.4",
         "tqdm>=4.67.1",
         "torch>=1.13.0",
         "torchvision>=0.14.0",
