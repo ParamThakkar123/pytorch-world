@@ -59,3 +59,35 @@ def make_humanoid_env(
         include_qfrc_actuator_in_observation=include_qfrc_actuator_in_observation,
         include_cfrc_ext_in_observation=include_cfrc_ext_in_observation,
     )
+
+
+def make_half_cheetah_env(
+    version: str = "v4",
+    forward_reward_weight: float = 0.1,
+    reset_noise_scale: float = 0.1,
+    exclude_current_positions_from_observation: bool = True,
+    render_mode: str = "rgb_array",
+) -> gym.Env:
+    """
+    Create a HalfCheetah environment with customizable parameters.
+
+    Args:
+        version (str): The version of the HalfCheetah environment (e.g., "v4").
+        forward_reward_weight (float): Weight for the forward reward.
+        reset_noise_scale (float): Scale of noise added during environment reset.
+        exclude_current_positions_from_observation (bool): Whether to exclude current positions from observations.
+        render_mode (str): The render mode for the environment.
+
+    Returns:
+        gym.Env: The created HalfCheetah environment.
+    """
+
+    env_id = f"HalfCheetah-{version}"
+
+    return gym.make(
+        env_id,
+        forward_reward_weight=forward_reward_weight,
+        reset_noise_scale=reset_noise_scale,
+        exclude_current_positions_from_observation=exclude_current_positions_from_observation,
+        render_mode=render_mode,
+    )

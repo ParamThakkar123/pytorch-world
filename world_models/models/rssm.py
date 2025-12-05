@@ -96,6 +96,7 @@ class RecurrentStateSpaceModel(nn.Module):
         z = self.act_fn(self.fc_prior_1(h_t))
         m = self.fc_prior_m(z)
         s = F.softplus(self.fc_prior_s(z)) + 0.1
+        s = torch.clamp(s, min=1e-6, max=10.0)
         if sample:
             return m + torch.rand_like(m) * s
         return m, s
@@ -106,6 +107,7 @@ class RecurrentStateSpaceModel(nn.Module):
         z = self.act_fn(self.fc_posterior_1(z))
         m = self.fc_posterior_m(z)
         s = F.softplus(self.fc_posterior_s(z)) + 0.1
+        s = torch.clamp(s, min=1e-6, max=10.0)
         if sample:
             return m + torch.rand_like(m) * s
         return m, s

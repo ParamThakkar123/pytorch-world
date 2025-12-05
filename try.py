@@ -2,7 +2,7 @@ from world_models.models.planet import Planet
 
 p = Planet(
     env="CartPole-v1",
-    bit_depth=5,
+    bit_depth=10,
     headless=True,
     max_episode_steps=100,
     action_repeats=1,
