@@ -690,3 +690,11 @@ class TorchImageEnvWrapper:
         ):
             return int(self.env.spec.max_episode_steps)
         return 1000
+
+
+def apply_masks(x, masks):
+    all_x = []
+    for m in masks:
+        mask_keep = m.unsqueeze(-1).repeat(1, 1, x.shape(-1))
+        all_x += [torch.gather(x, 1, mask_keep)]
+    return torch.cat(all_x, dim=0)
