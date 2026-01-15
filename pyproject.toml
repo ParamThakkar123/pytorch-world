@@ -1,6 +1,6 @@
 [project]
 name = "pytorch-world"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Pytorch Based library for training world models"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -17,6 +17,13 @@ dependencies = [
     "tensorboard>=2.20.0",
     "tensorboardx>=2.6.4",
     "tqdm>=4.67.1",
+]
+license = "MIT"
+keywords = ["world-models", "pytorch"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
 ]
 
 [build-system]
