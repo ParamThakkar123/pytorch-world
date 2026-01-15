@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "ale-py>=0.11.2",
+    "einops>=0.8.1",
     "gym>=0.26.2",
     "gymnasium>=1.2.2",
     "mlagents-envs>=0.28.0",
@@ -14,6 +15,7 @@ dependencies = [
     "plotly>=6.5.0",
     "pre-commit>=4.5.0",
     "pygame>=2.6.1",
+    "scipy>=1.16.3",
     "tensorboard>=2.20.0",
     "tensorboardx>=2.6.4",
     "tqdm>=4.67.1",
