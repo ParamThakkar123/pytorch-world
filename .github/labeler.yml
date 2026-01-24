@@ -1,6 +1,9 @@
 config:
   - world_models/configs/*
 
+environment:
+  - world_models/envs/*
+
 trainer:
   - world_models/training/*
 
