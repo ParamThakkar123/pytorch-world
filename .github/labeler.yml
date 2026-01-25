@@ -45,7 +45,7 @@ vision:
 transforms:
   - world_models/transforms/*
 # Add 'CI/CD' to any changes to GitHub workflows
-'CI/CD':
+CI/CD:
   - .github/workflows/*
 
 # Add 'documentation' to any changes to documentation files

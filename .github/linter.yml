@@ -1,0 +1,51 @@
+name: Check Linted
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check-linted:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+
+      - name: Install flake8
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+
+      - name: Get changed Python files
+        id: changed_files
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+            HEAD="${{ github.sha }}"
+          fi
+          git fetch --no-tags --prune --depth=1 origin $BASE $HEAD || true
+          FILES=$(git diff --name-only $BASE $HEAD | grep -E '\.py$' || true)
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run flake8 on changed files
+        run: |
+          files="${{ steps.changed_files.outputs.files }}"
+          if [ -z "$files" ]; then
+            echo "No Python files changed; skipping flake8."
+            exit 0
+          fi
+          printf "%s\n" "$files"
+          # fail if flake8 reports issues
+          echo "$files" | xargs -r flake8 --count --select=E9,F63,F7,F82 --show-source --statistics
