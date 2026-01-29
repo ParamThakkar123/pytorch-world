@@ -10,7 +10,8 @@ import torch.distributions as distributions
 
 from collections import OrderedDict
 
-from world_models.envs import dreamer_envs as env_wrapper
+import world_models.envs.wrappers as env_wrapper
+from world_models.envs.dmc import DeepMindControl
 from world_models.memory.dreamer_memory import ReplayBuffer
 from world_models.models.dreamer_rssm import RSSM
 from world_models.vision.dreamer_decoder import ConvDecoder, DenseDecoder, ActionDecoder
@@ -23,7 +24,7 @@ os.environ["MUJOCO_GL"] = "egl"
 
 def make_env(args):
 
-    env = env_wrapper.DeepMindControl(args.env, args.seed)
+    env = DeepMindControl(args.env, args.seed)
     env = env_wrapper.ActionRepeat(env, args.action_repeat)
     env = env_wrapper.NormalizeActions(env)
     env = env_wrapper.TimeLimit(env, args.time_limit / args.action_repeat)

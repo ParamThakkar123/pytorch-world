@@ -1,14 +1,51 @@
-# Add 'agent:dreamer' to any changes within the dreamer agent directory
-agent:dreamer:
-  - world_models/controller/dreamer_v1_*.py
-  - dreamer_v1_eval.py
+config:
+  - world_models/configs/*
 
 # Add 'environment' to any changes to environment files
 environment:
   - world_models/envs/*
 
+trainer:
+  - world_models/training/*
+
+controller:
+  - world_models/controller/*
+
+helpers:
+  - world_models/helpers/*
+
+tokenizers:
+  - world_models/tokenizers/*
+
+tests:
+  - tests/*
+  - world_models/testing/*
+
+models:
+  - world_models/models/*
+
+memory:
+  - world_models/memory/*
+
+masks:
+  - world_models/masks/*
+
+reward_functions:
+  - world_models/reward/*
+
+observation_wrappers:
+  - world_models/observations/*
+
+utilities:
+  - world_models/utils/*
+
+vision:
+  - world_models/vision/*
+
+transforms:
+  - world_models/transforms/*
 # Add 'CI/CD' to any changes to GitHub workflows
-'CI/CD':
+CI/CD:
   - .github/workflows/*
 
 # Add 'documentation' to any changes to documentation files

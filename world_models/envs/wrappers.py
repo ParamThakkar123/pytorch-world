@@ -1,58 +1,8 @@
 import gym
+from PIL import Image
 import numpy as np
-
-
-class DeepMindControl:
-
-    def __init__(self, name, seed, size=(64, 64), camera=None):
-
-        domain, task = name.split("-", 1)
-        if domain == "cup":  # Only domain with multiple words.
-            domain = "ball_in_cup"
-        if isinstance(domain, str):
-            from dm_control import suite
-
-            self._env = suite.load(domain, task, task_kwargs={"random": seed})
-        else:
-            assert task is None
-            self._env = domain()
-        self._size = size
-        if camera is None:
-            camera = dict(quadruped=2).get(domain, 0)
-        self._camera = camera
-
-    @property
-    def observation_space(self):
-        spaces = {}
-        for key, value in self._env.observation_spec().items():
-            spaces[key] = gym.spaces.Box(-np.inf, np.inf, value.shape, dtype=np.float32)
-        spaces["image"] = gym.spaces.Box(0, 255, (3,) + self._size, dtype=np.uint8)
-        return gym.spaces.Dict(spaces)
-
-    @property
-    def action_space(self):
-        spec = self._env.action_spec()
-        return gym.spaces.Box(spec.minimum, spec.maximum, dtype=np.float32)
-
-    def step(self, action):
-        time_step = self._env.step(action)
-        obs = dict(time_step.observation)
-        obs["image"] = self.render().transpose(2, 0, 1).copy()
-        reward = time_step.reward or 0
-        done = time_step.last()
-        info = {"discount": np.array(time_step.discount, np.float32)}
-        return obs, reward, done, info
-
-    def reset(self):
-        time_step = self._env.reset()
-        obs = dict(time_step.observation)
-        obs["image"] = self.render().transpose(2, 0, 1).copy()
-        return obs
-
-    def render(self, *args, **kwargs):
-        if kwargs.get("mode", "rgb_array") != "rgb_array":
-            raise ValueError("Only render mode 'rgb_array' is supported.")
-        return self._env.physics.render(*self._size, camera_id=self._camera)
+import datetime
+import uuid
 
 
 class TimeLimit:
@@ -228,7 +178,6 @@ class ResizeImage:
         ]
         print(f'Resizing keys {",".join(self._keys)} to {self._size}.')
         if self._keys:
-            from PIL import Image
 
             self._Image = Image
 
@@ -297,3 +246,24 @@ class RenderImage:
         obs = self._env.reset()
         obs[self._key] = self._env.render("rgb_array")
         return obs
+
+
+class UUID(gym.Wrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        timestamp = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        self.id = f"{timestamp}-{str(uuid.uuid4().hex)}"
+
+    def reset(self):
+        timestamp = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        self.id = f"{timestamp}-{str(uuid.uuid4().hex)}"
+        return self.env.reset()
+
+
+class SelectAction(gym.Wrapper):
+    def __init__(self, env, key):
+        super().__init__(env)
+        self._key = key
+
+    def step(self, action):
+        return self.env.step(action[self._key])

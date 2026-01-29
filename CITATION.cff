@@ -3,8 +3,8 @@ preferred-citation:
   authors:
     - family-names: Thakkar
       given-names: Param
-  title: "GitHub - ParamThakkar123/pytorch-world: A modular PyTorch library designed for learning, training, and deploying world models across various environments."
+  title: "GitHub - ParamThakkar123/torchwm: A modular PyTorch library designed for learning, training, and deploying world models across various environments."
   year: 2025
-  url: "https://github.com/ParamThakkar123/pytorch-world"
+  url: "https://github.com/ParamThakkar123/torchwm"
   publisher: "GitHub"
   journal: "GitHub"
