@@ -1,7 +1,7 @@
 [project]
-name = "pytorch-world"
-version = "0.2.0"
-description = "A Pytorch Based library for training world models"
+name = "torchwm"
+version = "0.2.1"
+description = "A Modular Pytorch Based library for training world models"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -10,16 +10,24 @@ dependencies = [
     "gymnasium>=1.2.2",
     "mlagents-envs>=0.28.0",
     "moviepy>=2.2.1",
+    "myst-parser>=5.0.0",
+    "nbsphinx>=0.9.8",
     "opencv-python>=4.12.0.88",
     "plotly>=6.5.0",
     "pre-commit>=4.5.0",
     "pygame>=2.6.1",
+    "sphinx>=9.1.0",
+    "sphinx-autodoc-typehints>=3.6.2",
+    "sphinx-copybutton>=0.5.2",
+    "sphinx-rtd-theme>=3.1.0",
+    "sphinxcontrib-bibtex>=2.6.5",
+    "sphinxext-opengraph>=0.13.0",
     "tensorboard>=2.20.0",
     "tensorboardx>=2.6.4",
     "tqdm>=4.67.1",
 ]
 license = "MIT"
-keywords = ["world-models", "pytorch"]
+keywords = ["world-models", "pytorch", "mbrl"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",

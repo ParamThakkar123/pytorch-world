@@ -1,6 +1,6 @@
-# Contributing to pytorch-world
+# Contributing to TorchWM
 
-We welcome contributions to pytorch-world! This document outlines the guidelines for contributing to the project.
+We welcome contributions to torchwm! This document outlines the guidelines for contributing to the project.
 
 ## Ways to Contribute
 
@@ -12,8 +12,8 @@ We welcome contributions to pytorch-world! This document outlines the guidelines
 
 1. Fork the repository and clone your fork:
    ```bash
-   git clone https://github.com/your-username/pytorch-world.git
-   cd pytorch-world
+   git clone https://github.com/your-username/torchwm.git
+   cd torchwm
    ```
 
 2. Install dependencies in editable mode with development extras:

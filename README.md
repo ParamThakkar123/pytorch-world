@@ -1,4 +1,4 @@
-# pytorch-world
+# TorchWM
 
 A modular PyTorch library for learning, training, and deploying world models across various environments. This package provides minimal implementations of popular world model algorithms, enabling researchers and developers to experiment with predictive modeling in reinforcement learning and beyond.
 
@@ -22,14 +22,14 @@ A modular PyTorch library for learning, training, and deploying world models acr
 
 ### Install from PyPI
 ```bash
-pip install pytorch-world
+pip install torchwm
 ```
 
 ### Install from Source
 Clone the repository and install in editable mode:
 ```bash
-git clone https://github.com/ParamThakkar123/pytorch-world.git
-cd pytorch-world
+git clone https://github.com/ParamThakkar123/torchwm.git
+cd torchwm
 pip install -e .
 ```
 
@@ -82,7 +82,7 @@ model = WorldModel(obs_dim=env.obs_dim, act_dim=env.act_dim)
 
 ## Documentation
 
-For detailed API documentation, see the [Wiki](https://github.com/ParamThakkar123/pytorch-world/wiki) or docstrings in the source code.
+For detailed API documentation, see the [Wiki](https://github.com/ParamThakkar123/torchwm/wiki) or docstrings in the source code.
 
 ## Contributing
 
@@ -100,12 +100,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you use this library for your research, please cite:
 
 ```bibtex
-@misc{Thakkar_GitHub_-_ParamThakkar123_pytorch-world,
+@misc{Thakkar_GitHub_-_ParamThakkar123_torchwm,
 author = {Thakkar, Param},
-title = {{GitHub - ParamThakkar123/pytorch-world: A modular PyTorch library designed for learning, training, and deploying world models across various environments.}},
+title = {{GitHub - ParamThakkar123/torchwm: A modular PyTorch library designed for learning, training, and deploying world models across various environments.}},
 year = {2025},
-url = {https://github.com/ParamThakkar123/pytorch-world}
+url = {https://github.com/ParamThakkar123/torchwm}
 }
 ```
 
-Package link: [Pytorch-World](https://pypi.org/project/pytorch-world/)
+Package link: [TorchWM](https://pypi.org/project/torchwm/)

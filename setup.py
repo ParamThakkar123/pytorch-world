@@ -10,7 +10,7 @@ README = (
 )
 
 setup(
-    name="pytorch-world",
+    name="torchwm",
     version="0.1.0",
     description="A Pytorch Based library for training world models",
     long_description=README,
