@@ -99,11 +99,13 @@ class GymImageEnv:
             self._action_space = gym.spaces.Box(
                 low=-1.0, high=1.0, shape=(self._discrete_n,), dtype=np.float32
             )
-            self._action_space.sample = self._sample_discrete_action  # type: ignore[assignment, method-assign]
+            self._action_space.sample = self._sample_discrete_action
 
         self._seed_spaces(seed)
         self._state_space = (
-            infer_state_space_from_observation_space(getattr(self._env, "observation_space", None))
+            infer_state_space_from_observation_space(
+                getattr(self._env, "observation_space", None)
+            )
             if self._include_state
             else None
         )
@@ -358,7 +360,7 @@ class GymImageEnv:
         )
         info["action"] = np.asarray(model_action, dtype=np.float32).copy()
         info["executed_action"] = (
-            int(native_action)
+            int(np.asarray(native_action).item())
             if np.isscalar(native_action)
             else np.asarray(native_action, dtype=np.float32).copy()
         )
@@ -382,4 +384,3 @@ class GymImageEnv:
     def close(self) -> None:
         if hasattr(self._env, "close"):
             self._env.close()
-

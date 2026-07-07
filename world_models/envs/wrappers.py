@@ -102,7 +102,9 @@ class FrameStack:
     def _stack_observation(self, obs: dict[str, Any]) -> dict[str, Any]:
         image = np.asarray(obs["image"], dtype=np.uint8)
         if image.ndim != 3:
-            raise ValueError("FrameStack expects image observations with shape (C, H, W).")
+            raise ValueError(
+                "FrameStack expects image observations with shape (C, H, W)."
+            )
         stacked = np.concatenate(list(self._frames), axis=0)
         out = dict(obs)
         out["image"] = stacked.copy()
@@ -182,13 +184,17 @@ class NormalizeActions:
             np.ones_like(self._high, dtype=np.float32),
         )
         original = (normalized + 1.0) / 2.0 * (self._high - self._low) + self._low
-        original = np.where(self._mask, original, normalized).astype(np.float32, copy=False)
+        original = np.where(self._mask, original, normalized).astype(
+            np.float32, copy=False
+        )
         obs, reward, done, info = self._env.step(original)
         info = dict(info or {})
         if "action" in info and "executed_action" not in info:
             existing = info["action"]
             info["executed_action"] = (
-                int(existing) if np.isscalar(existing) else np.asarray(existing).copy()
+                int(np.asarray(existing).item())
+                if np.isscalar(existing)
+                else np.asarray(existing).copy()
             )
         info["action"] = normalized.copy()
         return obs, reward, done, info
@@ -240,8 +246,10 @@ class OneHotAction:
         self._env = env
         self._random = np.random.default_rng()
         shape = (self._env.action_space.n,)
-        self._action_space = gym.spaces.Box(low=0, high=1, shape=shape, dtype=np.float32)
-        self._action_space.sample = self._sample_action  # type: ignore[method-assign, assignment]
+        self._action_space = gym.spaces.Box(
+            low=0, high=1, shape=shape, dtype=np.float32
+        )
+        self._action_space.sample = self._sample_action
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._env, name)
@@ -429,4 +437,3 @@ class SelectAction(gym.Wrapper):
 
     def step(self, action: dict[str, Any]) -> Any:
         return self.env.step(action[self._key])
-

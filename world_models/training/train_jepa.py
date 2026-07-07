@@ -474,7 +474,7 @@ def sweep_train() -> None:
     with wandb.init():
         cfg = JEPAConfig()
         # Update config with sweep parameters
-        for key, value in wandb.config.items():  # type: ignore[no-untyped-call]
+        for key, value in wandb.config.items():
             if hasattr(cfg, key):
                 setattr(cfg, key, value)
         main(cfg.to_train_dict())
