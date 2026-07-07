@@ -14,7 +14,6 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Any
 
-import world_models.envs.wrappers as env_wrapper
 from world_models.memory.dreamer_memory import ReplayBuffer
 from world_models.models.dreamer_rssm import RSSM
 from world_models.vision.dreamer_decoder import ConvDecoder, DenseDecoder, ActionDecoder
@@ -101,6 +100,8 @@ def make_env(args: Any) -> Any:
     and applies the standard wrapper stack: action repeat, action normalization,
     and time limit.
     """
+    import world_models.envs.wrappers as env_wrapper
+
     size = _resolve_image_size(args)
     backend = str(getattr(args, "env_backend", "dmc")).lower()
 

@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import numpy as np
 from world_models.envs._contract import finalize_step_info
-from world_models.utils.gym_compat import gym, spaces
 from typing import Tuple, Dict, Optional, Any
 
 
-class DiamondAtariWrapper(gym.Wrapper):
+class DiamondAtariWrapper:
     """
     Atari wrapper for DIAMOND following the paper specifications:
     - frameskip: number of frames to skip (default 4)
@@ -16,14 +17,16 @@ class DiamondAtariWrapper(gym.Wrapper):
 
     def __init__(
         self,
-        env: gym.Env,
+        env: Any,
         frameskip: int = 4,
         max_noop: int = 30,
         terminate_on_life_loss: bool = True,
         reward_clip: bool = True,
         resize: Optional[Tuple[int, int]] = (64, 64),
     ):
-        super().__init__(env)
+        from world_models.utils.gym_compat import spaces
+
+        self.env = env
         self.frameskip = frameskip
         self.max_noop = max_noop
         self.terminate_on_life_loss = terminate_on_life_loss
@@ -60,7 +63,9 @@ class DiamondAtariWrapper(gym.Wrapper):
             else:
                 # older gym: (obs, reward, done, info)
                 obs, reward, single_done, info = ret
-                truncated = bool(info.get("TimeLimit.truncated", False)) if info else False
+                truncated = (
+                    bool(info.get("TimeLimit.truncated", False)) if info else False
+                )
                 terminated = bool(single_done and not truncated)
 
             total_reward += float(reward)
@@ -189,6 +194,8 @@ def make_diamond_atari_env(
     Returns:
         DiamondAtariWrapper: Configured Atari environment
     """
+    from world_models.utils.gym_compat import gym
+
     env = gym.make(
         game,
         obs_type="rgb",
@@ -211,4 +218,3 @@ def make_diamond_atari_env(
     )
 
     return env
-
