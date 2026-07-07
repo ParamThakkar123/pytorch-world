@@ -4,13 +4,7 @@ from typing import Any
 
 import numpy as np
 
-
-def __getattr__(name: str) -> Any:
-    if name == "gym":
-        from world_models.utils.gym_compat import gym as _gym
-
-        return _gym
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+from world_models.utils.gym_compat import gym
 
 
 _IMAGE_KEYS = {"image", "pixels", "rgb"}

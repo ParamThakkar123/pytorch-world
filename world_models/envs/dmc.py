@@ -4,15 +4,8 @@ from typing import Any
 
 from world_models.envs._actions import clip_box_action
 from world_models.envs._contract import finalize_step_info
+from world_models.utils.gym_compat import gym
 import numpy as np
-
-
-def __getattr__(name: str) -> Any:
-    if name == "gym":
-        from world_models.utils.gym_compat import gym as _gym
-
-        return _gym
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 class DeepMindControlEnv:

@@ -1644,3 +1644,50 @@ def test_unity_reset_seed_rebuilds_backend_and_replays_initial_observation(monke
     assert old_env.closed is True
     assert env._env.kwargs["seed"] == 12
     assert np.array_equal(first["image"], second["image"])
+
+
+class _StatefulEnv:
+    """Tracks internal counter across episodes to test reset isolation."""
+
+    def __init__(self):
+        self.action_space = gym.spaces.Box(-1, 1, (2,), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(0, 1, (4,), dtype=np.float32)
+        self._counter = 0
+
+    def reset(self, seed=None):
+        self._counter = 0
+        return np.zeros(4, dtype=np.float32), {}
+
+    def step(self, action):
+        self._counter += 1
+        return np.full(4, self._counter, dtype=np.float32), 1.0, False, {}
+
+
+def test_reset_does_not_carry_hidden_state():
+    """Verify reset() clears environment-internal state between episodes."""
+    raw = _StatefulEnv()
+
+    _, _ = raw.reset(seed=42)
+    for _ in range(5):
+        _, _, done, _ = raw.step(np.array([0.5, 0.5], dtype=np.float32))
+        if done:
+            break
+
+    obs, info = raw.reset()
+    assert np.array_equal(obs, np.zeros(4, dtype=np.float32)), (
+        "reset() should restore initial observation, not carry counter from previous episode"
+    )
+    assert raw._counter == 0, "Internal state counter should be reset to 0"
+
+
+def test_render_graceful_error_on_unsupported_env():
+    """Calling render on an env that does not support it should raise a useful error."""
+    raw_env = _StatefulEnv()
+    env = GymImageEnv(raw_env, seed=0, size=(8, 8))
+
+    with pytest.raises((Exception, RuntimeError, AttributeError)) as excinfo:
+        env.render()
+    assert (
+        "render" in str(excinfo.value).lower()
+        or "rgb_array" in str(excinfo.value).lower()
+    ), f"Expected render error message, got: {excinfo.value}"

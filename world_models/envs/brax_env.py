@@ -7,16 +7,9 @@ from typing import Any
 from world_models.envs._actions import clip_box_action
 from world_models.envs._contract import finalize_step_info
 from world_models.envs._observations import add_optional_state_space
+import gymnasium as gym
 import numpy as np
 from PIL import Image
-
-
-def __getattr__(name: str) -> Any:
-    if name == "gym":
-        import gymnasium as _gym
-
-        return _gym
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def make_brax_env(env: str | Any, **kwargs: Any) -> BraxImageEnv:

@@ -9,15 +9,8 @@ from world_models.envs._observations import (
     flatten_vector_observation,
     infer_state_space_from_observation_space,
 )
+from world_models.utils.gym_compat import gym, import_gymnasium
 import numpy as np
-
-
-def __getattr__(name: str) -> Any:
-    if name == "gym":
-        from world_models.utils.gym_compat import gym as _gym
-
-        return _gym
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 from PIL import Image
@@ -131,8 +124,6 @@ class GymImageEnv:
 
     def _make_env_from_id(self, env_id: str, render_mode: str) -> Any:
         # Prefer gymnasium if available, then fallback to gym.
-        from world_models.utils.gym_compat import import_gymnasium
-
         gymnasium = import_gymnasium()
         if gymnasium is not None:
             try:
