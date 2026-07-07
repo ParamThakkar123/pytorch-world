@@ -4,16 +4,12 @@ import sys
 import numpy as np
 import pytest
 
-from world_models.envs.brax_env import BraxImageEnv
-from world_models.envs.robotics_env import (
-    list_gymnasium_robotics_envs,
-    make_robotics_env,
-)
-
 pytestmark = [pytest.mark.integration, pytest.mark.slow]
 
 
-def _assert_image_observation(obs: dict[str, np.ndarray], shape: tuple[int, int, int]) -> None:
+def _assert_image_observation(
+    obs: dict[str, np.ndarray], shape: tuple[int, int, int]
+) -> None:
     assert set(obs) >= {"image"}
     assert obs["image"].shape == shape
     assert obs["image"].dtype == np.uint8
@@ -23,6 +19,7 @@ def _assert_image_observation(obs: dict[str, np.ndarray], shape: tuple[int, int,
 
 def test_real_brax_image_env_smoke():
     pytest.importorskip("brax")
+    from world_models.envs.brax_env import BraxImageEnv
 
     env = BraxImageEnv(
         "inverted_pendulum",
@@ -55,6 +52,10 @@ def test_real_brax_image_env_smoke():
 
 def test_real_robotics_env_smoke():
     pytest.importorskip("gymnasium_robotics")
+    from world_models.envs.robotics_env import (
+        list_gymnasium_robotics_envs,
+        make_robotics_env,
+    )
 
     env_ids = list_gymnasium_robotics_envs()
     assert env_ids, "Gymnasium Robotics did not register any environments."
@@ -64,7 +65,9 @@ def test_real_robotics_env_smoke():
         "FetchReachDense-v4",
         "AdroitHandDoor-v1",
     )
-    env_id = next((candidate for candidate in preferred_ids if candidate in env_ids), env_ids[0])
+    env_id = next(
+        (candidate for candidate in preferred_ids if candidate in env_ids), env_ids[0]
+    )
     env = make_robotics_env(env_id, seed=0, size=(16, 16), render_mode="rgb_array")
     try:
         obs = env.reset()

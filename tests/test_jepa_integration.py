@@ -1,10 +1,11 @@
 import pytest
 from world_models.configs.jepa_config import JEPAConfig
-from world_models.models.jepa_agent import JEPAAgent
 
 
 @pytest.mark.integration
 def test_jepa_construct_no_crash(tmp_path):
+    from world_models.models.jepa_agent import JEPAAgent
+
     config = JEPAConfig()
     config.folder = str(tmp_path / "jepa_integration_test")
     config.epochs = 1
