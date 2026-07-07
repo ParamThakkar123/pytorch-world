@@ -4185,8 +4185,6 @@ dependencies = [
     { name = "ale-py" },
     { name = "click" },
     { name = "einops" },
-    { name = "gym" },
-    { name = "gymnasium" },
     { name = "h5py" },
     { name = "huggingface-hub" },
     { name = "moviepy" },
@@ -4255,6 +4253,7 @@ docs = [
 ]
 gym = [
     { name = "autorom" },
+    { name = "gymnasium" },
     { name = "huggingface-hub" },
     { name = "pygame" },
 ]
@@ -4281,8 +4280,7 @@ requires-dist = [
     { name = "click", specifier = ">=8.0.0" },
     { name = "einops", specifier = ">=0.8.2" },
     { name = "fastapi", extras = ["standard"], marker = "extra == 'viz'", specifier = ">=0.116.0" },
-    { name = "gym", specifier = ">=0.26.2" },
-    { name = "gymnasium", specifier = ">=1.2.2" },
+    { name = "gymnasium", marker = "extra == gym", specifier = ">=1.2.2" },
     { name = "h5py", specifier = ">=3.11.0" },
     { name = "huggingface-hub", specifier = ">=1.14.0" },
     { name = "huggingface-hub", marker = "extra == 'gym'", specifier = ">=0.23.0" },

@@ -4,7 +4,7 @@ import pytest
 import torchwm
 
 try:
-    from tools import cli
+    import torchwm.cli as cli
 except ImportError:
     pytest.skip("click not installed", allow_module_level=True)
 
@@ -171,3 +171,4 @@ def test_dmlab_backend_specs_are_public_api():
 
     assert world_models.EnvBackendSpec is not None
     assert "dmlab" in world_models.ENV_BACKEND_SPECS
+

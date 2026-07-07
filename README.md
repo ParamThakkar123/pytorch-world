@@ -17,6 +17,7 @@ TorchWM provides reusable PyTorch components and training utilities for Dreamer-
 
 ```bash
 # Install the core package from PyPI.
+# This keeps environment integrations and experiment logging optional.
 pip install torchwm
 
 # With extras
