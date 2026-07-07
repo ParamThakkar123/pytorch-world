@@ -3,10 +3,10 @@ TorchWM CLI
 
 The project exposes a small command-line interface for common developer tasks:
 
-- Run the CLI with: `python -m tools.cli <command>`; after installing the
+- Run the CLI with: `python -m torchwm.cli <command>`; after installing the
   package an installed entrypoint is available as `torchwm <command>`. Tests
-  and plugin integrations may invoke the top-level Click app (`tools.cli.app`)
-  or the console-script callable (`tools.cli.run`).
+  and plugin integrations may invoke the top-level Click app (`torchwm.cli.app`)
+  or the console-script callable (`torchwm.cli.run`).
 - The CLI uses Click directly and lazy imports to keep startup fast; some
   commands require optional dependencies (listed below).
 
@@ -151,5 +151,6 @@ torchwm play --model diamond --checkpoint checkpoints/diamond/checkpoint.pt --ga
 Maintaining this page
 ---------------------
 
-If you add or rename CLI commands in `tools.cli`, update this page with the
+If you add or rename CLI commands in `torchwm.cli`, update this page with the
 new usage, examples, and any additional optional dependencies.
+

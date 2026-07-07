@@ -11,12 +11,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-206/cli.html" />
 <meta property="og:site_name" content="TorchWM Documentation" />
-<meta property="og:description" content="The project exposes a small command-line interface for common developer tasks: Run the CLI with: python -m tools.cli &lt;command&gt;; after installing the package an installed entrypoint is availab..." />
+<meta property="og:description" content="The project exposes a small command-line interface for common developer tasks: Run the CLI with: python -m torchwm.cli &lt;command&gt;; after installing the package an installed entrypoint is avail..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-206/_images/social_previews/summary_cli_3f3a5b7d.png" />
-<meta property="og:image:alt" content="The project exposes a small command-line interface for common developer tasks: Run the CLI with: python -m tools.cli &lt;command&gt;; after installing the package an installed entrypoint is availab..." />
-<meta name="description" content="The project exposes a small command-line interface for common developer tasks: Run the CLI with: python -m tools.cli &lt;command&gt;; after installing the package an installed entrypoint is availab..." />
+<meta property="og:image" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-206/_images/social_previews/summary_cli_38a2f162.png" />
+<meta property="og:image:alt" content="The project exposes a small command-line interface for common developer tasks: Run the CLI with: python -m torchwm.cli &lt;command&gt;; after installing the package an installed entrypoint is avail..." />
+<meta name="description" content="The project exposes a small command-line interface for common developer tasks: Run the CLI with: python -m torchwm.cli &lt;command&gt;; after installing the package an installed entrypoint is avail..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>TorchWM CLI &#8212; TorchWM 0.4.2 documentation</title>
@@ -367,10 +367,10 @@
 <h1>TorchWM CLI<a class="headerlink" href="#torchwm-cli" title="Link to this heading">#</a></h1>
 <p>The project exposes a small command-line interface for common developer tasks:</p>
 <ul class="simple">
-<li><p>Run the CLI with: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">tools.cli</span> <span class="pre">&lt;command&gt;</span></code>; after installing the
+<li><p>Run the CLI with: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">torchwm.cli</span> <span class="pre">&lt;command&gt;</span></code>; after installing the
 package an installed entrypoint is available as <code class="docutils literal notranslate"><span class="pre">torchwm</span> <span class="pre">&lt;command&gt;</span></code>. Tests
-and plugin integrations may invoke the top-level Click app (<code class="docutils literal notranslate"><span class="pre">tools.cli.app</span></code>)
-or the console-script callable (<code class="docutils literal notranslate"><span class="pre">tools.cli.run</span></code>).</p></li>
+and plugin integrations may invoke the top-level Click app (<code class="docutils literal notranslate"><span class="pre">torchwm.cli.app</span></code>)
+or the console-script callable (<code class="docutils literal notranslate"><span class="pre">torchwm.cli.run</span></code>).</p></li>
 <li><p>The CLI uses Click directly and lazy imports to keep startup fast; some
 commands require optional dependencies (listed below).</p></li>
 </ul>
@@ -514,7 +514,7 @@ repository.</p></li>
 </section>
 <section id="maintaining-this-page">
 <h2>Maintaining this page<a class="headerlink" href="#maintaining-this-page" title="Link to this heading">#</a></h2>
-<p>If you add or rename CLI commands in <code class="docutils literal notranslate"><span class="pre">tools.cli</span></code>, update this page with the
+<p>If you add or rename CLI commands in <code class="docutils literal notranslate"><span class="pre">torchwm.cli</span></code>, update this page with the
 new usage, examples, and any additional optional dependencies.</p>
 </section>
 </section>
