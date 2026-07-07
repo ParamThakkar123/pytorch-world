@@ -4,9 +4,9 @@ from unittest.mock import Mock, patch
 
 gym = pytest.importorskip("gym")
 
-from world_models.models.dreamer import DreamerAgent
-from world_models.models.dreamer_rssm import RSSM
-from world_models.configs.dreamer_config import DreamerConfig
+from world_models.models.dreamer import DreamerAgent  # noqa: E402
+from world_models.models.dreamer_rssm import RSSM  # noqa: E402
+from world_models.configs.dreamer_config import DreamerConfig  # noqa: E402
 
 
 class TestDreamerAgent:

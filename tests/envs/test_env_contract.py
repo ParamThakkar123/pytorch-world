@@ -4,10 +4,10 @@ import numpy as np
 
 gym = pytest.importorskip("gym")
 
-from world_models.envs.dmc import DeepMindControlEnv
-from world_models.envs.gym_env import GymImageEnv
-from world_models.envs.mujoco_env import MuJoCoImageEnv
-from world_models.envs.wrappers import FrameStack, NormalizeActions, TimeLimit
+from world_models.envs.dmc import DeepMindControlEnv  # noqa: E402
+from world_models.envs.gym_env import GymImageEnv  # noqa: E402
+from world_models.envs.mujoco_env import MuJoCoImageEnv  # noqa: E402
+from world_models.envs.wrappers import FrameStack, NormalizeActions, TimeLimit  # noqa: E402
 
 
 class _ContractFiveTupleEnv:
@@ -242,7 +242,9 @@ def test_gym_image_env_contract_preserves_truncation_metadata():
     env = GymImageEnv(_ContractFiveTupleEnv(truncated=True), seed=3, size=(8, 8))
 
     obs = env.reset()
-    next_obs, reward, done, info = env.step(np.array([-1.0, 0.5, 0.25], dtype=np.float32))
+    next_obs, reward, done, info = env.step(
+        np.array([-1.0, 0.5, 0.25], dtype=np.float32)
+    )
     frame = env.render()
     assert np.array_equal(frame, env.render())
 
@@ -266,7 +268,6 @@ def test_gym_image_env_contract_preserves_truncation_metadata():
     assert info["discount"].dtype == np.float32
     assert "vector_observation" in info
     assert info["vector_observation"].shape == (4,)
-
 
 
 def test_gym_image_env_can_include_optional_state_observation():
@@ -302,9 +303,7 @@ def test_normalize_actions_clips_to_unit_range_and_preserves_native_execution():
     assert np.array_equal(
         info["executed_action"], np.array([2.0, -4.0], dtype=np.float32)
     )
-    assert np.array_equal(
-        env._env.last_action, np.array([2.0, -4.0], dtype=np.float32)
-    )
+    assert np.array_equal(env._env.last_action, np.array([2.0, -4.0], dtype=np.float32))
     assert env.action_space.contains(info["action"])
 
 
@@ -364,7 +363,9 @@ def test_dmc_adapter_matches_contract(monkeypatch):
     assert env.observation_space.contains(next_obs)
     assert env.action_space.contains(info["action"])
     assert np.array_equal(info["action"], np.array([1.0, -1.0], dtype=np.float32))
-    assert np.array_equal(info["executed_action"], np.array([1.0, -1.0], dtype=np.float32))
+    assert np.array_equal(
+        info["executed_action"], np.array([1.0, -1.0], dtype=np.float32)
+    )
     assert isinstance(reward, float)
     assert done is True
     assert info["terminated"] is True
@@ -382,7 +383,9 @@ def test_mujoco_adapter_adds_discount_and_contract_fields(monkeypatch):
     fake_mujoco.Renderer = _FakeRenderer
     fake_mujoco.mj_resetData = lambda model, data: None
     fake_mujoco.mj_forward = lambda model, data: None
-    fake_mujoco.mj_step = lambda model, data, nstep=1: setattr(data, "time", data.time + 0.01 * nstep)
+    fake_mujoco.mj_step = lambda model, data, nstep=1: setattr(
+        data, "time", data.time + 0.01 * nstep
+    )
     monkeypatch.setitem(sys.modules, "mujoco", fake_mujoco)
 
     env = MuJoCoImageEnv(

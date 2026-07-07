@@ -6,11 +6,11 @@ import torch
 
 gym = pytest.importorskip("gym")
 
-from world_models.configs.dreamer_config import DreamerConfig
-from world_models.envs.gym_env import GymImageEnv
-from world_models.envs.wrappers import FrameStack
-from world_models.models.dreamer import make_env
-from world_models.utils.utils import TorchImageEnvWrapper
+from world_models.configs.dreamer_config import DreamerConfig  # noqa: E402
+from world_models.envs.gym_env import GymImageEnv  # noqa: E402
+from world_models.envs.wrappers import FrameStack  # noqa: E402
+from world_models.models.dreamer import make_env  # noqa: E402
+from world_models.utils.utils import TorchImageEnvWrapper  # noqa: E402
 
 
 class _FakeDiscreteEnv:
@@ -166,11 +166,15 @@ def test_unity_mlagents_env_contract_with_fake_sdk(monkeypatch):
             self.agent_id = np.asarray(agent_ids, dtype=np.int64)
             self.obs = list(obs or [])
             self.reward = np.asarray(
-                reward if reward is not None else np.zeros(len(self.agent_id), dtype=np.float32),
+                reward
+                if reward is not None
+                else np.zeros(len(self.agent_id), dtype=np.float32),
                 dtype=np.float32,
             )
             self.interrupted = np.asarray(
-                interrupted if interrupted is not None else np.zeros(len(self.agent_id), dtype=bool),
+                interrupted
+                if interrupted is not None
+                else np.zeros(len(self.agent_id), dtype=bool),
                 dtype=bool,
             )
 
@@ -277,9 +281,13 @@ def test_unity_mlagents_env_contract_with_fake_sdk(monkeypatch):
     assert next_obs["state"].shape == (4,)
     assert reward == 1.5
     assert done is True
-    assert np.array_equal(env._env.last_action, np.array([[1.0, -1.0]], dtype=np.float32))
+    assert np.array_equal(
+        env._env.last_action, np.array([[1.0, -1.0]], dtype=np.float32)
+    )
     assert np.array_equal(info["action"], np.array([1.0, -1.0], dtype=np.float32))
-    assert np.array_equal(info["vector_observation"], np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float32))
+    assert np.array_equal(
+        info["vector_observation"], np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float32)
+    )
     assert info["discount"] == np.array(0.0, dtype=np.float32)
     assert info["terminated"] is False
     assert info["truncated"] is True
@@ -315,7 +323,11 @@ def test_normalize_actions_wrapper_reports_model_and_executed_actions():
                 dtype=np.float32,
             )
             self.observation_space = gym.spaces.Dict(
-                {"image": gym.spaces.Box(low=0, high=255, shape=(3, 2, 2), dtype=np.uint8)}
+                {
+                    "image": gym.spaces.Box(
+                        low=0, high=255, shape=(3, 2, 2), dtype=np.uint8
+                    )
+                }
             )
             self.last_action = None
 
@@ -324,7 +336,12 @@ def test_normalize_actions_wrapper_reports_model_and_executed_actions():
 
         def step(self, action):
             self.last_action = np.asarray(action, dtype=np.float32)
-            return {"image": np.ones((3, 2, 2), dtype=np.uint8)}, 0.5, False, {"action": self.last_action.copy()}
+            return (
+                {"image": np.ones((3, 2, 2), dtype=np.uint8)},
+                0.5,
+                False,
+                {"action": self.last_action.copy()},
+            )
 
     from world_models.envs.wrappers import NormalizeActions
 
@@ -334,18 +351,26 @@ def test_normalize_actions_wrapper_reports_model_and_executed_actions():
     assert reward == 0.5
     assert done is False
     assert np.array_equal(info["action"], np.array([1.0, -1.0], dtype=np.float32))
-    assert np.array_equal(info["executed_action"], np.array([2.0, -4.0], dtype=np.float32))
-    assert np.array_equal(wrapped._env.last_action, np.array([2.0, -4.0], dtype=np.float32))
+    assert np.array_equal(
+        info["executed_action"], np.array([2.0, -4.0], dtype=np.float32)
+    )
+    assert np.array_equal(
+        wrapped._env.last_action, np.array([2.0, -4.0], dtype=np.float32)
+    )
 
 
 def test_frame_stack_wrapper_shifts_frames_for_gym_image_env():
-    wrapped = FrameStack(GymImageEnv(_FakeDiscreteEnv(), seed=1, size=(4, 4)), num_frames=2)
+    wrapped = FrameStack(
+        GymImageEnv(_FakeDiscreteEnv(), seed=1, size=(4, 4)), num_frames=2
+    )
 
     obs = wrapped.reset()
     assert obs["image"].shape == (6, 4, 4)
     assert np.array_equal(obs["image"][0:3], obs["image"][3:6])
 
-    next_obs, reward, done, info = wrapped.step(np.array([-0.2, 0.7, 0.1], dtype=np.float32))
+    next_obs, reward, done, info = wrapped.step(
+        np.array([-0.2, 0.7, 0.1], dtype=np.float32)
+    )
     assert reward == 1.0
     assert done is False
     assert isinstance(info, dict)
@@ -467,7 +492,9 @@ def test_native_mujoco_image_env_with_mocked_bindings(monkeypatch):
     assert reward == 2.25
     assert done is True
     assert np.array_equal(info["action"], np.array([2.0, 0.25], dtype=np.float32))
-    assert np.array_equal(info["executed_action"], np.array([2.0, 0.25], dtype=np.float32))
+    assert np.array_equal(
+        info["executed_action"], np.array([2.0, 0.25], dtype=np.float32)
+    )
 
 
 def test_list_gymnasium_robotics_envs_uses_registered_package_envs(monkeypatch):
@@ -680,7 +707,9 @@ def test_brax_image_env_adapts_functional_brax_api(monkeypatch):
     assert reward == 1.25
     assert done is False
     assert np.array_equal(info["action"], np.array([1.0, -1.0], dtype=np.float32))
-    assert np.array_equal(info["executed_action"], np.array([1.0, -1.0], dtype=np.float32))
+    assert np.array_equal(
+        info["executed_action"], np.array([1.0, -1.0], dtype=np.float32)
+    )
     assert info["vector_observation"].shape == (3,)
     assert "discount" in info
 
@@ -777,7 +806,7 @@ def test_require_module_filters_warp_messages(monkeypatch, capsys):
     monkeypatch.setattr(importlib, "import_module", fake_import)
 
     # When suppression is enabled, only the non-warp line should be replayed.
-    mod = be._require_module("brax.envs", "hint", suppress_warp_warnings=True)
+    be._require_module("brax.envs", "hint", suppress_warp_warnings=True)
     captured = capsys.readouterr()
     assert "Some other message" in captured.out
     assert "Failed to import warp:" not in captured.out
@@ -1285,7 +1314,9 @@ def test_bsuite_image_env_wraps_dm_env_discrete_task():
     from world_models.envs.bsuite_env import BSuiteImageEnv
 
     base_env = _FakeBSuiteEnv()
-    env = BSuiteImageEnv("catch/0", seed=7, size=(16, 16), env=base_env, include_state=True)
+    env = BSuiteImageEnv(
+        "catch/0", seed=7, size=(16, 16), env=base_env, include_state=True
+    )
 
     obs = env.reset()
     render0 = env.render()
@@ -1306,7 +1337,6 @@ def test_bsuite_image_env_wraps_dm_env_discrete_task():
     assert info["bsuite_id"] == "catch/0"
     assert info["vector_observation"].shape == (2,)
     assert np.array_equal(info["action"], np.array([-1.0, 1.0, -1.0], dtype=np.float32))
-
 
 
 def test_gym_image_env_reset_seed_replays_initial_observation_and_action_samples():
@@ -1342,7 +1372,6 @@ def test_gym_image_env_reset_seed_replays_initial_observation_and_action_samples
     assert np.array_equal(first_action, second_action)
 
 
-
 def test_dmc_reset_seed_rebuilds_backend_and_replays_initial_state(monkeypatch):
     import sys
     from types import ModuleType, SimpleNamespace
@@ -1359,7 +1388,9 @@ def test_dmc_reset_seed_rebuilds_backend_and_replays_initial_state(monkeypatch):
 
     class _SeededTimeStep:
         def __init__(self, seed, last=False):
-            self.observation = {"position": np.array([seed, seed + 1], dtype=np.float32)}
+            self.observation = {
+                "position": np.array([seed, seed + 1], dtype=np.float32)
+            }
             self.reward = float(seed)
             self.discount = 0.0 if last else 1.0
             self._last = last
@@ -1403,7 +1434,6 @@ def test_dmc_reset_seed_rebuilds_backend_and_replays_initial_state(monkeypatch):
     assert not np.array_equal(first["position"], third["position"])
 
 
-
 def test_brax_reset_seed_replays_initial_state_and_action_space_sampling(monkeypatch):
     from world_models.envs.brax_env import BraxImageEnv
 
@@ -1414,7 +1444,9 @@ def test_brax_reset_seed_replays_initial_state_and_action_space_sampling(monkeyp
 
         def reset(self, rng):
             seed = float(np.asarray(rng).reshape(-1)[0])
-            return _FakeBraxState(np.array([seed, seed + 1.0, seed + 2.0], dtype=np.float32))
+            return _FakeBraxState(
+                np.array([seed, seed + 1.0, seed + 2.0], dtype=np.float32)
+            )
 
         def step(self, state, action):
             return _FakeBraxState(state.obs, reward=0.0, done=0.0)
@@ -1437,7 +1469,6 @@ def test_brax_reset_seed_replays_initial_state_and_action_space_sampling(monkeyp
     assert np.array_equal(first["state"], second["state"])
     assert np.array_equal(first["image"], second["image"])
     assert np.array_equal(first_action, second_action)
-
 
 
 def test_dmlab_reset_seed_restarts_episode_sequence_and_action_sampling(monkeypatch):
@@ -1464,7 +1495,6 @@ def test_dmlab_reset_seed_restarts_episode_sequence_and_action_sampling(monkeypa
     assert np.array_equal(first_action, second_action)
 
 
-
 def test_procgen_reset_seed_rebuilds_backend_and_reseeds_action_sampling(monkeypatch):
     import sys
     import types
@@ -1486,7 +1516,12 @@ def test_procgen_reset_seed_rebuilds_backend_and_reseeds_action_sampling(monkeyp
             return {"rgb": np.full((1, 8, 8, 3), value, dtype=np.uint8)}
 
         def step(self, action):
-            return self.reset(), np.array([0.0], dtype=np.float32), np.array([False]), [{}]
+            return (
+                self.reset(),
+                np.array([0.0], dtype=np.float32),
+                np.array([False]),
+                [{}],
+            )
 
         def close(self):
             self.closed = True
@@ -1515,7 +1550,6 @@ def test_procgen_reset_seed_rebuilds_backend_and_reseeds_action_sampling(monkeyp
     assert np.array_equal(first_action, second_action)
 
 
-
 def test_unity_reset_seed_rebuilds_backend_and_replays_initial_observation(monkeypatch):
     import sys
     from types import ModuleType, SimpleNamespace
@@ -1535,8 +1569,12 @@ def test_unity_reset_seed_rebuilds_backend_and_replays_initial_observation(monke
         def __init__(self, agent_ids=(), obs=None, reward=None, interrupted=None):
             self.agent_id = np.asarray(agent_ids, dtype=np.int64)
             self.obs = list(obs or [])
-            self.reward = np.asarray(reward if reward is not None else [0.0], dtype=np.float32)
-            self.interrupted = np.asarray(interrupted if interrupted is not None else [False], dtype=bool)
+            self.reward = np.asarray(
+                reward if reward is not None else [0.0], dtype=np.float32
+            )
+            self.interrupted = np.asarray(
+                interrupted if interrupted is not None else [False], dtype=bool
+            )
 
     class _SeededUnityEnvironment:
         instances = []
@@ -1558,7 +1596,11 @@ def test_unity_reset_seed_rebuilds_backend_and_replays_initial_observation(monke
         def get_steps(self, behavior_name):
             assert behavior_name == "Behavior"
             value = self.kwargs["seed"] % 255
-            decision = _SeededSteps(agent_ids=[1], obs=[np.full((1, 8, 8, 3), value, dtype=np.uint8)], reward=[0.0])
+            decision = _SeededSteps(
+                agent_ids=[1],
+                obs=[np.full((1, 8, 8, 3), value, dtype=np.uint8)],
+                reward=[0.0],
+            )
             return decision, _SeededSteps(agent_ids=[], obs=[], reward=[])
 
         def set_actions(self, behavior_name, action_tuple):

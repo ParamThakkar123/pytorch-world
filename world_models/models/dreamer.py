@@ -1,6 +1,5 @@
 import os
 import random
-import sys
 import time
 import importlib.util
 import numpy as np
@@ -13,7 +12,6 @@ import torch.distributions as distributions
 
 from collections import OrderedDict
 from pathlib import Path
-from typing import Dict, Union
 from typing import Any
 
 import world_models.envs.wrappers as env_wrapper
@@ -1308,4 +1306,3 @@ class DreamerAgent(ExportableAgentMixin):
         )
         self.logger.flush()
         return episode_rews, video_images, latents
-
