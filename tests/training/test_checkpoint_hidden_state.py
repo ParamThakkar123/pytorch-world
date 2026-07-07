@@ -3,15 +3,13 @@ import pytest
 import torch
 
 from world_models.configs.diamond_config import DiamondConfig
-from world_models.envs.diamond_atari import make_diamond_atari_env
 
 pytestmark = [pytest.mark.integration, pytest.mark.slow]
 
 
 def test_hidden_state_save_load_and_broadcast(tmp_path):
-    """Ensure last_policy_hidden/last_reward_hidden are saved/restored and
-    batch-size-1 hidden states are broadcast when used for larger batches.
-    """
+    from world_models.envs.diamond_atari import make_diamond_atari_env
+
     try:
         make_diamond_atari_env(
             game="Breakout-v4", frameskip=4, max_noop=30, resize=(64, 64), seed=0

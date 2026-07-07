@@ -4,7 +4,6 @@ import torch
 import numpy as np
 
 from world_models.configs.diamond_config import DiamondConfig
-from world_models.envs.diamond_atari import make_diamond_atari_env
 
 pytestmark = [pytest.mark.integration, pytest.mark.slow]
 
@@ -18,9 +17,8 @@ def set_seeds(seed: int = 0):
 
 
 def test_reproducible_imagination(tmp_path):
-    """Run a short imagined rollout, save checkpoint, reload and re-run to
-    assert identical imagined observations when seeds and inputs are fixed.
-    """
+    from world_models.envs.diamond_atari import make_diamond_atari_env
+
     try:
         make_diamond_atari_env(
             game="Breakout-v4", frameskip=4, max_noop=30, resize=(64, 64), seed=0
