@@ -4,6 +4,7 @@ import importlib
 import importlib.util
 from typing import Any
 
+from world_models.envs._actions import clip_box_action
 from world_models.envs._contract import finalize_step_info
 from world_models.envs._observations import add_optional_state_space
 import gymnasium as gym
@@ -115,6 +116,7 @@ class BraxImageEnv:
             ),
             state_space=state_space,
         )
+        self._seed_spaces(self._seed)
 
     def _make_env(
         self,
@@ -161,6 +163,17 @@ class BraxImageEnv:
     def _split_key(self) -> Any:
         self._rng, key = self._jax.random.split(self._rng)
         return key
+
+    def _seed_spaces(self, seed: int | None) -> None:
+        if seed is None:
+            return
+        for space in (self._action_space, self._observation_space):
+            if hasattr(space, "seed"):
+                try:
+                    space.seed(seed)
+                except Exception:
+                    pass
+
 
     def _to_numpy(self, value: Any) -> np.ndarray:
         return np.asarray(self._jax.device_get(value))
@@ -245,7 +258,12 @@ class BraxImageEnv:
                         info[key] = value
         return info
 
-    def reset(self) -> dict[str, Any]:
+    def reset(self, seed: int | None = None) -> dict[str, Any]:
+        if seed is not None:
+            self._seed = int(seed)
+            self._rng = self._jax.random.PRNGKey(self._seed)
+            self._seed_spaces(self._seed)
+        self._state = None
         self._state = self._reset_fn(self._split_key())
         return self._state_to_obs(self._state)
 
@@ -253,10 +271,10 @@ class BraxImageEnv:
         if self._state is None:
             raise RuntimeError("Must call reset() before step().")
 
-        clipped = np.clip(
-            np.asarray(action, dtype=np.float32).reshape(self._action_size),
-            -1.0,
-            1.0,
+        clipped = clip_box_action(
+            action,
+            -np.ones((self._action_size,), dtype=np.float32),
+            np.ones((self._action_size,), dtype=np.float32),
         )
         brax_action = self._jnp.asarray(clipped)
         self._state = self._step_fn(self._state, brax_action)
@@ -270,6 +288,7 @@ class BraxImageEnv:
             truncated=False,
         )
         info["action"] = clipped.copy()
+        info["executed_action"] = clipped.copy()
         info["vector_observation"] = self._to_numpy(self._state.obs).copy()
         return self._state_to_obs(self._state), reward, done, info
 

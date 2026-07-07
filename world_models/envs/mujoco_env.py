@@ -7,6 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from world_models.envs._actions import clip_box_action
 from world_models.envs._contract import finalize_step_info
 from world_models.envs._observations import add_optional_state_space
 import gymnasium as gym
@@ -269,16 +270,18 @@ class MuJoCoImageEnv:
     def step(
         self, action: Any
     ) -> tuple[dict[str, np.ndarray], float, bool, dict[str, Any]]:
-        action_arr = np.asarray(action, dtype=np.float32).reshape(
-            self.action_space.shape
+        clipped = clip_box_action(
+            action,
+            self.action_space.low,
+            self.action_space.high,
         )
-        clipped = np.clip(action_arr, self.action_space.low, self.action_space.high)
         if clipped.size:
             self.data.ctrl[:] = clipped
         self._mujoco.mj_step(self.model, self.data, nstep=self._frame_skip)
 
         info = {
             "action": clipped.astype(np.float32, copy=True),
+            "executed_action": clipped.astype(np.float32, copy=True),
             "time": float(getattr(self.data, "time", 0.0)),
             "qpos": np.asarray(getattr(self.data, "qpos", []), dtype=np.float64).copy(),
             "qvel": np.asarray(getattr(self.data, "qvel", []), dtype=np.float64).copy(),

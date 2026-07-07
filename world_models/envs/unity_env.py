@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from world_models.envs._actions import clip_box_action
 from world_models.envs._contract import finalize_step_info
 from world_models.envs._observations import add_optional_state_space
 import gymnasium as gym
@@ -98,29 +99,25 @@ class UnityMLAgentsEnv:
         )
 
         self._ActionTuple = ActionTuple
+        self._UnityEnvironment = UnityEnvironment
+        self._EngineConfigurationChannel = EngineConfigurationChannel
         self._size = (int(size[0]), int(size[1]))
         self._max_episode_steps = int(max_episode_steps)
         self._agent_id = None
         self._include_state = bool(include_state)
         self._last_image: Any = None
+        self._seed = int(seed)
+        self._file_name = file_name
+        self._worker_id = int(worker_id)
+        self._base_port = int(base_port)
+        self._no_graphics = bool(no_graphics)
+        self._time_scale = float(time_scale)
+        self._quality_level = int(quality_level)
 
-        self._engine_channel = EngineConfigurationChannel()
-        self._engine_channel.set_configuration_parameters(
-            width=self._size[1],
-            height=self._size[0],
-            quality_level=quality_level,
-            time_scale=float(time_scale),
-        )
+        self._engine_channel = self._EngineConfigurationChannel()
+        self._configure_engine_channel()
 
-        self._env = UnityEnvironment(
-            file_name=file_name,
-            seed=seed,
-            worker_id=worker_id,
-            base_port=base_port,
-            no_graphics=no_graphics,
-            side_channels=[self._engine_channel],
-        )
-        self._env.reset()
+        self._env = self._make_env(self._seed)
 
         behavior_names = list(self._env.behavior_specs.keys())
         if not behavior_names:
@@ -141,9 +138,33 @@ class UnityMLAgentsEnv:
                 "UnityMLAgentsEnv currently supports only continuous action spaces."
             )
         self._action_size = int(action_spec.continuous_size)
+        self._action_space = gym.spaces.Box(
+            low=-1.0, high=1.0, shape=(self._action_size,), dtype=np.float32
+        )
+        self._observation_space = self._build_observation_space()
+        self._seed_spaces(self._seed)
 
-    @property
-    def observation_space(self) -> gym.spaces.Dict:
+    def _configure_engine_channel(self) -> None:
+        self._engine_channel.set_configuration_parameters(
+            width=self._size[1],
+            height=self._size[0],
+            quality_level=self._quality_level,
+            time_scale=self._time_scale,
+        )
+
+    def _make_env(self, seed: int) -> Any:
+        env = self._UnityEnvironment(
+            file_name=self._file_name,
+            seed=int(seed),
+            worker_id=self._worker_id,
+            base_port=self._base_port,
+            no_graphics=self._no_graphics,
+            side_channels=[self._engine_channel],
+        )
+        env.reset()
+        return env
+
+    def _build_observation_space(self) -> gym.spaces.Dict:
         state_space = None
         if self._include_state:
             vector_dim = 0
@@ -172,11 +193,23 @@ class UnityMLAgentsEnv:
             state_space=state_space,
         )
 
+    def _seed_spaces(self, seed: int | None) -> None:
+        if seed is None:
+            return
+        for space in (self._action_space, self._observation_space):
+            if hasattr(space, "seed"):
+                try:
+                    space.seed(seed)
+                except Exception:
+                    pass
+
+    @property
+    def observation_space(self) -> gym.spaces.Dict:
+        return self._observation_space
+
     @property
     def action_space(self) -> gym.spaces.Box:
-        return gym.spaces.Box(
-            low=-1.0, high=1.0, shape=(self._action_size,), dtype=np.float32
-        )
+        return self._action_space
 
     @property
     def max_episode_steps(self) -> int:
@@ -294,7 +327,18 @@ class UnityMLAgentsEnv:
             return None
         return np.concatenate(vectors, axis=0)
 
-    def reset(self) -> dict[str, Any]:
+    def reset(self, seed: int | None = None) -> dict[str, Any]:
+        if seed is not None:
+            self._seed = int(seed)
+            close = getattr(self._env, "close", None)
+            if callable(close):
+                close()
+            self._env = self._make_env(self._seed)
+            self._spec = self._env.behavior_specs[self._behavior_name]
+            self._observation_space = self._build_observation_space()
+            self._seed_spaces(self._seed)
+        self._agent_id = None
+        self._last_image = None
         self._env.reset()
         decision_steps, terminal_steps = self._env.get_steps(self._behavior_name)
 
@@ -320,8 +364,12 @@ class UnityMLAgentsEnv:
                 "Environment has terminated. Call reset() before step()."
             )
 
-        action = np.asarray(action, dtype=np.float32).reshape(1, self._action_size)
-        action = np.clip(action, -1.0, 1.0)
+        clipped = clip_box_action(
+            action,
+            -np.ones((self._action_size,), dtype=np.float32),
+            np.ones((self._action_size,), dtype=np.float32),
+        )
+        action = clipped.reshape(1, self._action_size)
 
         self._env.set_actions(
             self._behavior_name,
@@ -351,7 +399,8 @@ class UnityMLAgentsEnv:
 
         info = {
             "discount": np.array(0.0 if done else 1.0, dtype=np.float32),
-            "action": action[0].copy(),
+            "action": clipped.copy(),
+            "executed_action": clipped.copy(),
         }
         vector_observation = self._extract_vector_observation(obs_list)
         if vector_observation is not None:

@@ -7,7 +7,7 @@ gym = pytest.importorskip("gym")
 from world_models.envs.dmc import DeepMindControlEnv
 from world_models.envs.gym_env import GymImageEnv
 from world_models.envs.mujoco_env import MuJoCoImageEnv
-from world_models.envs.wrappers import FrameStack, TimeLimit
+from world_models.envs.wrappers import FrameStack, NormalizeActions, TimeLimit
 
 
 class _ContractFiveTupleEnv:
@@ -81,6 +81,38 @@ class _TimeLimitBaseEnv:
     def step(self, action):
         obs = {"image": np.ones((3, 4, 4), dtype=np.uint8)}
         return obs, 0.5, False, {"discount": np.array(1.0, dtype=np.float32)}
+
+
+class _NormalizeActionBaseEnv:
+    def __init__(self):
+        self.action_space = gym.spaces.Box(
+            low=np.array([-2.0, -4.0], dtype=np.float32),
+            high=np.array([2.0, 4.0], dtype=np.float32),
+            dtype=np.float32,
+        )
+        self.observation_space = gym.spaces.Dict(
+            {
+                "image": gym.spaces.Box(
+                    low=0,
+                    high=255,
+                    shape=(3, 2, 2),
+                    dtype=np.uint8,
+                )
+            }
+        )
+        self.last_action = None
+
+    def reset(self):
+        return {"image": np.zeros((3, 2, 2), dtype=np.uint8)}
+
+    def step(self, action):
+        self.last_action = np.asarray(action, dtype=np.float32)
+        return (
+            {"image": np.ones((3, 2, 2), dtype=np.uint8)},
+            0.25,
+            False,
+            {"action": self.last_action.copy()},
+        )
 
 
 class _FrameStackBaseEnv:
@@ -225,6 +257,7 @@ def test_gym_image_env_contract_preserves_truncation_metadata():
     assert env.observation_space.contains(obs)
     assert env.observation_space.contains(next_obs)
     assert env.action_space.contains(info["action"])
+    assert info["executed_action"] == 1
     assert isinstance(reward, float)
     assert isinstance(done, bool)
     assert done is True
@@ -253,6 +286,26 @@ def test_gym_image_env_can_include_optional_state_observation():
     assert isinstance(reward, float)
     assert done is False
     assert np.allclose(info["vector_observation"], next_obs["state"])
+
+
+def test_normalize_actions_clips_to_unit_range_and_preserves_native_execution():
+    env = NormalizeActions(_NormalizeActionBaseEnv())
+
+    obs = env.reset()
+    next_obs, reward, done, info = env.step(np.array([2.0, -2.0], dtype=np.float32))
+
+    assert obs["image"].shape == (3, 2, 2)
+    assert next_obs["image"].shape == (3, 2, 2)
+    assert reward == 0.25
+    assert done is False
+    assert np.array_equal(info["action"], np.array([1.0, -1.0], dtype=np.float32))
+    assert np.array_equal(
+        info["executed_action"], np.array([2.0, -4.0], dtype=np.float32)
+    )
+    assert np.array_equal(
+        env._env.last_action, np.array([2.0, -4.0], dtype=np.float32)
+    )
+    assert env.action_space.contains(info["action"])
 
 
 def test_frame_stack_stacks_chw_images_and_preserves_state():
@@ -301,7 +354,7 @@ def test_dmc_adapter_matches_contract(monkeypatch):
     env = DeepMindControlEnv("cartpole-swingup", seed=1, size=(8, 8))
     obs = env.reset()
     frame = env.render()
-    next_obs, reward, done, info = env.step(np.array([0.25, -0.25], dtype=np.float32))
+    next_obs, reward, done, info = env.step(np.array([2.0, -2.0], dtype=np.float32))
 
     assert set(obs) == {"position", "image"}
     assert set(next_obs) == set(obs)
@@ -309,7 +362,9 @@ def test_dmc_adapter_matches_contract(monkeypatch):
     assert frame.shape == (8, 8, 3)
     assert env.observation_space.contains(obs)
     assert env.observation_space.contains(next_obs)
-    assert env.action_space.contains(np.array([0.25, -0.25], dtype=np.float32))
+    assert env.action_space.contains(info["action"])
+    assert np.array_equal(info["action"], np.array([1.0, -1.0], dtype=np.float32))
+    assert np.array_equal(info["executed_action"], np.array([1.0, -1.0], dtype=np.float32))
     assert isinstance(reward, float)
     assert done is True
     assert info["terminated"] is True
@@ -351,6 +406,7 @@ def test_mujoco_adapter_adds_discount_and_contract_fields(monkeypatch):
     assert env.observation_space.contains(obs)
     assert env.observation_space.contains(next_obs)
     assert env.action_space.contains(info["action"])
+    assert np.array_equal(info["executed_action"], info["action"])
     assert isinstance(reward, float)
     assert done is True
     assert info["terminated"] is True

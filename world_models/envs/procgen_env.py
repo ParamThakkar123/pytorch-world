@@ -7,6 +7,7 @@ import importlib.util
 import sys
 from typing import Any
 
+from world_models.envs._actions import encode_discrete_action
 from world_models.envs._contract import finalize_step_info
 import gymnasium as gym
 import numpy as np
@@ -113,13 +114,20 @@ def normalize_procgen_env_name(env: str) -> str:
 class _ProcgenActionSpace(gym.spaces.Box):
     """One-hot-like continuous action space for discrete Procgen actions."""
 
-    def __init__(self, n: int):
+    def __init__(self, n: int, seed: int = 0):
         self.n = int(n)
+        self._rng = np.random.default_rng(int(seed))
         super().__init__(low=-1.0, high=1.0, shape=(self.n,), dtype=np.float32)
+
+    def seed(self, seed: int | None = None) -> list[int]:
+        if seed is None:
+            seed = int(self._rng.integers(0, 2**31 - 1))
+        self._rng = np.random.default_rng(int(seed))
+        return [int(seed)]
 
     def sample(self, mask: Any = None, probability: Any = None) -> NDArray[np.float32]:
         del mask, probability
-        idx = np.random.randint(0, self.n)
+        idx = int(self._rng.integers(0, self.n))
         action: NDArray[np.float32] = -np.ones((self.n,), dtype=np.float32)
         action[idx] = 1.0
         return action
@@ -159,33 +167,27 @@ class ProcgenImageEnv:
         action_n: int = 15,
         **procgen_kwargs: Any,
     ):
-        ProcgenEnv = _require_procgen_env_class()
+        self._procgen_env_class = _require_procgen_env_class()
 
         self.env_name = normalize_procgen_env_name(env)
         self._size = (int(size[0]), int(size[1]))
         self._seed = int(seed)
+        self._distribution_mode = distribution_mode
+        self._num_levels = int(num_levels)
+        self._procgen_kwargs = dict(procgen_kwargs)
+        self._start_level = self._seed if start_level is None else int(start_level)
         self._last_image: np.ndarray | None = None
         self._last_obs: Any = None
 
-        max_episode_steps = int(procgen_kwargs.pop("max_episode_steps", 1000))
+        max_episode_steps = int(self._procgen_kwargs.pop("max_episode_steps", 1000))
 
-        if start_level is None:
-            start_level = self._seed
-
-        self._env = ProcgenEnv(
-            num_envs=1,
-            env_name=self.env_name,
-            distribution_mode=distribution_mode,
-            num_levels=int(num_levels),
-            start_level=int(start_level),
-            **procgen_kwargs,
-        )
+        self._env = self._make_env(start_level=self._start_level)
 
         base_action_space = getattr(self._env, "action_space", None)
         if base_action_space is not None and hasattr(base_action_space, "n"):
             action_n = int(base_action_space.n)
         self._discrete_n = int(action_n)
-        self._action_space = _ProcgenActionSpace(self._discrete_n)
+        self._action_space = _ProcgenActionSpace(self._discrete_n, seed=self._seed)
         self._observation_space = gym.spaces.Dict(
             {
                 "image": gym.spaces.Box(
@@ -197,6 +199,7 @@ class ProcgenImageEnv:
             }
         )
         self._max_episode_steps = max_episode_steps
+        self._seed_spaces(self._seed)
 
     @property
     def observation_space(self) -> gym.spaces.Dict:
@@ -210,18 +213,29 @@ class ProcgenImageEnv:
     def max_episode_steps(self) -> int:
         return self._max_episode_steps
 
+    def _make_env(self, *, start_level: int) -> Any:
+        return self._procgen_env_class(
+            num_envs=1,
+            env_name=self.env_name,
+            distribution_mode=self._distribution_mode,
+            num_levels=self._num_levels,
+            start_level=int(start_level),
+            **self._procgen_kwargs,
+        )
+
+    def _seed_spaces(self, seed: int | None) -> None:
+        if seed is None:
+            return
+        for space in (self._action_space, self._observation_space):
+            if hasattr(space, "seed"):
+                try:
+                    space.seed(seed)
+                except Exception:
+                    pass
+
+
     def _to_native_action(self, action: Any) -> tuple[int, NDArray[np.float32]]:
-        vec = np.asarray(action, dtype=np.float32).reshape(-1)
-        if vec.size == self._discrete_n and vec.size > 1:
-            idx = int(np.argmax(vec))
-        elif vec.size >= 1:
-            idx = int(round(float(vec[0])))
-        else:
-            idx = 0
-        idx = int(np.clip(idx, 0, self._discrete_n - 1))
-        encoded = -np.ones((self._discrete_n,), dtype=np.float32)
-        encoded[idx] = 1.0
-        return idx, encoded
+        return encode_discrete_action(action, self._discrete_n)
 
     def _extract_rgb(self, obs: Any) -> np.ndarray:
         if isinstance(obs, tuple):
@@ -267,7 +281,16 @@ class ProcgenImageEnv:
             )
         return image.transpose(2, 0, 1).copy()
 
-    def reset(self) -> dict[str, NDArray[np.uint8]]:
+    def reset(self, seed: int | None = None) -> dict[str, NDArray[np.uint8]]:
+        if seed is not None:
+            self._seed = int(seed)
+            self._start_level = self._seed
+            if hasattr(self._env, "close"):
+                self._env.close()
+            self._env = self._make_env(start_level=self._start_level)
+            self._seed_spaces(self._seed)
+        self._last_obs = None
+        self._last_image = None
         obs = self._env.reset()
         self._last_obs = obs
         image = self._to_chw_uint8_image(obs)
@@ -287,6 +310,7 @@ class ProcgenImageEnv:
             done=done_value,
         )
         info_value["action"] = np.asarray(model_action, dtype=np.float32).copy()
+        info_value["executed_action"] = int(native_action)
 
         self._last_obs = obs
         image = self._to_chw_uint8_image(obs)

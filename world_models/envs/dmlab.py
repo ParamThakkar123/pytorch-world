@@ -4,6 +4,7 @@ import importlib
 from collections.abc import Sequence
 from typing import Any
 
+from world_models.envs._actions import encode_discrete_action
 from world_models.envs._contract import finalize_step_info
 import gymnasium as gym
 import numpy as np
@@ -67,8 +68,9 @@ def make_dmlab_env(level: str, **kwargs: Any) -> "DMLabEnv":
 class _OneHotActionSpace(gym.spaces.Box):
     """Box action space that samples normalized one-hot vectors."""
 
-    def __init__(self, actions: int):
+    def __init__(self, actions: int, seed: int = 0):
         self._actions = int(actions)
+        self._rng = np.random.default_rng(int(seed))
         super().__init__(
             low=-1.0,
             high=1.0,
@@ -76,11 +78,17 @@ class _OneHotActionSpace(gym.spaces.Box):
             dtype=np.float32,
         )
 
+    def seed(self, seed: int | None = None) -> list[int]:
+        if seed is None:
+            seed = int(self._rng.integers(0, 2**31 - 1))
+        self._rng = np.random.default_rng(int(seed))
+        return [int(seed)]
+
     def sample(self, mask: None = None, probability: None = None) -> np.ndarray:
         if mask is not None or probability is not None:
             raise ValueError("DMLab action sampling does not support masks.")
         action: np.ndarray = -np.ones((self._actions,), dtype=np.float32)
-        action[np.random.randint(0, self._actions)] = 1.0
+        action[int(self._rng.integers(0, self._actions))] = 1.0
         return action
 
 
@@ -139,8 +147,9 @@ class DMLabEnv:
         )
         self._last_obs: dict[str, np.ndarray] | None = None
 
-        self._action_space = _OneHotActionSpace(self._action_set.shape[0])
+        self._action_space = _OneHotActionSpace(self._action_set.shape[0], seed=self._seed)
         self._observation_space = self._build_observation_space()
+        self._seed_spaces(self._seed)
 
     def _build_observation_space(self) -> gym.spaces.Dict:
         spaces: dict[str, gym.spaces.Space[Any]] = {
@@ -205,10 +214,26 @@ class DMLabEnv:
         episode_length = int(self._config.get("episode_length_seconds", 60))
         return max(1, (fps * episode_length) // self._action_repeat)
 
-    def reset(self) -> dict[str, np.ndarray]:
-        seed = self._seed + self._episode
+    def _seed_spaces(self, seed: int | None) -> None:
+        if seed is None:
+            return
+        for space in (self._action_space, self._observation_space):
+            if hasattr(space, "seed"):
+                try:
+                    space.seed(seed)
+                except Exception:
+                    pass
+
+
+    def reset(self, seed: int | None = None) -> dict[str, np.ndarray]:
+        if seed is not None:
+            self._seed = int(seed)
+            self._episode = 0
+            self._seed_spaces(self._seed)
+        self._last_obs = None
+        episode_seed = self._seed + self._episode
         self._episode += 1
-        self._env.reset(seed=seed)
+        self._env.reset(seed=episode_seed)
         self._last_obs = self._read_obs()
         return self._last_obs
 
@@ -227,6 +252,7 @@ class DMLabEnv:
             {
                 "discount": np.array(0.0 if done else 1.0, dtype=np.float32),
                 "action": self._action_to_one_hot(native_action),
+                "executed_action": native_action.copy(),
                 "dmlab_action": native_action.copy(),
             },
             done=done,
@@ -252,8 +278,12 @@ class DMLabEnv:
         if arr.shape == (self._action_set.shape[1],) and np.issubdtype(
             arr.dtype, np.integer
         ):
-            return arr.astype(np.intc, copy=True)
-        index = int(np.argmax(arr.reshape(-1)))
+            native = arr.astype(np.intc, copy=True)
+            matches = np.all(self._action_set == native, axis=1)
+            if not matches.any():
+                raise ValueError(f"Invalid native DMLab action: {native!r}")
+            return native
+        index, _ = encode_discrete_action(arr, self._action_set.shape[0])
         return self._action_set[index].astype(np.intc, copy=True)
 
     def _action_to_one_hot(self, native_action: np.ndarray) -> np.ndarray:

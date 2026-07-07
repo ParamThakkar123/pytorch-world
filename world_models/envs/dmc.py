@@ -1,5 +1,6 @@
 from typing import Any
 
+from world_models.envs._actions import clip_box_action
 from world_models.envs._contract import finalize_step_info
 from world_models.utils.gym_compat import gym
 import numpy as np
@@ -45,33 +46,51 @@ class DeepMindControlEnv:
         domain, task = name.split("-", 1)
         if domain == "cup":  # Only domain with multiple words.
             domain = "ball_in_cup"
-        if isinstance(domain, str):
-            from dm_control import suite
-
-            self._env = suite.load(domain, task, task_kwargs={"random": seed})
-        else:
-            assert task is None
-            self._env = domain()
-        self._size = size
+        self._name = name
+        self._domain = domain
+        self._task = task
+        self._seed = int(seed)
+        self._size = (int(size[0]), int(size[1]))
         if camera is None:
             camera = dict(quadruped=2).get(domain, 0)
         self._camera = camera
+        self._env = self._make_env(self._seed)
 
-    @property
-    def observation_space(self) -> gym.spaces.Dict:
         spaces: dict[str, gym.spaces.Space[Any]] = {}
         for key, value in self._env.observation_spec().items():
             spaces[key] = gym.spaces.Box(-np.inf, np.inf, value.shape, dtype=np.float32)
         spaces["image"] = gym.spaces.Box(0, 255, (3,) + self._size, dtype=np.uint8)
-        return gym.spaces.Dict(spaces)
+        self._observation_space = gym.spaces.Dict(spaces)
+        spec = self._env.action_spec()
+        self._action_space = gym.spaces.Box(spec.minimum, spec.maximum, dtype=np.float32)
+        self._seed_spaces(self._seed)
+
+    def _make_env(self, seed: int) -> Any:
+        from dm_control import suite
+
+        return suite.load(self._domain, self._task, task_kwargs={"random": int(seed)})
+
+    def _seed_spaces(self, seed: int | None) -> None:
+        if seed is None:
+            return
+        for space in (self._action_space, self._observation_space):
+            if hasattr(space, "seed"):
+                try:
+                    space.seed(seed)
+                except Exception:
+                    pass
+
+    @property
+    def observation_space(self) -> gym.spaces.Dict:
+        return self._observation_space
 
     @property
     def action_space(self) -> gym.spaces.Box:
-        spec = self._env.action_spec()
-        return gym.spaces.Box(spec.minimum, spec.maximum, dtype=np.float32)
+        return self._action_space
 
     def step(self, action: np.ndarray) -> tuple[dict, float, bool, dict]:
-        time_step = self._env.step(action)
+        clipped = clip_box_action(action, self.action_space.low, self.action_space.high)
+        time_step = self._env.step(clipped)
         obs = dict(time_step.observation)
         obs["image"] = self.render().transpose(2, 0, 1).copy()
         reward = time_step.reward or 0
@@ -86,6 +105,8 @@ class DeepMindControlEnv:
         info = finalize_step_info(
             {
                 "discount": np.array(time_step.discount, np.float32),
+                "action": clipped.copy(),
+                "executed_action": clipped.copy(),
                 "vector_observation": vector_observation,
             },
             done=done,
@@ -94,7 +115,11 @@ class DeepMindControlEnv:
         )
         return obs, float(reward), done, info
 
-    def reset(self) -> dict:
+    def reset(self, seed: int | None = None) -> dict:
+        if seed is not None:
+            self._seed = int(seed)
+            self._env = self._make_env(self._seed)
+            self._seed_spaces(self._seed)
         time_step = self._env.reset()
         obs = dict(time_step.observation)
         obs["image"] = self.render().transpose(2, 0, 1).copy()

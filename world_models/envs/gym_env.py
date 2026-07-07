@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from world_models.envs._actions import clip_box_action, encode_discrete_action
 from world_models.envs._contract import finalize_step_info
 from world_models.envs._observations import (
     add_optional_state_space,
@@ -294,22 +295,12 @@ class GymImageEnv:
         self, action: Any
     ) -> tuple[np.ndarray, np.ndarray] | tuple[int, np.ndarray]:
         if self._discrete_n is None:
-            action = np.asarray(action, dtype=np.float32)
             low = np.asarray(self._env.action_space.low, dtype=np.float32)
             high = np.asarray(self._env.action_space.high, dtype=np.float32)
-            clipped = np.clip(action, low, high).astype(np.float32)
-            return clipped, clipped
+            clipped = clip_box_action(action, low, high)
+            return clipped, clipped.copy()
 
-        vec = np.asarray(action, dtype=np.float32).reshape(-1)
-        if vec.size == self._discrete_n and vec.size > 1:
-            idx = int(np.argmax(vec))
-        elif vec.size >= 1:
-            idx = int(round(float(vec[0])))
-        else:
-            idx = 0
-        idx = int(np.clip(idx, 0, self._discrete_n - 1))
-        encoded = -np.ones((self._discrete_n,), dtype=np.float32)
-        encoded[idx] = 1.0
+        idx, encoded = encode_discrete_action(action, self._discrete_n)
         return idx, encoded
 
     def _build_observation(self, raw_obs: Any, image: np.ndarray) -> dict[str, Any]:
@@ -323,7 +314,14 @@ class GymImageEnv:
             observation["state"] = vector_observation.copy()
         return observation
 
-    def reset(self) -> dict[str, Any]:
+    def reset(self, seed: int | None = None) -> dict[str, Any]:
+        if seed is not None:
+            self._seed = int(seed)
+            self._rng = np.random.default_rng(self._seed)
+            self._seed_spaces(self._seed)
+            self._seed_applied = False
+        self._last_obs = None
+        self._last_image = None
         if not self._seed_applied:
             try:
                 result = self._env.reset(seed=self._seed)
@@ -359,6 +357,11 @@ class GymImageEnv:
             truncated=truncated,
         )
         info["action"] = np.asarray(model_action, dtype=np.float32).copy()
+        info["executed_action"] = (
+            int(native_action)
+            if np.isscalar(native_action)
+            else np.asarray(native_action, dtype=np.float32).copy()
+        )
         vector_observation = flatten_vector_observation(obs)
         if vector_observation is not None:
             info["vector_observation"] = vector_observation.copy()

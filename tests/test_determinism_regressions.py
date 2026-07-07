@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import importlib.util
 import math
 import random
 
+import pytest
+
+if importlib.util.find_spec("gymnasium") is None and importlib.util.find_spec("gym") is None:
+    pytest.skip("gym/gymnasium is not installed", allow_module_level=True)
+
 from world_models.utils.gym_compat import gym
 import numpy as np
-import pytest
 import torch
 from torch.distributions import Categorical
 

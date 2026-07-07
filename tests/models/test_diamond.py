@@ -1,4 +1,10 @@
+import importlib.util
+
 import pytest
+
+if importlib.util.find_spec("gymnasium") is None and importlib.util.find_spec("gym") is None:
+    pytest.skip("gym/gymnasium is not installed", allow_module_level=True)
+
 import torch
 import numpy as np
 from world_models.utils.gym_compat import gym

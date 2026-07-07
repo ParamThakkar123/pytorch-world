@@ -303,6 +303,39 @@ def test_gym_image_env_discrete_action_mapping():
     assert done is False
     assert info["action"].shape == (3,)
     assert np.array_equal(info["action"], np.array([-1.0, 1.0, -1.0], dtype=np.float32))
+    assert info["executed_action"] == 1
+
+
+def test_normalize_actions_wrapper_reports_model_and_executed_actions():
+    class _ContinuousEnv:
+        def __init__(self):
+            self.action_space = gym.spaces.Box(
+                low=np.array([-2.0, -4.0], dtype=np.float32),
+                high=np.array([2.0, 4.0], dtype=np.float32),
+                dtype=np.float32,
+            )
+            self.observation_space = gym.spaces.Dict(
+                {"image": gym.spaces.Box(low=0, high=255, shape=(3, 2, 2), dtype=np.uint8)}
+            )
+            self.last_action = None
+
+        def reset(self):
+            return {"image": np.zeros((3, 2, 2), dtype=np.uint8)}
+
+        def step(self, action):
+            self.last_action = np.asarray(action, dtype=np.float32)
+            return {"image": np.ones((3, 2, 2), dtype=np.uint8)}, 0.5, False, {"action": self.last_action.copy()}
+
+    from world_models.envs.wrappers import NormalizeActions
+
+    wrapped = NormalizeActions(_ContinuousEnv())
+    _, reward, done, info = wrapped.step(np.array([2.0, -2.0], dtype=np.float32))
+
+    assert reward == 0.5
+    assert done is False
+    assert np.array_equal(info["action"], np.array([1.0, -1.0], dtype=np.float32))
+    assert np.array_equal(info["executed_action"], np.array([2.0, -4.0], dtype=np.float32))
+    assert np.array_equal(wrapped._env.last_action, np.array([2.0, -4.0], dtype=np.float32))
 
 
 def test_frame_stack_wrapper_shifts_frames_for_gym_image_env():
@@ -434,6 +467,7 @@ def test_native_mujoco_image_env_with_mocked_bindings(monkeypatch):
     assert reward == 2.25
     assert done is True
     assert np.array_equal(info["action"], np.array([2.0, 0.25], dtype=np.float32))
+    assert np.array_equal(info["executed_action"], np.array([2.0, 0.25], dtype=np.float32))
 
 
 def test_list_gymnasium_robotics_envs_uses_registered_package_envs(monkeypatch):
@@ -646,6 +680,7 @@ def test_brax_image_env_adapts_functional_brax_api(monkeypatch):
     assert reward == 1.25
     assert done is False
     assert np.array_equal(info["action"], np.array([1.0, -1.0], dtype=np.float32))
+    assert np.array_equal(info["executed_action"], np.array([1.0, -1.0], dtype=np.float32))
     assert info["vector_observation"].shape == (3,)
     assert "discount" in info
 
@@ -1016,6 +1051,7 @@ def test_dmlab_env_adapts_deepmind_lab_api(monkeypatch):
     assert reward == 2.5
     assert done is True
     assert info["action"].shape == env.action_space.shape
+    assert np.array_equal(info["executed_action"], np.array([0, 0, 0, 1, 0, 0, 0]))
     assert info["discount"] == np.array(0.0, dtype=np.float32)
 
 
@@ -1094,6 +1130,7 @@ def test_procgen_image_env_wraps_single_vector_env(monkeypatch):
     assert done is False
     expected_action = np.array([-1.0, -1.0, 1.0, -1.0], dtype=np.float32)
     assert np.array_equal(info["action"], expected_action)
+    assert info["executed_action"] == 2
     assert np.asarray(info["discount"]).item() == 1.0
 
     frame = env.render()
@@ -1269,3 +1306,299 @@ def test_bsuite_image_env_wraps_dm_env_discrete_task():
     assert info["bsuite_id"] == "catch/0"
     assert info["vector_observation"].shape == (2,)
     assert np.array_equal(info["action"], np.array([-1.0, 1.0, -1.0], dtype=np.float32))
+
+
+
+def test_gym_image_env_reset_seed_replays_initial_observation_and_action_samples():
+    from world_models.envs.gym_env import GymImageEnv
+
+    class _SeedReplayEnv:
+        def __init__(self):
+            self.action_space = gym.spaces.Discrete(3)
+            self.observation_space = gym.spaces.Box(
+                low=0, high=255, shape=(8, 8, 3), dtype=np.uint8
+            )
+            self._rng = np.random.default_rng(0)
+
+        def reset(self, seed=None):
+            if seed is not None:
+                self._rng = np.random.default_rng(seed)
+            return self._rng.integers(0, 256, size=(8, 8, 3), dtype=np.uint8), {}
+
+        def step(self, action):
+            return self.reset()[0], 0.0, False, False, {}
+
+        def render(self):
+            return self._rng.integers(0, 256, size=(8, 8, 3), dtype=np.uint8)
+
+    env = GymImageEnv(_SeedReplayEnv(), seed=5, size=(8, 8))
+    first = env.reset(seed=123)
+    first_action = env.action_space.sample()
+    env.step(first_action)
+    second = env.reset(seed=123)
+    second_action = env.action_space.sample()
+
+    assert np.array_equal(first["image"], second["image"])
+    assert np.array_equal(first_action, second_action)
+
+
+
+def test_dmc_reset_seed_rebuilds_backend_and_replays_initial_state(monkeypatch):
+    import sys
+    from types import ModuleType, SimpleNamespace
+
+    from world_models.envs.dmc import DeepMindControlEnv
+
+    class _SeededPhysics:
+        def __init__(self, seed):
+            self._seed = seed
+
+        def render(self, height, width, camera_id=0):
+            del camera_id
+            return np.full((height, width, 3), self._seed % 255, dtype=np.uint8)
+
+    class _SeededTimeStep:
+        def __init__(self, seed, last=False):
+            self.observation = {"position": np.array([seed, seed + 1], dtype=np.float32)}
+            self.reward = float(seed)
+            self.discount = 0.0 if last else 1.0
+            self._last = last
+
+        def last(self):
+            return self._last
+
+    class _SeededDMCEnv:
+        def __init__(self, seed):
+            self.seed = seed
+            self.physics = _SeededPhysics(seed)
+
+        def observation_spec(self):
+            return {"position": SimpleNamespace(shape=(2,))}
+
+        def action_spec(self):
+            return SimpleNamespace(
+                minimum=np.array([-1.0, -1.0], dtype=np.float32),
+                maximum=np.array([1.0, 1.0], dtype=np.float32),
+            )
+
+        def reset(self):
+            return _SeededTimeStep(self.seed)
+
+        def step(self, action):
+            return _SeededTimeStep(self.seed + int(np.asarray(action).sum()), last=True)
+
+    dm_control = ModuleType("dm_control")
+    dm_control.suite = SimpleNamespace(
+        load=lambda domain, task, task_kwargs: _SeededDMCEnv(task_kwargs["random"])
+    )
+    monkeypatch.setitem(sys.modules, "dm_control", dm_control)
+
+    env = DeepMindControlEnv("cartpole-swingup", seed=1, size=(8, 8))
+    first = env.reset(seed=17)
+    second = env.reset(seed=17)
+    third = env.reset(seed=18)
+
+    assert np.array_equal(first["position"], second["position"])
+    assert np.array_equal(first["image"], second["image"])
+    assert not np.array_equal(first["position"], third["position"])
+
+
+
+def test_brax_reset_seed_replays_initial_state_and_action_space_sampling(monkeypatch):
+    from world_models.envs.brax_env import BraxImageEnv
+
+    class _SeededBraxEnv:
+        action_size = 2
+        episode_length = 7
+        observation_size = 3
+
+        def reset(self, rng):
+            seed = float(np.asarray(rng).reshape(-1)[0])
+            return _FakeBraxState(np.array([seed, seed + 1.0, seed + 2.0], dtype=np.float32))
+
+        def step(self, state, action):
+            return _FakeBraxState(state.obs, reward=0.0, done=0.0)
+
+    monkeypatch.setattr(
+        "world_models.envs.brax_env._require_module",
+        lambda module_name, install_hint, **kwargs: {
+            "jax": _FakeJax,
+            "jax.numpy": np,
+            "brax.envs": Mock(get_environment=lambda *args, **kwargs: _SeededBraxEnv()),
+        }[module_name],
+    )
+
+    env = BraxImageEnv("ant", seed=0, size=(8, 8), jit=True, include_state=True)
+    first = env.reset(seed=9)
+    first_action = env.action_space.sample()
+    second = env.reset(seed=9)
+    second_action = env.action_space.sample()
+
+    assert np.array_equal(first["state"], second["state"])
+    assert np.array_equal(first["image"], second["image"])
+    assert np.array_equal(first_action, second_action)
+
+
+
+def test_dmlab_reset_seed_restarts_episode_sequence_and_action_sampling(monkeypatch):
+    import sys
+
+    from world_models.envs.dmlab import DMLabEnv
+
+    _FakeDeepMindLabModule.instances = []
+    monkeypatch.setitem(sys.modules, "deepmind_lab", _FakeDeepMindLabModule)
+
+    env = DMLabEnv("rooms_collect_good_objects_train", seed=5, size=(16, 16))
+    env.reset(seed=21)
+    first_seed = _FakeDeepMindLabModule.instances[-1].seed
+    first_action = env.action_space.sample()
+    env.reset()
+    second_seed = _FakeDeepMindLabModule.instances[-1].seed
+    env.reset(seed=21)
+    third_seed = _FakeDeepMindLabModule.instances[-1].seed
+    second_action = env.action_space.sample()
+
+    assert first_seed == 21
+    assert second_seed == 22
+    assert third_seed == 21
+    assert np.array_equal(first_action, second_action)
+
+
+
+def test_procgen_reset_seed_rebuilds_backend_and_reseeds_action_sampling(monkeypatch):
+    import sys
+    import types
+
+    from world_models.envs import procgen_env
+    from world_models.envs.procgen_env import ProcgenImageEnv
+
+    instances = []
+
+    class _SeededProcgenEnv:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+            self.action_space = gym.spaces.Discrete(4)
+            self.closed = False
+            instances.append(self)
+
+        def reset(self):
+            value = self.kwargs["start_level"] % 255
+            return {"rgb": np.full((1, 8, 8, 3), value, dtype=np.uint8)}
+
+        def step(self, action):
+            return self.reset(), np.array([0.0], dtype=np.float32), np.array([False]), [{}]
+
+        def close(self):
+            self.closed = True
+
+    monkeypatch.setattr(
+        procgen_env.importlib.util,
+        "find_spec",
+        lambda name: object() if name == "procgen" else None,
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "procgen",
+        types.SimpleNamespace(ProcgenEnv=_SeededProcgenEnv),
+    )
+
+    env = ProcgenImageEnv("coinrun", seed=3, size=(8, 8))
+    first = env.reset(seed=14)
+    first_action = env.action_space.sample()
+    old_env = instances[-1]
+    second = env.reset(seed=14)
+    second_action = env.action_space.sample()
+
+    assert old_env.closed is True
+    assert env._env.kwargs["start_level"] == 14
+    assert np.array_equal(first["image"], second["image"])
+    assert np.array_equal(first_action, second_action)
+
+
+
+def test_unity_reset_seed_rebuilds_backend_and_replays_initial_observation(monkeypatch):
+    import sys
+    from types import ModuleType, SimpleNamespace
+
+    class _SeededChannel:
+        def set_configuration_parameters(self, **kwargs):
+            self.params = kwargs
+
+    class _SeededActionSpec:
+        continuous_size = 2
+
+        @staticmethod
+        def is_continuous():
+            return True
+
+    class _SeededSteps:
+        def __init__(self, agent_ids=(), obs=None, reward=None, interrupted=None):
+            self.agent_id = np.asarray(agent_ids, dtype=np.int64)
+            self.obs = list(obs or [])
+            self.reward = np.asarray(reward if reward is not None else [0.0], dtype=np.float32)
+            self.interrupted = np.asarray(interrupted if interrupted is not None else [False], dtype=bool)
+
+    class _SeededUnityEnvironment:
+        instances = []
+
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+            self.behavior_specs = {
+                "Behavior": SimpleNamespace(
+                    action_spec=_SeededActionSpec(),
+                    observation_specs=[SimpleNamespace(shape=(8, 8, 3))],
+                )
+            }
+            self.closed = False
+            _SeededUnityEnvironment.instances.append(self)
+
+        def reset(self):
+            return None
+
+        def get_steps(self, behavior_name):
+            assert behavior_name == "Behavior"
+            value = self.kwargs["seed"] % 255
+            decision = _SeededSteps(agent_ids=[1], obs=[np.full((1, 8, 8, 3), value, dtype=np.uint8)], reward=[0.0])
+            return decision, _SeededSteps(agent_ids=[], obs=[], reward=[])
+
+        def set_actions(self, behavior_name, action_tuple):
+            del behavior_name, action_tuple
+
+        def step(self):
+            return None
+
+        def close(self):
+            self.closed = True
+
+    root = ModuleType("mlagents_envs")
+    base_env_mod = ModuleType("mlagents_envs.base_env")
+    env_mod = ModuleType("mlagents_envs.environment")
+    channel_mod = ModuleType("mlagents_envs.side_channel.engine_configuration_channel")
+
+    class _SeededActionTuple:
+        def __init__(self, continuous=None):
+            self.continuous = continuous
+
+    base_env_mod.ActionTuple = _SeededActionTuple
+    env_mod.UnityEnvironment = _SeededUnityEnvironment
+    channel_mod.EngineConfigurationChannel = _SeededChannel
+
+    monkeypatch.setitem(sys.modules, "mlagents_envs", root)
+    monkeypatch.setitem(sys.modules, "mlagents_envs.base_env", base_env_mod)
+    monkeypatch.setitem(sys.modules, "mlagents_envs.environment", env_mod)
+    monkeypatch.setitem(
+        sys.modules,
+        "mlagents_envs.side_channel.engine_configuration_channel",
+        channel_mod,
+    )
+
+    from world_models.envs.unity_env import UnityMLAgentsEnv
+
+    env = UnityMLAgentsEnv(file_name="fake.exe", seed=4, size=(8, 8), no_graphics=True)
+    first = env.reset(seed=12)
+    old_env = _SeededUnityEnvironment.instances[-1]
+    second = env.reset(seed=12)
+
+    assert old_env.closed is True
+    assert env._env.kwargs["seed"] == 12
+    assert np.array_equal(first["image"], second["image"])
