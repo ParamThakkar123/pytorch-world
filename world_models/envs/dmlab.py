@@ -4,6 +4,7 @@ import importlib
 from collections.abc import Sequence
 from typing import Any
 
+from world_models.envs._contract import finalize_step_info
 import gymnasium as gym
 import numpy as np
 from PIL import Image
@@ -222,11 +223,16 @@ class DMLabEnv:
         else:
             obs = self._read_obs()
             self._last_obs = obs
-        info = {
-            "discount": np.array(0.0 if done else 1.0, dtype=np.float32),
-            "action": self._action_to_one_hot(native_action),
-            "dmlab_action": native_action.copy(),
-        }
+        info = finalize_step_info(
+            {
+                "discount": np.array(0.0 if done else 1.0, dtype=np.float32),
+                "action": self._action_to_one_hot(native_action),
+                "dmlab_action": native_action.copy(),
+            },
+            done=done,
+            terminated=done,
+            truncated=False,
+        )
         return obs, reward, done, info
 
     def render(self, *args: Any, **kwargs: Any) -> np.ndarray:

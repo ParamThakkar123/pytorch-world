@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 import random
 
-import gymnasium as gym
+from world_models.utils.gym_compat import gym
 import numpy as np
 import pytest
 import torch
@@ -211,3 +211,4 @@ def test_tiny_model_regression_baselines(name, metrics_fn, baseline, tolerances)
         assert metrics[metric_name] == pytest.approx(
             expected, abs=tolerances[metric_name]
         ), f"{name}.{metric_name} drifted: {metrics}"
+

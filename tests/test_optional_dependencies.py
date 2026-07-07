@@ -75,3 +75,19 @@ def test_lockfile_keeps_gymnasium_and_wandb_out_of_core_torchwm_dependencies():
     assert "wandb" not in core
     assert "gymnasium" in _dependency_names(torchwm["optional-dependencies"]["gym"])
     assert "wandb" in _dependency_names(torchwm["optional-dependencies"]["ml"])
+
+
+def test_ml_agents_extra_matches_real_supported_sdk_series():
+    project = tomllib.loads(Path("pyproject.toml").read_text())["project"]
+
+    assert "mlagents-envs>=0.28.0,<0.29.0" in project["optional-dependencies"]["ml-agents"]
+    assert "protobuf>=3.20,<3.21" in project["optional-dependencies"]["ml-agents"]
+
+
+def test_procgen_extra_declares_python_support_boundary():
+    project = tomllib.loads(Path("pyproject.toml").read_text())["project"]
+
+    assert (
+        "procgen>=0.10.7; python_version < '3.11'"
+        in project["optional-dependencies"]["procgen"]
+    )

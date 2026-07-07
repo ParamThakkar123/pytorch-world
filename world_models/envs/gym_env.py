@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from typing import Any
 
-import gymnasium as gym
+from world_models.envs._contract import finalize_step_info
+from world_models.envs._observations import (
+    add_optional_state_space,
+    flatten_vector_observation,
+    infer_state_space_from_observation_space,
+)
+from world_models.utils.gym_compat import gym, import_gymnasium
 import numpy as np
 from PIL import Image
 
@@ -36,7 +42,8 @@ class GymImageEnv:
         - Synthesizes RGB images from vector observations for pixel-based training.
         - Exposes continuous action spaces mapped to [-1, 1] range.
         - Converts discrete actions to one-hot vectors.
-        - Returns observations as dict {"image": (C, H, W)} with uint8 values.
+        - Returns observations as dicts with required key ``"image"`` and optional
+          key ``"state"`` when ``include_state=True`` and a vector observation is available.
 
     Args:
         env: Either a string environment ID (e.g., "Pendulum-v1") or a pre-built
@@ -44,9 +51,12 @@ class GymImageEnv:
         seed (int): Random seed for environment reset (default: 0).
         size (tuple): Target image size as (height, width) (default: (64, 64)).
         render_mode (str): Render mode for environment (default: "rgb_array").
+        include_state (bool): Include a flattened low-dimensional ``"state"`` key
+            in observations when one can be derived from the underlying env.
 
     Attributes:
-        observation_space: Dict space with "image" key containing (C, H, W) Box.
+        observation_space: Dict space with required ``"image"`` key and optional
+            ``"state"`` key when enabled.
         action_space: Box space with actions in [-1, 1] range.
         max_episode_steps: Maximum steps per episode (default: 1000).
     """
@@ -57,10 +67,12 @@ class GymImageEnv:
         seed: int = 0,
         size: tuple[int, int] = (64, 64),
         render_mode: str = "rgb_array",
+        include_state: bool = False,
     ) -> None:
         self._size = (int(size[0]), int(size[1]))
         self._seed = seed
         self._render_mode = render_mode
+        self._include_state = bool(include_state)
         self._seed_applied = False
         self._rng = np.random.default_rng(seed)
 
@@ -89,23 +101,26 @@ class GymImageEnv:
             self._action_space.sample = self._sample_discrete_action  # type: ignore[assignment, method-assign]
 
         self._seed_spaces(seed)
+        self._state_space = (
+            infer_state_space_from_observation_space(getattr(self._env, "observation_space", None))
+            if self._include_state
+            else None
+        )
 
-        self._observation_space = gym.spaces.Dict(
-            {
-                "image": gym.spaces.Box(
-                    low=0,
-                    high=255,
-                    shape=(3, self._size[0], self._size[1]),
-                    dtype=np.uint8,
-                )
-            }
+        self._observation_space = add_optional_state_space(
+            gym.spaces.Box(
+                low=0,
+                high=255,
+                shape=(3, self._size[0], self._size[1]),
+                dtype=np.uint8,
+            ),
+            state_space=self._state_space,
         )
 
     def _make_env_from_id(self, env_id: str, render_mode: str) -> Any:
         # Prefer gymnasium if available, then fallback to gym.
-        try:
-            import gymnasium as gymnasium
-
+        gymnasium = import_gymnasium()
+        if gymnasium is not None:
             try:
                 return gymnasium.make(env_id, render_mode=render_mode)
             except ImportError as exc:
@@ -123,11 +138,11 @@ class GymImageEnv:
                     return gymnasium.make(env_id)
             except TypeError:
                 return gymnasium.make(env_id)
-        except Exception:
-            try:
-                return gym.make(env_id, render_mode=render_mode)
-            except TypeError:
-                return gym.make(env_id)
+
+        try:
+            return gym.make(env_id, render_mode=render_mode)
+        except TypeError:
+            return gym.make(env_id)
 
     @property
     def observation_space(self) -> gym.spaces.Dict:
@@ -297,6 +312,17 @@ class GymImageEnv:
         encoded[idx] = 1.0
         return idx, encoded
 
+    def _build_observation(self, raw_obs: Any, image: np.ndarray) -> dict[str, Any]:
+        observation = {"image": image}
+        vector_observation = flatten_vector_observation(raw_obs)
+        if self._state_space is not None:
+            if vector_observation is None:
+                raise RuntimeError(
+                    "include_state=True but no low-dimensional state could be extracted."
+                )
+            observation["state"] = vector_observation.copy()
+        return observation
+
     def reset(self) -> dict[str, Any]:
         if not self._seed_applied:
             try:
@@ -311,7 +337,7 @@ class GymImageEnv:
         self._last_obs = obs
         image = self._to_chw_uint8_image(obs)
         self._last_image = image
-        return {"image": image}
+        return self._build_observation(obs, image)
 
     def step(self, action: Any) -> tuple[dict[str, Any], float, bool, dict[str, Any]]:
         native_action, model_action = self._to_native_action(action)
@@ -323,18 +349,24 @@ class GymImageEnv:
         else:
             obs, reward, done, info = result
             done = bool(done)
+            truncated = bool(info.get("TimeLimit.truncated", False)) if info else False
+            terminated = bool(done and not truncated)
 
-        if info is None:
-            info = {}
-        info = dict(info)
-        if "discount" not in info:
-            info["discount"] = np.array(0.0 if done else 1.0, dtype=np.float32)
+        info = finalize_step_info(
+            info,
+            done=done,
+            terminated=terminated,
+            truncated=truncated,
+        )
         info["action"] = np.asarray(model_action, dtype=np.float32).copy()
+        vector_observation = flatten_vector_observation(obs)
+        if vector_observation is not None:
+            info["vector_observation"] = vector_observation.copy()
 
         self._last_obs = obs
         image = self._to_chw_uint8_image(obs)
         self._last_image = image
-        return {"image": image}, float(reward), done, info
+        return self._build_observation(obs, image), float(reward), done, info
 
     def render(self, *args: Any, **kwargs: Any) -> np.ndarray:
         frame = self._render_hwc_image(last_obs=self._last_obs)
@@ -347,3 +379,4 @@ class GymImageEnv:
     def close(self) -> None:
         if hasattr(self._env, "close"):
             self._env.close()
+

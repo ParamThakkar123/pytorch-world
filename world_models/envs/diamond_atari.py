@@ -1,6 +1,6 @@
 import numpy as np
-import gymnasium as gym
-from gymnasium import spaces
+from world_models.envs._contract import finalize_step_info
+from world_models.utils.gym_compat import gym, spaces
 from typing import Tuple, Dict, Optional, Any
 
 
@@ -47,6 +47,8 @@ class DiamondAtariWrapper(gym.Wrapper):
         """
         total_reward = 0.0
         done = False
+        terminated = False
+        truncated = False
         info: Dict[str, Any] = {}
         obs: Any = None
 
@@ -58,12 +60,12 @@ class DiamondAtariWrapper(gym.Wrapper):
             else:
                 # older gym: (obs, reward, done, info)
                 obs, reward, single_done, info = ret
-                terminated = bool(single_done)
-                truncated = False
+                truncated = bool(info.get("TimeLimit.truncated", False)) if info else False
+                terminated = bool(single_done and not truncated)
 
             total_reward += float(reward)
 
-            if terminated or (locals().get("truncated", False)):
+            if terminated or truncated:
                 done = True
                 break
 
@@ -90,6 +92,12 @@ class DiamondAtariWrapper(gym.Wrapper):
             total_reward = float(np.clip(total_reward, -1, 1))
 
         assert obs is not None
+        info = finalize_step_info(
+            info,
+            done=done,
+            terminated=terminated,
+            truncated=truncated,
+        )
         return obs, total_reward, done, info
 
     def step(self, action: int) -> Any:
@@ -203,3 +211,4 @@ def make_diamond_atari_env(
     )
 
     return env
+

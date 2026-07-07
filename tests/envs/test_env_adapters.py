@@ -8,6 +8,7 @@ gym = pytest.importorskip("gym")
 
 from world_models.configs.dreamer_config import DreamerConfig
 from world_models.envs.gym_env import GymImageEnv
+from world_models.envs.wrappers import FrameStack
 from world_models.models.dreamer import make_env
 from world_models.utils.utils import TorchImageEnvWrapper
 
@@ -43,7 +44,7 @@ class _FakeDiscreteEnv:
 @patch("world_models.models.dreamer.env_wrapper.TimeLimit")
 @patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
 @patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
-@patch("world_models.models.dreamer.DeepMindControlEnv")
+@patch("world_models.envs.dmc.DeepMindControlEnv")
 def test_make_env_dmc_backend(
     mock_dmc,
     mock_repeat,
@@ -68,13 +69,15 @@ def test_make_env_dmc_backend(
 
 
 @patch("world_models.models.dreamer.env_wrapper.TimeLimit")
+@patch("world_models.models.dreamer.env_wrapper.FrameStack")
 @patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
 @patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
-@patch("world_models.models.dreamer.GymImageEnv")
+@patch("world_models.envs.gym_env.GymImageEnv")
 def test_make_env_gym_backend(
     mock_gym_env,
     mock_repeat,
     mock_normalize,
+    mock_frame_stack,
     mock_time_limit,
 ):
     cfg = DreamerConfig()
@@ -82,16 +85,19 @@ def test_make_env_gym_backend(
     cfg.env = "Pendulum-v1"
     cfg.image_size = (64, 64)
     cfg.gym_render_mode = "rgb_array"
+    cfg.frame_stack = 4
 
     env = Mock()
     mock_gym_env.return_value = env
     mock_repeat.side_effect = lambda wrapped_env, *args, **kwargs: wrapped_env
     mock_normalize.side_effect = lambda wrapped_env, *args, **kwargs: wrapped_env
+    mock_frame_stack.side_effect = lambda wrapped_env, *args, **kwargs: wrapped_env
     mock_time_limit.side_effect = lambda wrapped_env, *args, **kwargs: wrapped_env
 
     out_env = make_env(cfg)
 
     assert out_env is env
+    mock_frame_stack.assert_called_once_with(env, 4)
     mock_gym_env.assert_called_once_with(
         cfg.env,
         seed=cfg.seed,
@@ -103,7 +109,7 @@ def test_make_env_gym_backend(
 @patch("world_models.models.dreamer.env_wrapper.TimeLimit")
 @patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
 @patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
-@patch("world_models.models.dreamer.UnityMLAgentsEnv")
+@patch("world_models.envs.unity_env.UnityMLAgentsEnv")
 def test_make_env_unity_backend(
     mock_unity_env,
     mock_repeat,
@@ -130,6 +136,160 @@ def test_make_env_unity_backend(
     assert call_kwargs["behavior_name"] == cfg.unity_behavior_name
 
 
+def test_unity_mlagents_env_contract_with_fake_sdk(monkeypatch):
+    import sys
+    from importlib.machinery import ModuleSpec
+    from types import ModuleType, SimpleNamespace
+
+    from world_models.envs.unity_env import UnityMLAgentsEnv
+
+    class _FakeActionTuple:
+        def __init__(self, continuous):
+            self.continuous = np.asarray(continuous, dtype=np.float32)
+
+    class _FakeEngineConfigurationChannel:
+        def __init__(self):
+            self.params = None
+
+        def set_configuration_parameters(self, **kwargs):
+            self.params = kwargs
+
+    class _FakeActionSpec:
+        continuous_size = 2
+
+        @staticmethod
+        def is_continuous():
+            return True
+
+    class _FakeSteps:
+        def __init__(self, agent_ids=(), obs=None, reward=None, interrupted=None):
+            self.agent_id = np.asarray(agent_ids, dtype=np.int64)
+            self.obs = list(obs or [])
+            self.reward = np.asarray(
+                reward if reward is not None else np.zeros(len(self.agent_id), dtype=np.float32),
+                dtype=np.float32,
+            )
+            self.interrupted = np.asarray(
+                interrupted if interrupted is not None else np.zeros(len(self.agent_id), dtype=bool),
+                dtype=bool,
+            )
+
+    class _FakeUnityEnvironment:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+            self.behavior_specs = {
+                "Behavior": SimpleNamespace(
+                    action_spec=_FakeActionSpec(),
+                    observation_specs=[
+                        SimpleNamespace(shape=(8, 8, 3)),
+                        SimpleNamespace(shape=(4,)),
+                    ],
+                )
+            }
+            self._step_count = 0
+            self.last_action = None
+            self.closed = False
+
+        def reset(self):
+            self._step_count = 0
+
+        def get_steps(self, behavior_name):
+            assert behavior_name == "Behavior"
+            if self._step_count == 0:
+                decision = _FakeSteps(
+                    agent_ids=[11],
+                    obs=[
+                        np.full((1, 8, 8, 3), 32, dtype=np.uint8),
+                        np.array([[0.1, 0.2, 0.3, 0.4]], dtype=np.float32),
+                    ],
+                    reward=[0.0],
+                )
+                terminal = _FakeSteps()
+                return decision, terminal
+            decision = _FakeSteps()
+            terminal = _FakeSteps(
+                agent_ids=[11],
+                obs=[
+                    np.full((1, 8, 8, 3), 96, dtype=np.uint8),
+                    np.array([[1.0, 2.0, 3.0, 4.0]], dtype=np.float32),
+                ],
+                reward=[1.5],
+                interrupted=[True],
+            )
+            return decision, terminal
+
+        def set_actions(self, behavior_name, action_tuple):
+            assert behavior_name == "Behavior"
+            self.last_action = np.asarray(action_tuple.continuous, dtype=np.float32)
+
+        def step(self):
+            self._step_count += 1
+
+        def close(self):
+            self.closed = True
+
+    root = ModuleType("mlagents_envs")
+    root.__spec__ = ModuleSpec("mlagents_envs", loader=None)
+    base_env = ModuleType("mlagents_envs.base_env")
+    base_env.__spec__ = ModuleSpec("mlagents_envs.base_env", loader=None)
+    base_env.ActionTuple = _FakeActionTuple
+    environment = ModuleType("mlagents_envs.environment")
+    environment.__spec__ = ModuleSpec("mlagents_envs.environment", loader=None)
+    environment.UnityEnvironment = _FakeUnityEnvironment
+    side_channel = ModuleType("mlagents_envs.side_channel")
+    side_channel.__spec__ = ModuleSpec("mlagents_envs.side_channel", loader=None)
+    engine = ModuleType("mlagents_envs.side_channel.engine_configuration_channel")
+    engine.__spec__ = ModuleSpec(
+        "mlagents_envs.side_channel.engine_configuration_channel", loader=None
+    )
+    engine.EngineConfigurationChannel = _FakeEngineConfigurationChannel
+
+    monkeypatch.setitem(sys.modules, "mlagents_envs", root)
+    monkeypatch.setitem(sys.modules, "mlagents_envs.base_env", base_env)
+    monkeypatch.setitem(sys.modules, "mlagents_envs.environment", environment)
+    monkeypatch.setitem(sys.modules, "mlagents_envs.side_channel", side_channel)
+    monkeypatch.setitem(
+        sys.modules,
+        "mlagents_envs.side_channel.engine_configuration_channel",
+        engine,
+    )
+
+    env = UnityMLAgentsEnv(
+        file_name="fake.exe",
+        behavior_name="Behavior",
+        seed=5,
+        size=(8, 8),
+        include_state=True,
+        no_graphics=False,
+    )
+
+    obs = env.reset()
+    assert set(obs) == {"image", "state"}
+    assert obs["image"].shape == (3, 8, 8)
+    assert obs["image"].dtype == np.uint8
+    assert obs["state"].shape == (4,)
+    assert env.observation_space.contains(obs)
+    assert np.array_equal(env.render(), obs["image"].transpose(1, 2, 0))
+
+    next_obs, reward, done, info = env.step(np.array([2.0, -3.0], dtype=np.float32))
+
+    assert next_obs["image"].shape == (3, 8, 8)
+    assert next_obs["state"].shape == (4,)
+    assert reward == 1.5
+    assert done is True
+    assert np.array_equal(env._env.last_action, np.array([[1.0, -1.0]], dtype=np.float32))
+    assert np.array_equal(info["action"], np.array([1.0, -1.0], dtype=np.float32))
+    assert np.array_equal(info["vector_observation"], np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float32))
+    assert info["discount"] == np.array(0.0, dtype=np.float32)
+    assert info["terminated"] is False
+    assert info["truncated"] is True
+    assert info["interrupted"] is True
+    assert env.observation_space.contains(next_obs)
+
+    env.close()
+    assert env._env.closed is True
+
+
 def test_gym_image_env_discrete_action_mapping():
     wrapped = GymImageEnv(_FakeDiscreteEnv(), seed=1, size=(64, 64))
     obs = wrapped.reset()
@@ -143,6 +303,21 @@ def test_gym_image_env_discrete_action_mapping():
     assert done is False
     assert info["action"].shape == (3,)
     assert np.array_equal(info["action"], np.array([-1.0, 1.0, -1.0], dtype=np.float32))
+
+
+def test_frame_stack_wrapper_shifts_frames_for_gym_image_env():
+    wrapped = FrameStack(GymImageEnv(_FakeDiscreteEnv(), seed=1, size=(4, 4)), num_frames=2)
+
+    obs = wrapped.reset()
+    assert obs["image"].shape == (6, 4, 4)
+    assert np.array_equal(obs["image"][0:3], obs["image"][3:6])
+
+    next_obs, reward, done, info = wrapped.step(np.array([-0.2, 0.7, 0.1], dtype=np.float32))
+    assert reward == 1.0
+    assert done is False
+    assert isinstance(info, dict)
+    assert next_obs["image"].shape == (6, 4, 4)
+    assert np.array_equal(next_obs["image"][0:3], obs["image"][3:6])
 
 
 class _FakeDictObsEnv:
@@ -448,16 +623,26 @@ def test_brax_image_env_adapts_functional_brax_api(monkeypatch):
     )
 
     wrapped = BraxImageEnv(
-        "ant", seed=0, size=(32, 32), backend="generalized", jit=True
+        "ant",
+        seed=0,
+        size=(32, 32),
+        backend="generalized",
+        jit=True,
+        include_state=True,
     )
     obs = wrapped.reset()
+    render0 = wrapped.render()
     assert obs["image"].shape == (3, 32, 32)
+    assert obs["state"].shape == (3,)
     assert wrapped.action_space.shape == (2,)
     assert wrapped.max_episode_steps == 7
+    assert render0.shape == (32, 32, 3)
+    assert np.array_equal(render0, wrapped.render())
 
     next_obs, reward, done, info = wrapped.step(np.array([2.0, -2.0], dtype=np.float32))
 
     assert next_obs["image"].shape == (3, 32, 32)
+    assert next_obs["state"].shape == (3,)
     assert reward == 1.25
     assert done is False
     assert np.array_equal(info["action"], np.array([1.0, -1.0], dtype=np.float32))
@@ -468,7 +653,7 @@ def test_brax_image_env_adapts_functional_brax_api(monkeypatch):
 @patch("world_models.models.dreamer.env_wrapper.TimeLimit")
 @patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
 @patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
-@patch("world_models.models.dreamer.make_mujoco_env_from_config")
+@patch("world_models.envs.mujoco_env.make_mujoco_env_from_config")
 def test_make_env_native_mujoco_backend(
     mock_make_mujoco_env,
     mock_repeat,
@@ -498,7 +683,7 @@ def test_make_env_native_mujoco_backend(
 @patch("world_models.models.dreamer.env_wrapper.TimeLimit")
 @patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
 @patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
-@patch("world_models.models.dreamer.BraxImageEnv")
+@patch("world_models.envs.brax_env.BraxImageEnv")
 def test_make_env_brax_backend(
     mock_brax_env,
     mock_repeat,
@@ -657,7 +842,7 @@ def test_make_mujoco_env_falls_back_to_gymnasium_robotics_for_legacy_ids(
 @patch("world_models.models.dreamer.env_wrapper.TimeLimit")
 @patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
 @patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
-@patch("world_models.models.dreamer.make_robotics_env")
+@patch("world_models.envs.robotics_env.make_robotics_env")
 def test_make_env_robotics_backend(
     mock_robotics_env,
     mock_repeat,
@@ -920,7 +1105,7 @@ def test_procgen_image_env_wraps_single_vector_env(monkeypatch):
 @patch("world_models.models.dreamer.env_wrapper.TimeLimit")
 @patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
 @patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
-@patch("world_models.models.dreamer.DMLabEnv")
+@patch("world_models.envs.dmlab.DMLabEnv")
 def test_make_env_dmlab_backend(
     mock_dmlab,
     mock_repeat,
@@ -960,7 +1145,7 @@ def test_make_env_dmlab_backend(
 @patch("world_models.models.dreamer.env_wrapper.TimeLimit")
 @patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
 @patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
-@patch("world_models.models.dreamer.ProcgenImageEnv")
+@patch("world_models.envs.procgen_env.ProcgenImageEnv")
 def test_make_env_procgen_backend(
     mock_procgen_env,
     mock_repeat,
@@ -998,7 +1183,7 @@ def test_make_env_procgen_backend(
 @patch("world_models.models.dreamer.env_wrapper.TimeLimit")
 @patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
 @patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
-@patch("world_models.models.dreamer.BSuiteImageEnv")
+@patch("world_models.envs.bsuite_env.BSuiteImageEnv")
 def test_make_env_bsuite_backend(
     mock_bsuite_env,
     mock_repeat,
@@ -1063,18 +1248,24 @@ def test_bsuite_image_env_wraps_dm_env_discrete_task():
     from world_models.envs.bsuite_env import BSuiteImageEnv
 
     base_env = _FakeBSuiteEnv()
-    env = BSuiteImageEnv("catch/0", seed=7, size=(16, 16), env=base_env)
+    env = BSuiteImageEnv("catch/0", seed=7, size=(16, 16), env=base_env, include_state=True)
 
     obs = env.reset()
+    render0 = env.render()
     assert obs["image"].shape == (3, 16, 16)
+    assert obs["state"].shape == (2,)
     assert env.action_space.shape == (3,)
+    assert render0.shape == (16, 16, 3)
+    assert np.array_equal(render0, env.render())
 
     next_obs, reward, done, info = env.step(
         np.array([-1.0, 1.0, -1.0], dtype=np.float32)
     )
     assert next_obs["image"].shape == (3, 16, 16)
+    assert next_obs["state"].shape == (2,)
     assert reward == 1.5
     assert done is True
     assert base_env.last_action == 1
     assert info["bsuite_id"] == "catch/0"
+    assert info["vector_observation"].shape == (2,)
     assert np.array_equal(info["action"], np.array([-1.0, 1.0, -1.0], dtype=np.float32))

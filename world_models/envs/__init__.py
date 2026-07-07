@@ -240,9 +240,9 @@ def make_env(env_id: str, **kwargs: Any) -> Any:
     except Exception:
         logger.debug("make_bsuite_env could not create %s", env_id, exc_info=True)
 
-    import gymnasium
+    from world_models.utils.gym_compat import gym
 
-    return gymnasium.make(env_id, **kwargs)
+    return gym.make(env_id, **kwargs)
 
 
 __all__ = [
@@ -286,3 +286,4 @@ __all__ = [
     "SelectAction",
     "make_env",
 ]
+

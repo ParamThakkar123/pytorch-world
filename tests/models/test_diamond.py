@@ -1,7 +1,7 @@
 import pytest
 import torch
 import numpy as np
-import gymnasium as gym
+from world_models.utils.gym_compat import gym
 from unittest.mock import MagicMock, patch
 
 from world_models.configs.diamond_config import (
@@ -563,3 +563,4 @@ class TestIntegration:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

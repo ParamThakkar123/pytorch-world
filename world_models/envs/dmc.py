@@ -1,6 +1,7 @@
 from typing import Any
 
-import gymnasium as gym
+from world_models.envs._contract import finalize_step_info
+from world_models.utils.gym_compat import gym
 import numpy as np
 
 
@@ -75,8 +76,23 @@ class DeepMindControlEnv:
         obs["image"] = self.render().transpose(2, 0, 1).copy()
         reward = time_step.reward or 0
         done = time_step.last()
-        info = {"discount": np.array(time_step.discount, np.float32)}
-        return obs, reward, done, info
+        vector_observation = np.concatenate(
+            [
+                np.asarray(value, dtype=np.float32).reshape(-1)
+                for value in time_step.observation.values()
+            ],
+            axis=0,
+        )
+        info = finalize_step_info(
+            {
+                "discount": np.array(time_step.discount, np.float32),
+                "vector_observation": vector_observation,
+            },
+            done=done,
+            terminated=done,
+            truncated=False,
+        )
+        return obs, float(reward), done, info
 
     def reset(self) -> dict:
         time_step = self._env.reset()
@@ -88,3 +104,4 @@ class DeepMindControlEnv:
         if kwargs.get("mode", "rgb_array") != "rgb_array":
             raise ValueError("Only render mode 'rgb_array' is supported.")
         return self._env.physics.render(*self._size, camera_id=self._camera)
+

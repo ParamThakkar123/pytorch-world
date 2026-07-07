@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import datetime
+from collections import deque
 import uuid
 from typing import Any
 
-import gymnasium as gym
+from world_models.envs._contract import finalize_step_info
+from world_models.utils.gym_compat import gym
 import numpy as np
 from PIL import Image
 
@@ -28,16 +30,94 @@ class TimeLimit:
         assert self._step is not None, "Must reset environment."
         obs, reward, done, info = self._env.step(action)
         self._step += 1
-        if self._step >= self._duration:
+        timeout = self._step >= self._duration
+        upstream_terminated = bool(info.get("terminated", False)) if info else False
+        if timeout:
             done = True
-            if "discount" not in info:
-                info["discount"] = np.array(1.0).astype(np.float32)
             self._step = None
+        info = finalize_step_info(
+            info,
+            done=done,
+            terminated=upstream_terminated,
+            truncated=timeout and not upstream_terminated,
+            discount=np.array(
+                1.0
+                if timeout and not upstream_terminated
+                else ((info or {}).get("discount", 0.0 if done else 1.0)),
+                dtype=np.float32,
+            ),
+        )
         return obs, reward, done, info
 
     def reset(self) -> Any:
         self._step = 0
         return self._env.reset()
+
+
+class FrameStack:
+    """Stack the most recent image observations along the channel axis.
+
+    The wrapped environment must emit dict observations with an ``"image"`` key
+    in ``(C, H, W)`` layout. Non-image keys such as ``"state"`` are passed
+    through unchanged from the latest observation.
+    """
+
+    def __init__(self, env: Any, num_frames: int) -> None:
+        if int(num_frames) < 1:
+            raise ValueError("num_frames must be >= 1")
+        self._env = env
+        self._num_frames = int(num_frames)
+        self._frames: deque[np.ndarray] = deque(maxlen=self._num_frames)
+        image_space = env.observation_space["image"]
+        if len(image_space.shape) != 3:
+            raise ValueError(
+                "FrameStack expects image observations with shape (C, H, W)."
+            )
+        channels, height, width = image_space.shape
+        spaces = dict(env.observation_space.spaces)
+        image_space_cls = image_space.__class__
+        spaces["image"] = image_space_cls(
+            low=0,
+            high=255,
+            shape=(channels * self._num_frames, height, width),
+            dtype=image_space.dtype,
+        )
+        dict_space_cls = env.observation_space.__class__
+        self._observation_space = dict_space_cls(spaces)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._env, name)
+
+    @property
+    def observation_space(self) -> gym.spaces.Dict:
+        return self._observation_space
+
+    @property
+    def action_space(self) -> Any:
+        return self._env.action_space
+
+    def _stack_observation(self, obs: dict[str, Any]) -> dict[str, Any]:
+        image = np.asarray(obs["image"], dtype=np.uint8)
+        if image.ndim != 3:
+            raise ValueError("FrameStack expects image observations with shape (C, H, W).")
+        stacked = np.concatenate(list(self._frames), axis=0)
+        out = dict(obs)
+        out["image"] = stacked.copy()
+        return out
+
+    def reset(self) -> dict[str, Any]:
+        obs = self._env.reset()
+        image = np.asarray(obs["image"], dtype=np.uint8)
+        self._frames.clear()
+        for _ in range(self._num_frames):
+            self._frames.append(image.copy())
+        return self._stack_observation(obs)
+
+    def step(self, action: Any) -> tuple[dict[str, Any], Any, bool, dict[str, Any]]:
+        obs, reward, done, info = self._env.step(action)
+        image = np.asarray(obs["image"], dtype=np.uint8)
+        self._frames.append(image.copy())
+        return self._stack_observation(obs), reward, done, info
 
 
 class ActionRepeat:
@@ -324,3 +404,4 @@ class SelectAction(gym.Wrapper):
 
     def step(self, action: dict[str, Any]) -> Any:
         return self.env.step(action[self._key])
+

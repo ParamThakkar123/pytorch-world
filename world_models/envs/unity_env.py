@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from world_models.envs._contract import finalize_step_info
+from world_models.envs._observations import add_optional_state_space
 import gymnasium as gym
 import numpy as np
 from PIL import Image
@@ -45,9 +47,9 @@ class UnityMLAgentsEnv:
 
     Features:
         - Supports single-agent control with continuous action spaces.
-        - Returns observations as {"image": (C, H, W)} with uint8 values.
+        - Returns observations as dicts with required key ``"image"``.
         - Normalizes actions to [-1, 1] range.
-        - Includes rendered frames in observations for visual policies.
+        - Exposes non-visual sensors in ``info["vector_observation"]`` for debugging.
 
     Args:
         file_name (str): Path to the Unity environment binary.
@@ -61,9 +63,12 @@ class UnityMLAgentsEnv:
         time_scale (float): Simulation time scale multiplier (default: 20.0).
         quality_level (int): Graphics quality level 0-5 (default: 1).
         max_episode_steps (int): Maximum steps per episode (default: 1000).
+        include_state (bool): Include a flattened non-visual ``"state"`` key
+            in observations when the Unity behavior exposes non-image sensors.
 
     Attributes:
-        observation_space: Dict space with "image" key containing (3, H, W) Box.
+        observation_space: Dict space with required ``"image"`` key containing
+            ``(3, H, W)`` uint8 frames.
         action_space: Box space with actions in [-1, 1] range.
         max_episode_steps: Maximum steps per episode.
 
@@ -84,6 +89,7 @@ class UnityMLAgentsEnv:
         time_scale: float = 20.0,
         quality_level: int = 1,
         max_episode_steps: int = 1000,
+        include_state: bool = False,
     ) -> None:
         from mlagents_envs.base_env import ActionTuple
         from mlagents_envs.environment import UnityEnvironment
@@ -95,6 +101,7 @@ class UnityMLAgentsEnv:
         self._size = (int(size[0]), int(size[1]))
         self._max_episode_steps = int(max_episode_steps)
         self._agent_id = None
+        self._include_state = bool(include_state)
         self._last_image: Any = None
 
         self._engine_channel = EngineConfigurationChannel()
@@ -137,15 +144,32 @@ class UnityMLAgentsEnv:
 
     @property
     def observation_space(self) -> gym.spaces.Dict:
-        return gym.spaces.Dict(
-            {
-                "image": gym.spaces.Box(
-                    low=0,
-                    high=255,
-                    shape=(3, self._size[0], self._size[1]),
-                    dtype=np.uint8,
+        state_space = None
+        if self._include_state:
+            vector_dim = 0
+            for spec in getattr(self._spec, "observation_specs", []):
+                shape = tuple(getattr(spec, "shape", ()))
+                if len(shape) == 3 and (
+                    shape[-1] in (1, 3, 4) or shape[0] in (1, 3, 4)
+                ):
+                    continue
+                if len(shape) > 0:
+                    vector_dim += int(np.prod(shape))
+            if vector_dim > 0:
+                state_space = gym.spaces.Box(
+                    low=-np.inf,
+                    high=np.inf,
+                    shape=(vector_dim,),
+                    dtype=np.float32,
                 )
-            }
+        return add_optional_state_space(
+            gym.spaces.Box(
+                low=0,
+                high=255,
+                shape=(3, self._size[0], self._size[1]),
+                dtype=np.uint8,
+            ),
+            state_space=state_space,
         )
 
     @property
@@ -255,6 +279,21 @@ class UnityMLAgentsEnv:
         image = self._to_hwc_uint8(visual)
         return image.transpose(2, 0, 1).copy()
 
+    def _extract_vector_observation(self, obs_list: Any) -> np.ndarray | None:
+        vectors: list[np.ndarray] = []
+        for obs in obs_list:
+            arr = np.asarray(obs)
+            if arr.ndim == 0:
+                continue
+            if arr.ndim == 3 and (
+                arr.shape[-1] in (1, 3, 4) or arr.shape[0] in (1, 3, 4)
+            ):
+                continue
+            vectors.append(arr.astype(np.float32, copy=False).reshape(-1))
+        if not vectors:
+            return None
+        return np.concatenate(vectors, axis=0)
+
     def reset(self) -> dict[str, Any]:
         self._env.reset()
         decision_steps, terminal_steps = self._env.get_steps(self._behavior_name)
@@ -268,7 +307,12 @@ class UnityMLAgentsEnv:
         self._agent_id, obs_list, _, _ = data
         image = self._obs_list_to_chw_image(obs_list)
         self._last_image = image
-        return {"image": image}
+        observation = {"image": image}
+        if self._include_state:
+            vector_observation = self._extract_vector_observation(obs_list)
+            if vector_observation is not None:
+                observation["state"] = vector_observation.copy()
+        return observation
 
     def step(self, action: Any) -> tuple[dict[str, Any], float, bool, dict[str, Any]]:
         if self._agent_id is None:
@@ -309,10 +353,22 @@ class UnityMLAgentsEnv:
             "discount": np.array(0.0 if done else 1.0, dtype=np.float32),
             "action": action[0].copy(),
         }
+        vector_observation = self._extract_vector_observation(obs_list)
+        if vector_observation is not None:
+            info["vector_observation"] = vector_observation.copy()
         if done:
             info["interrupted"] = bool(interrupted)
+        info = finalize_step_info(
+            info,
+            done=done,
+            terminated=done and not interrupted,
+            truncated=done and interrupted,
+        )
 
-        return {"image": image}, float(reward), bool(done), info
+        observation = {"image": image}
+        if self._include_state and vector_observation is not None:
+            observation["state"] = vector_observation.copy()
+        return observation, float(reward), bool(done), info
 
     def render(self, *args: Any, **kwargs: Any) -> Any:
         if self._last_image is None:

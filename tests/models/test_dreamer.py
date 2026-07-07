@@ -1,6 +1,9 @@
 import pytest
 import numpy as np
 from unittest.mock import Mock, patch
+
+gym = pytest.importorskip("gym")
+
 from world_models.models.dreamer import DreamerAgent
 from world_models.models.dreamer_rssm import RSSM
 from world_models.configs.dreamer_config import DreamerConfig
@@ -91,6 +94,92 @@ def _mock_image_env():
     mock_action_space.shape = (2,)
     mock_env.action_space = mock_action_space
     return mock_env
+
+
+class _FrameStackCollectEnv:
+    def __init__(self):
+        self.action_space = gym.spaces.Box(
+            low=-1.0, high=1.0, shape=(2,), dtype=np.float32
+        )
+        self.observation_space = gym.spaces.Box(
+            low=-1.0, high=1.0, shape=(3,), dtype=np.float32
+        )
+        self.spec = type("Spec", (), {"max_episode_steps": 5})()
+        self._step_count = 0
+
+    def reset(self, seed=None):
+        self._step_count = 0
+        return np.array([0.0, 0.1, 0.2], dtype=np.float32), {"seed": seed}
+
+    def step(self, action):
+        self._step_count += 1
+        obs = np.array([0.2, 0.1, 0.0], dtype=np.float32) + self._step_count
+        reward = float(self._step_count)
+        terminated = self._step_count >= 2
+        truncated = False
+        return obs.astype(np.float32), reward, terminated, truncated, {}
+
+    def render(self, *args, **kwargs):
+        value = 32 + self._step_count * 16
+        return np.full((8, 8, 3), value, dtype=np.uint8)
+
+    def close(self):
+        pass
+
+
+class TestDreamerEnvConfig:
+    def test_config_defaults_to_single_frame_stack(self):
+        config = DreamerConfig()
+        assert config.frame_stack == 1
+
+    def test_yaml_roundtrip_preserves_frame_stack(self, tmp_path):
+        config = DreamerConfig()
+        config.frame_stack = 3
+        path = tmp_path / "dreamer.yaml"
+        config.to_yaml(path)
+
+        loaded = DreamerConfig.from_yaml(path)
+        assert loaded.frame_stack == 3
+
+
+class TestDreamerFrameStackIntegration:
+    @patch("world_models.models.dreamer.Logger")
+    def test_collect_random_episodes_uses_stacked_frames_end_to_end(
+        self, mock_logger, tmp_path
+    ):
+        config = DreamerConfig()
+        config.env_backend = "gym"
+        config.env_instance = _FrameStackCollectEnv()
+        config.image_size = (8, 8)
+        config.frame_stack = 2
+        config.action_repeat = 1
+        config.seed_steps = 3
+        config.train_seq_len = 2
+        config.batch_size = 1
+        config.buffer_size = 8
+        config.no_gpu = True
+        config.use_amp = False
+        config.logdir = str(tmp_path / "run")
+        config.restore = False
+        config.to_yaml = Mock(return_value="")
+
+        agent = DreamerAgent(config)
+        rewards = agent.dreamer.collect_random_episodes(agent.train_env, seed_steps=3)
+
+        assert agent.train_env.observation_space["image"].shape == (6, 8, 8)
+        assert agent.dreamer.obs_shape == (6, 8, 8)
+        assert agent.dreamer.data_buffer.observations.shape == (8, 6, 8, 8)
+        assert agent.dreamer.data_buffer.steps == 3
+        assert agent.dreamer.data_buffer.episodes == 1
+        assert rewards.shape == (2,)
+        assert rewards.tolist() == [3.0, 1.0]
+        first_obs = agent.dreamer.data_buffer.observations[0]
+        second_obs = agent.dreamer.data_buffer.observations[1]
+        assert first_obs.shape == (6, 8, 8)
+        assert np.array_equal(first_obs[0:3], first_obs[3:6])
+        assert np.array_equal(second_obs[0:3], first_obs[3:6])
+        assert not np.array_equal(second_obs[3:6], second_obs[0:3])
+        mock_logger.assert_called_once()
 
 
 class TestDreamerConfigSerialization:

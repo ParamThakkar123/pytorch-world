@@ -29,6 +29,7 @@ class DreamerConfig(SerializableConfigMixin):
     env_instance: Any = None
     image_size: tuple[int, int] = (64, 64)
     gym_render_mode: str = "rgb_array"
+    frame_stack: int = 1
 
     # DeepMind Lab options. dmlab_action_repeat is native DMLab frame
     # repeat; Dreamer action_repeat is still applied by the shared wrapper
