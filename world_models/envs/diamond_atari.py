@@ -27,6 +27,7 @@ class DiamondAtariWrapper:
         from world_models.utils.gym_compat import spaces
 
         self.env = env
+        self.action_space = env.action_space
         self.frameskip = frameskip
         self.max_noop = max_noop
         self.terminate_on_life_loss = terminate_on_life_loss
