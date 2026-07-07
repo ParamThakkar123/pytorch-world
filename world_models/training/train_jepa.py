@@ -471,7 +471,7 @@ def main(args: Any = None, resume_preempt: bool = False) -> Any:
 
 def sweep_train() -> None:
     """Function for WandB sweep agent."""
-    with wandb.init() as run:
+    with wandb.init():
         cfg = JEPAConfig()
         # Update config with sweep parameters
         for key, value in wandb.config.items():  # type: ignore[no-untyped-call]

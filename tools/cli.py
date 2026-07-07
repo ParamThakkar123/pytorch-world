@@ -17,4 +17,4 @@ def __getattr__(name: str) -> Any:
 
 
 if __name__ == "__main__":
-    run()
+    _impl.run()

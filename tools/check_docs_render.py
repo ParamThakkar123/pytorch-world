@@ -5,7 +5,6 @@ Saves output to tools/render_check/ with screenshots and console logs.
 """
 
 from pathlib import Path
-import sys
 import time
 from playwright.sync_api import ConsoleMessage, Error, sync_playwright
 

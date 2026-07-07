@@ -11,7 +11,7 @@ Reference:
 import torch
 import torch.nn as nn
 from torchvision import models
-from typing import Sequence, Optional
+
 
 
 class VGGFeatureExtractor(nn.Module):

@@ -732,10 +732,6 @@ def train(model: str, extra_args: tuple[str, ...], inproc: bool) -> None:
             logger.debug("In-process training failed: %s", exc, exc_info=True)
             click.echo("Falling back to subprocess execution")
 
-    safe_args = [
-        click.utils.LazyFile(arg).name if hasattr(click.utils, "LazyFile") else arg
-        for arg in extra_args
-    ]  # noqa: B018
     cmd = [sys.executable, "-m", module, *extra_args]
     click.echo(f"Running: {' '.join(cmd)}")
     try:
