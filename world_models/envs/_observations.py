@@ -4,7 +4,13 @@ from typing import Any
 
 import numpy as np
 
-from world_models.utils.gym_compat import gym
+
+def __getattr__(name: str) -> Any:
+    if name == "gym":
+        from world_models.utils.gym_compat import gym as _gym
+
+        return _gym
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 _IMAGE_KEYS = {"image", "pixels", "rgb"}
@@ -53,12 +59,12 @@ def infer_state_space_from_observation_space(space: Any) -> gym.spaces.Box | Non
     vector_spaces = iter_vector_spaces(space)
     if not vector_spaces:
         return None
-    low = np.concatenate([subspace.low.reshape(-1) for subspace in vector_spaces]).astype(
-        np.float32
-    )
-    high = np.concatenate([subspace.high.reshape(-1) for subspace in vector_spaces]).astype(
-        np.float32
-    )
+    low = np.concatenate(
+        [subspace.low.reshape(-1) for subspace in vector_spaces]
+    ).astype(np.float32)
+    high = np.concatenate(
+        [subspace.high.reshape(-1) for subspace in vector_spaces]
+    ).astype(np.float32)
     return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
 

@@ -7,9 +7,16 @@ from typing import Any
 from world_models.envs._actions import clip_box_action
 from world_models.envs._contract import finalize_step_info
 from world_models.envs._observations import add_optional_state_space
-import gymnasium as gym
 import numpy as np
 from PIL import Image
+
+
+def __getattr__(name: str) -> Any:
+    if name == "gym":
+        import gymnasium as _gym
+
+        return _gym
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def make_brax_env(env: str | Any, **kwargs: Any) -> BraxImageEnv:
@@ -174,7 +181,6 @@ class BraxImageEnv:
                 except Exception:
                     pass
 
-
     def _to_numpy(self, value: Any) -> np.ndarray:
         return np.asarray(self._jax.device_get(value))
 
@@ -243,7 +249,9 @@ class BraxImageEnv:
         image = self._to_chw_uint8_image(state.obs)
         observation = {"image": image}
         if self._include_state:
-            observation["state"] = self._to_numpy(state.obs).astype(np.float32).reshape(-1).copy()
+            observation["state"] = (
+                self._to_numpy(state.obs).astype(np.float32).reshape(-1).copy()
+            )
         return observation
 
     def _metrics_to_info(self, state: Any) -> dict[str, Any]:

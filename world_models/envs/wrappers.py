@@ -229,7 +229,8 @@ class ObsDict:
         return obs, reward, done, info
 
     def reset(self, *, seed: int | None = None) -> dict[str, Any]:
-        obs = self._env.reset() if seed is None else self._env.reset(seed=seed)
+        result = self._env.reset() if seed is None else self._env.reset(seed=seed)
+        obs = result[0] if isinstance(result, tuple) else result
         obs = {self._key: np.array(obs)}
         return obs
 
@@ -300,7 +301,7 @@ class RewardObs:
 
     @property
     def observation_space(self) -> gym.spaces.Dict:
-        spaces = self._env.observation_space.spaces
+        spaces = dict(self._env.observation_space.spaces)
         assert "reward" not in spaces
         spaces["reward"] = gym.spaces.Box(-np.inf, np.inf, dtype=np.float32)
         return gym.spaces.Dict(spaces)
@@ -311,7 +312,8 @@ class RewardObs:
         return obs, reward, done, info
 
     def reset(self, *, seed: int | None = None) -> dict[str, Any]:
-        obs = self._env.reset() if seed is None else self._env.reset(seed=seed)
+        result = self._env.reset() if seed is None else self._env.reset(seed=seed)
+        obs = result[0] if isinstance(result, tuple) else result
         obs["reward"] = 0.0
         return obs
 

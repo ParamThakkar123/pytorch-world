@@ -10,9 +10,17 @@ from typing import Any
 from world_models.envs._actions import clip_box_action
 from world_models.envs._contract import finalize_step_info
 from world_models.envs._observations import add_optional_state_space
-import gymnasium as gym
 import numpy as np
 from PIL import Image
+
+
+def __getattr__(name: str) -> Any:
+    if name == "gym":
+        import gymnasium as _gym
+
+        return _gym
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 from world_models.envs.gym_env import GymImageEnv
 from world_models.envs.robotics_env import (
@@ -157,7 +165,9 @@ class MuJoCoImageEnv:
 
         state_space = None
         if self._include_state:
-            state_dim = int(getattr(self.model, "nq", 0)) + int(getattr(self.model, "nv", 0))
+            state_dim = int(getattr(self.model, "nq", 0)) + int(
+                getattr(self.model, "nv", 0)
+            )
             state_space = gym.spaces.Box(
                 low=-np.inf,
                 high=np.inf,
@@ -221,8 +231,12 @@ class MuJoCoImageEnv:
     def _vector_state(self) -> np.ndarray:
         return np.concatenate(
             [
-                np.asarray(getattr(self.data, "qpos", []), dtype=np.float32).reshape(-1),
-                np.asarray(getattr(self.data, "qvel", []), dtype=np.float32).reshape(-1),
+                np.asarray(getattr(self.data, "qpos", []), dtype=np.float32).reshape(
+                    -1
+                ),
+                np.asarray(getattr(self.data, "qvel", []), dtype=np.float32).reshape(
+                    -1
+                ),
             ],
             axis=0,
         )

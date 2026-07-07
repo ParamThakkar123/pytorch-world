@@ -1,9 +1,18 @@
+from __future__ import annotations
+
 from typing import Any
 
 from world_models.envs._actions import clip_box_action
 from world_models.envs._contract import finalize_step_info
-from world_models.utils.gym_compat import gym
 import numpy as np
+
+
+def __getattr__(name: str) -> Any:
+    if name == "gym":
+        from world_models.utils.gym_compat import gym as _gym
+
+        return _gym
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 class DeepMindControlEnv:
@@ -62,7 +71,9 @@ class DeepMindControlEnv:
         spaces["image"] = gym.spaces.Box(0, 255, (3,) + self._size, dtype=np.uint8)
         self._observation_space = gym.spaces.Dict(spaces)
         spec = self._env.action_spec()
-        self._action_space = gym.spaces.Box(spec.minimum, spec.maximum, dtype=np.float32)
+        self._action_space = gym.spaces.Box(
+            spec.minimum, spec.maximum, dtype=np.float32
+        )
         self._seed_spaces(self._seed)
 
     def _make_env(self, seed: int) -> Any:
@@ -129,4 +140,3 @@ class DeepMindControlEnv:
         if kwargs.get("mode", "rgb_array") != "rgb_array":
             raise ValueError("Only render mode 'rgb_array' is supported.")
         return self._env.physics.render(*self._size, camera_id=self._camera)
-

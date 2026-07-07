@@ -5,9 +5,16 @@ import importlib.util
 import sys
 from typing import Any
 
-import gymnasium as gym
-
 from world_models.envs.gym_env import GymImageEnv
+
+
+def __getattr__(name: str) -> Any:
+    if name == "gym":
+        import gymnasium as _gym
+
+        return _gym
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 _GYMNASIUM_ROBOTICS_PACKAGE = "gymnasium_robotics"
 _MOVED_MUJOCO_MESSAGE = "gymnasium-robotics"
