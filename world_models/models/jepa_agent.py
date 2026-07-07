@@ -12,7 +12,6 @@ from world_models.models.model_io import (
     coerce_config,
     resolve_pretrained_file,
 )
-from world_models.training.train_jepa import main as train_jepa_main
 from world_models.export import ExportableAgentMixin
 
 
@@ -110,4 +109,6 @@ class JEPAAgent(ExportableAgentMixin):
         }
 
     def train(self) -> None:
+        from world_models.training.train_jepa import main as train_jepa_main
+
         train_jepa_main(self.cfg)
