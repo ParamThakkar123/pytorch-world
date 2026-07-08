@@ -12,6 +12,8 @@ The function `finalize_step_info()` in `world_models.envs._contract` normalises 
 | `truncated` | `bool` | The episode ended because of an external limit (time horizon, max steps, etc.). |
 | `discount` | `np.ndarray` (`float32`) | Discount factor for the transition. `0.0` when `terminated` is true (absorbing state) or `discount` was explicitly set to `0.0` by the backend; `1.0` otherwise, unless overridden by a model or wrapper. |
 
+**Important:** ``GymImageEnv`` without a wrapping ``TimeLimit`` sets ``discount=0.0`` on *any* ``done=True`` return, including truncation, because it treats all terminal transitions the same way. Wrap with ``TimeLimit`` to get ``discount=1.0`` on time-limit truncations (the Dreamer wrapper stack does this automatically). The cross-backend contract tests in ``tests/envs/test_env_contract.py`` (``test_env_contract_shared_assertions``) verify this behavior for each backend adapter.
+
 ```python
 obs, reward, terminated, truncated, info = env.step(action)
 # info always contains:

@@ -278,6 +278,7 @@
 <li class="toctree-l2"><a class="reference internal" href="gym.html">Gym and Gymnasium</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brax.html">Brax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="atari.html">Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bsuite.html">BSuite</a></li>
 <li class="toctree-l2"><a class="reference internal" href="procgen.html">Procgen</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mujoco.html">MuJoCo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="robotics.html">Gymnasium Robotics</a></li>
@@ -413,6 +414,7 @@
 </tbody>
 </table>
 </div>
+<p><strong>Important:</strong> <code class="docutils literal notranslate"><span class="pre">GymImageEnv</span></code> without a wrapping <code class="docutils literal notranslate"><span class="pre">TimeLimit</span></code> sets <code class="docutils literal notranslate"><span class="pre">discount=0.0</span></code> on <em>any</em> <code class="docutils literal notranslate"><span class="pre">done=True</span></code> return, including truncation, because it treats all terminal transitions the same way. Wrap with <code class="docutils literal notranslate"><span class="pre">TimeLimit</span></code> to get <code class="docutils literal notranslate"><span class="pre">discount=1.0</span></code> on time-limit truncations (the Dreamer wrapper stack does this automatically). The cross-backend contract tests in <code class="docutils literal notranslate"><span class="pre">tests/envs/test_env_contract.py</span></code> (<code class="docutils literal notranslate"><span class="pre">test_env_contract_shared_assertions</span></code>) verify this behavior for each backend adapter.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
 <span class="c1"># info always contains:</span>
 <span class="k">assert</span> <span class="s2">&quot;terminated&quot;</span> <span class="ow">in</span> <span class="n">info</span>

@@ -278,6 +278,7 @@
 <li class="toctree-l2"><a class="reference internal" href="gym.html">Gym and Gymnasium</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brax.html">Brax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="atari.html">Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bsuite.html">BSuite</a></li>
 <li class="toctree-l2"><a class="reference internal" href="procgen.html">Procgen</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mujoco.html">MuJoCo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="robotics.html">Gymnasium Robotics</a></li>
@@ -438,6 +439,17 @@
 <h2>Action contract<a class="headerlink" href="#action-contract" title="Link to this heading">#</a></h2>
 <p>The action space is a Gymnasium <code class="docutils literal notranslate"><span class="pre">Box</span></code> built from DMC’s action spec minimum and maximum arrays. Dreamer creation wraps the backend in <code class="docutils literal notranslate"><span class="pre">NormalizeActions</span></code>, so policy code can emit normalized actions while the wrapper maps finite bounds back to the native DMC range.</p>
 </section>
+<section id="seed-determinism">
+<h2>Seed determinism<a class="headerlink" href="#seed-determinism" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DeepMindControlEnv</span></code> passes its <code class="docutils literal notranslate"><span class="pre">seed</span></code> parameter directly to <code class="docutils literal notranslate"><span class="pre">dm_control.suite.load(...,</span> <span class="pre">task_kwargs={&quot;random&quot;:</span> <span class="pre">seed})</span></code>, which seeds the underlying MuJoCo simulation RNG. The wrapper also seeds its internal action-space RNG. Two environments constructed with the same seed produce identical initial states:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env_a</span> <span class="o">=</span> <span class="n">DeepMindControlEnv</span><span class="p">(</span><span class="s2">&quot;cartpole-swingup&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">env_b</span> <span class="o">=</span> <span class="n">DeepMindControlEnv</span><span class="p">(</span><span class="s2">&quot;cartpole-swingup&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">obs_a</span> <span class="o">=</span> <span class="n">env_a</span><span class="o">.</span><span class="n">reset</span><span class="p">()[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
+<span class="n">obs_b</span> <span class="o">=</span> <span class="n">env_b</span><span class="o">.</span><span class="n">reset</span><span class="p">()[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
+<span class="k">assert</span> <span class="p">(</span><span class="n">obs_a</span> <span class="o">==</span> <span class="n">obs_b</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
 <section id="cameras-and-rendering">
 <h2>Cameras and rendering<a class="headerlink" href="#cameras-and-rendering" title="Link to this heading">#</a></h2>
 <p>Pass <code class="docutils literal notranslate"><span class="pre">camera=&lt;id&gt;</span></code> when constructing <code class="docutils literal notranslate"><span class="pre">DeepMindControlEnv</span></code> directly. If no camera is provided, TorchWM uses camera <code class="docutils literal notranslate"><span class="pre">2</span></code> for <code class="docutils literal notranslate"><span class="pre">quadruped</span></code> and camera <code class="docutils literal notranslate"><span class="pre">0</span></code> for other domains. Only <code class="docutils literal notranslate"><span class="pre">rgb_array</span></code> rendering is supported.</p>
@@ -504,6 +516,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-task-ids">Common task IDs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#observation-contract">Observation contract</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#action-contract">Action contract</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seed-determinism">Seed determinism</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cameras-and-rendering">Cameras and rendering</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>
 </ul>

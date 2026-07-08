@@ -278,6 +278,7 @@
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Gym and Gymnasium</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brax.html">Brax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="atari.html">Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bsuite.html">BSuite</a></li>
 <li class="toctree-l2"><a class="reference internal" href="procgen.html">Procgen</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mujoco.html">MuJoCo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="robotics.html">Gymnasium Robotics</a></li>
@@ -421,6 +422,19 @@
 </ul>
 <p>When the wrapped environment supports <code class="docutils literal notranslate"><span class="pre">render()</span></code>, TorchWM attempts to use rendered frames for visual observations. If rendering fails or only vector observations are available, it falls back to vector-to-image synthesis.</p>
 </section>
+<section id="seed-determinism">
+<h2>Seed determinism<a class="headerlink" href="#seed-determinism" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GymImageEnv</span></code> accepts a <code class="docutils literal notranslate"><span class="pre">seed</span></code> parameter at construction. It calls <code class="docutils literal notranslate"><span class="pre">reset(seed=seed)</span></code> on the wrapped environment (seeding the simulation RNG) and also seeds its own action/observation spaces and internal <code class="docutils literal notranslate"><span class="pre">_rng</span></code> for discrete action sampling. Repeated construction with the same <code class="docutils literal notranslate"><span class="pre">seed</span></code> produces identical rollouts when the underlying Gym environment is deterministic:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env_a</span> <span class="o">=</span> <span class="n">GymImageEnv</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+<span class="n">obs_a</span> <span class="o">=</span> <span class="n">env_a</span><span class="o">.</span><span class="n">reset</span><span class="p">()[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
+
+<span class="n">env_b</span> <span class="o">=</span> <span class="n">GymImageEnv</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+<span class="n">obs_b</span> <span class="o">=</span> <span class="n">env_b</span><span class="o">.</span><span class="n">reset</span><span class="p">()[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
+<span class="k">assert</span> <span class="p">(</span><span class="n">obs_a</span> <span class="o">==</span> <span class="n">obs_b</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Calling <code class="docutils literal notranslate"><span class="pre">reset(seed=...)</span></code> on an existing instance reseeds both the simulation and the wrapper RNGs, so subsequent rollouts are also reproducible.</p>
+</section>
 <section id="action-conversion">
 <h2>Action conversion<a class="headerlink" href="#action-conversion" title="Link to this heading">#</a></h2>
 <p>For continuous action spaces, <code class="docutils literal notranslate"><span class="pre">GymImageEnv.action_space</span></code> mirrors the wrapped environment’s <code class="docutils literal notranslate"><span class="pre">Box</span></code> bounds.</p>
@@ -498,6 +512,7 @@
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#main-apis">Main APIs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#observation-conversion">Observation conversion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seed-determinism">Seed determinism</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#action-conversion">Action conversion</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-environments">Example environments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-collection">CLI collection</a></li>

@@ -42,6 +42,21 @@ The wrapper handles several observation styles:
 
 When the wrapped environment supports `render()`, TorchWM attempts to use rendered frames for visual observations. If rendering fails or only vector observations are available, it falls back to vector-to-image synthesis.
 
+## Seed determinism
+
+``GymImageEnv`` accepts a ``seed`` parameter at construction. It calls ``reset(seed=seed)`` on the wrapped environment (seeding the simulation RNG) and also seeds its own action/observation spaces and internal ``_rng`` for discrete action sampling. Repeated construction with the same ``seed`` produces identical rollouts when the underlying Gym environment is deterministic:
+
+```python
+env_a = GymImageEnv("CartPole-v1", seed=0, size=(64, 64))
+obs_a = env_a.reset()["image"]
+
+env_b = GymImageEnv("CartPole-v1", seed=0, size=(64, 64))
+obs_b = env_b.reset()["image"]
+assert (obs_a == obs_b).all()
+```
+
+Calling ``reset(seed=...)`` on an existing instance reseeds both the simulation and the wrapper RNGs, so subsequent rollouts are also reproducible.
+
 ## Action conversion
 
 For continuous action spaces, `GymImageEnv.action_space` mirrors the wrapped environment's `Box` bounds.
