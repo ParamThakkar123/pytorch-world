@@ -23,6 +23,7 @@ class DiamondAtariWrapper:
         terminate_on_life_loss: bool = True,
         reward_clip: bool = True,
         resize: Optional[Tuple[int, int]] = (64, 64),
+        seed: int | None = None,
     ):
         from world_models.utils.gym_compat import spaces
 
@@ -33,6 +34,7 @@ class DiamondAtariWrapper:
         self.terminate_on_life_loss = terminate_on_life_loss
         self.reward_clip = reward_clip
         self.resize = resize
+        self._rng = np.random.default_rng(seed)
 
         self.lives = 0
         self._last_lives = 0
@@ -106,6 +108,9 @@ class DiamondAtariWrapper:
         )
         return obs, total_reward, done, info
 
+    def seed(self, seed: int | None = None) -> None:
+        self._rng = np.random.default_rng(seed)
+
     def step(self, action: int) -> Any:
         """Step the environment.
 
@@ -122,6 +127,9 @@ class DiamondAtariWrapper:
         return obs, reward, bool(done), info
 
     def reset(self, **kwargs: Any) -> Tuple[Any, Dict[str, Any]]:
+        seed = kwargs.get("seed")
+        if seed is not None:
+            self._rng = np.random.default_rng(seed)
         obs, info = self.env.reset(**kwargs)
 
         if self.resize is not None:
@@ -134,7 +142,7 @@ class DiamondAtariWrapper:
                 self.lives = 0
             self._last_lives = self.lives
 
-        noops = np.random.randint(1, self.max_noop + 1)
+        noops = int(self._rng.integers(1, self.max_noop + 1))
         for _ in range(noops):
             action = self.env.action_space.sample()
             if action == 0:
@@ -216,6 +224,7 @@ def make_diamond_atari_env(
         terminate_on_life_loss=terminate_on_life_loss,
         reward_clip=reward_clip,
         resize=resize,
+        seed=seed,
     )
 
     return env

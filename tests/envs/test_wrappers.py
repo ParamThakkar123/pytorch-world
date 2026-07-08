@@ -368,3 +368,56 @@ class TestUUID:
     def test_delegates_step(self, env):
         obs, reward, done, info = env.step(0)
         assert reward == 1.0
+
+
+# ---------------------------------------------------------------------------
+# ActionRepeat - early termination
+# ---------------------------------------------------------------------------
+
+
+class _ActionRepeatBaseEnv:
+    def __init__(self, max_steps: int = 5):
+        self.action_space = gym.spaces.Discrete(2)
+        self.observation_space = gym.spaces.Box(0, 1, (4,), dtype=np.float32)
+        self._max_steps = max_steps
+        self._step = 0
+
+    def reset(self, seed=None):
+        self._step = 0
+        return np.zeros(4, dtype=np.float32), {}
+
+    def step(self, action):
+        self._step += 1
+        done = self._step >= self._max_steps
+        return (
+            np.ones(4, dtype=np.float32) * self._step,
+            1.0,
+            done,
+            {
+                "terminated": done,
+                "truncated": False,
+                "discount": np.array(0.0 if done else 1.0, dtype=np.float32),
+            },
+        )
+
+
+class TestActionRepeat:
+    def test_repeats_action_specified_amount(self):
+        from world_models.envs.wrappers import ActionRepeat
+
+        env = ActionRepeat(_ActionRepeatBaseEnv(max_steps=10), amount=3)
+        env.reset()
+        _, reward, done, info = env.step(0)
+        assert reward == 3.0
+        assert done is False
+        assert info["action_repeat"] == 3
+
+    def test_early_termination_reduces_repeat_count(self):
+        from world_models.envs.wrappers import ActionRepeat
+
+        env = ActionRepeat(_ActionRepeatBaseEnv(max_steps=2), amount=5)
+        env.reset()
+        _, reward, done, info = env.step(0)
+        assert reward == 2.0
+        assert done is True
+        assert info["action_repeat"] == 2

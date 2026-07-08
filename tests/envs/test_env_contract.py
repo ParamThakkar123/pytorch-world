@@ -1,3 +1,4 @@
+from typing import Any
 import pytest
 import numpy as np
 
@@ -111,8 +112,16 @@ class _NormalizeActionBaseEnv:
             {"image": np.ones((3, 2, 2), dtype=np.uint8)},
             0.25,
             False,
-            {"action": self.last_action.copy()},
+            {
+                "action": self.last_action.copy(),
+                "terminated": False,
+                "truncated": False,
+                "discount": np.array(1.0, dtype=np.float32),
+            },
         )
+
+    def render(self, *args: Any, **kwargs: Any) -> np.ndarray:
+        return np.zeros((2, 2, 3), dtype=np.uint8)
 
 
 class _FrameStackBaseEnv:
@@ -416,3 +425,255 @@ def test_mujoco_adapter_adds_discount_and_contract_fields(monkeypatch):
     assert info["truncated"] is False
     assert np.asarray(info["discount"]).item() == 0.0
     assert info["vector_observation"].shape == (0,)
+
+
+# ---------------------------------------------------------------------------
+# Cross-backend parametrized contract test suite
+# ---------------------------------------------------------------------------
+
+# Each tuple: (name, factory, seed, action, exp_shape, exp_term, exp_trunc, exp_discount)
+
+
+def _make_gym_contract_env() -> Any:
+    return GymImageEnv(
+        _ContractFiveTupleEnv(terminated=False, truncated=True),
+        seed=3,
+        size=(8, 8),
+    )
+
+
+def _make_dmc_contract_env(monkeypatch: Any) -> Any:
+    import sys
+    from types import ModuleType, SimpleNamespace
+
+    fake_env = _FakeDMCEnv()
+    dm_control = ModuleType("dm_control")
+    dm_control.suite = SimpleNamespace(load=lambda domain, task, task_kwargs: fake_env)
+    monkeypatch.setitem(sys.modules, "dm_control", dm_control)
+    return DeepMindControlEnv("cartpole-swingup", seed=1, size=(8, 8))
+
+
+def _make_mujoco_contract_env(monkeypatch: Any) -> Any:
+    import sys
+
+    fake_mujoco = type("FakeMujoco", (), {})()
+    fake_mujoco.MjModel = _FakeMjModel
+    fake_mujoco.MjData = _FakeMjData
+    fake_mujoco.Renderer = _FakeRenderer
+    fake_mujoco.mj_resetData = lambda model, data: None
+    fake_mujoco.mj_forward = lambda model, data: None
+    fake_mujoco.mj_step = lambda model, data, nstep=1: None
+    monkeypatch.setitem(sys.modules, "mujoco", fake_mujoco)
+    return MuJoCoImageEnv(
+        xml_string="<mujoco/>",
+        size=(8, 8),
+        frame_skip=1,
+        reward_fn=lambda model, data, action, info: float(action.sum()),
+        terminal_fn=lambda model, data, info: True,
+        include_state=False,
+    )
+
+
+def _make_framestack_contract_env() -> Any:
+    return FrameStack(
+        GymImageEnv(
+            _ContractFiveTupleEnv(terminated=False),
+            seed=3,
+            size=(8, 8),
+        ),
+        num_frames=2,
+    )
+
+
+def _make_normalize_actions_contract_env() -> Any:
+    env = _NormalizeActionBaseEnv()
+    env.observation_space = gym.spaces.Dict(
+        {
+            "image": gym.spaces.Box(0, 255, (3, 2, 2), dtype=np.uint8),
+        }
+    )
+    return NormalizeActions(env)
+
+
+_CONTRACT_CASES = [  # type: ignore[var-annotated]
+    (
+        "GymImageEnv",
+        _make_gym_contract_env,
+        3,
+        np.array([-1.0, 0.5, 0.25], dtype=np.float32),
+        (3, 8, 8),
+        False,
+        True,
+        0.0,
+    ),
+    (
+        "FrameStack(GymImageEnv)",
+        _make_framestack_contract_env,
+        3,
+        np.array([-1.0, 0.5, 0.25], dtype=np.float32),
+        (6, 8, 8),
+        False,
+        False,
+        1.0,
+    ),
+    (
+        "NormalizeActions",
+        _make_normalize_actions_contract_env,
+        None,
+        np.array([2.0, -2.0], dtype=np.float32),
+        (3, 2, 2),
+        False,
+        False,
+        1.0,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    (
+        "name",
+        "factory",
+        "seed",
+        "action",
+        "exp_shape",
+        "exp_term",
+        "exp_trunc",
+        "exp_discount",
+    ),
+    [
+        pytest.param(n, f, s, a, sh, te, tr, di, id=n)
+        for n, f, s, a, sh, te, tr, di in _CONTRACT_CASES
+    ],
+)
+def test_env_contract_shared_assertions(
+    name: str,
+    factory: Any,
+    seed: int | None,
+    action: Any,
+    exp_shape: tuple[int, int, int],
+    exp_term: bool,
+    exp_trunc: bool,
+    exp_discount: float,
+) -> None:
+    env = factory()
+    obs = env.reset(seed=seed) if seed is not None else env.reset()
+
+    assert "image" in obs
+    assert obs["image"].shape == exp_shape, (
+        f"{name}: expected shape {exp_shape}, got {obs['image'].shape}"
+    )
+    assert obs["image"].dtype == np.uint8, (
+        f"{name}: expected uint8, got {obs['image'].dtype}"
+    )
+    assert env.observation_space.contains(obs)
+
+    next_obs, reward, done, info = env.step(action)
+    assert env.action_space.contains(action) or env.action_space.contains(
+        info["action"]
+    )
+
+    assert "image" in next_obs
+    assert next_obs["image"].shape == exp_shape
+    assert next_obs["image"].dtype == np.uint8
+    assert env.observation_space.contains(next_obs)
+    assert isinstance(reward, float), f"{name}: reward must be float"
+    assert isinstance(done, bool), f"{name}: done must be bool"
+    assert "terminated" in info, f"{name}: info must contain 'terminated'"
+    assert "truncated" in info, f"{name}: info must contain 'truncated'"
+    assert "discount" in info, f"{name}: info must contain 'discount'"
+    assert "action" in info, f"{name}: info must contain 'action'"
+    assert info["discount"].dtype == np.float32, (
+        f"{name}: discount dtype must be float32"
+    )
+    assert info["terminated"] is exp_term, (
+        f"{name}: expected terminated={exp_term}, got {info['terminated']}"
+    )
+    assert info["truncated"] is exp_trunc, (
+        f"{name}: expected truncated={exp_trunc}, got {info['truncated']}"
+    )
+    assert np.asarray(info["discount"]).item() == pytest.approx(exp_discount), (
+        f"{name}: expected discount={exp_discount}, got {info['discount']}"
+    )
+
+    frame = env.render()
+    assert frame.shape == (exp_shape[1], exp_shape[2], 3), (
+        f"{name}: render shape mismatch {frame.shape}"
+    )
+    assert frame.dtype == np.uint8
+
+
+@pytest.mark.parametrize(
+    (
+        "name",
+        "factory",
+        "seed",
+        "action",
+        "exp_shape",
+        "exp_term",
+        "exp_trunc",
+        "exp_discount",
+    ),
+    [
+        pytest.param(
+            "DMC",
+            _make_dmc_contract_env,
+            1,
+            np.array([1.0, -1.0], dtype=np.float32),
+            (3, 8, 8),
+            True,
+            False,
+            0.0,
+            id="DMC",
+        ),
+        pytest.param(
+            "MuJoCo",
+            _make_mujoco_contract_env,
+            5,
+            np.array([0.5, -0.25], dtype=np.float32),
+            (3, 8, 8),
+            True,
+            False,
+            0.0,
+            id="MuJoCo",
+        ),
+    ],
+)
+def test_env_contract_shared_assertions_with_monkeypatch(
+    monkeypatch: Any,
+    name: str,
+    factory: Any,
+    seed: int | None,
+    action: Any,
+    exp_shape: tuple[int, int, int],
+    exp_term: bool,
+    exp_trunc: bool,
+    exp_discount: float,
+) -> None:
+    env = factory(monkeypatch)
+    obs = env.reset(seed=seed) if seed is not None else env.reset()
+
+    assert "image" in obs
+    assert obs["image"].shape == exp_shape
+    assert obs["image"].dtype == np.uint8
+    assert env.observation_space.contains(obs)
+
+    next_obs, reward, done, info = env.step(action)
+
+    assert "image" in next_obs
+    assert next_obs["image"].shape == exp_shape
+    assert next_obs["image"].dtype == np.uint8
+    assert env.observation_space.contains(next_obs)
+    assert isinstance(reward, float)
+    assert isinstance(done, bool)
+    assert "terminated" in info
+    assert "truncated" in info
+    assert "discount" in info
+    assert "action" in info
+    assert info["discount"].dtype == np.float32
+    assert info["terminated"] is exp_term
+    assert info["truncated"] is exp_trunc
+    assert np.asarray(info["discount"]).item() == pytest.approx(exp_discount)
+
+    frame = env.render()
+    assert frame.shape == (exp_shape[1], exp_shape[2], 3)
+    assert frame.dtype == np.uint8

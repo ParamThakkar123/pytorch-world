@@ -46,16 +46,21 @@ def make_bsuite_env(bsuite_id: str, **kwargs: Any) -> "BSuiteImageEnv":
 class _BSuiteDiscreteActionSpace(gym.spaces.Box):
     """Box action space that samples normalized one-hot actions for BSuite."""
 
-    def __init__(self, n: int):
+    def __init__(self, n: int, seed: int | None = None):
         self.n = int(n)
+        self._rng = np.random.default_rng(seed)
         super().__init__(low=-1.0, high=1.0, shape=(self.n,), dtype=np.float32)
+
+    def seed(self, seed: int | None = None) -> list[int]:
+        self._rng = np.random.default_rng(seed)
+        return [seed] if seed is not None else []
 
     def sample(
         self, mask: Any | None = None, probability: Any | None = None
     ) -> np.ndarray:
         del mask, probability
         action: np.ndarray = np.full((self.n,), -1.0, dtype=np.float32)
-        action[np.random.randint(self.n)] = 1.0
+        action[self._rng.integers(self.n)] = 1.0
         return action
 
 
@@ -134,6 +139,8 @@ class BSuiteImageEnv:
         # this wrapper compatible with Gym-style callers.
         if seed is not None:
             self._seed = int(seed)
+            if isinstance(self._action_space, _BSuiteDiscreteActionSpace):
+                self._action_space.seed(seed)
         if self._pending_reset_time_step is not None:
             time_step = self._pending_reset_time_step
             self._pending_reset_time_step = None
@@ -159,7 +166,9 @@ class BSuiteImageEnv:
                 ),
                 "bsuite_id": self.bsuite_id,
                 "action": self._one_hot_action(native_action),
-                "vector_observation": self._flatten_observation(time_step.observation).astype(np.float32, copy=False),
+                "vector_observation": self._flatten_observation(
+                    time_step.observation
+                ).astype(np.float32, copy=False),
             },
             done=done,
             terminated=done,
@@ -184,7 +193,7 @@ class BSuiteImageEnv:
         if num_values is not None:
             n = int(num_values)
             self._discrete_n = n
-            return _BSuiteDiscreteActionSpace(n)
+            return _BSuiteDiscreteActionSpace(n, seed=self._seed)
 
         minimum = np.asarray(getattr(action_spec, "minimum", -1.0), dtype=np.float32)
         maximum = np.asarray(getattr(action_spec, "maximum", 1.0), dtype=np.float32)
@@ -216,7 +225,9 @@ class BSuiteImageEnv:
             .copy()
         }
         if self._include_state:
-            observation["state"] = self._flatten_observation(time_step.observation).astype(np.float32, copy=False)
+            observation["state"] = self._flatten_observation(
+                time_step.observation
+            ).astype(np.float32, copy=False)
         return observation
 
     def _obs_to_hwc_image(self, obs: Any) -> np.ndarray:
