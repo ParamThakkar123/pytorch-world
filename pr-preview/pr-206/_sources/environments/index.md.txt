@@ -14,6 +14,7 @@ Procgen <procgen>
 MuJoCo <mujoco>
 Gymnasium Robotics <robotics>
 Unity ML-Agents <unity>
+Info Contract <info_contract>
 Vectorized Environments <vectorized>
 World Model Env <world_model>
 Wrappers <wrappers>
