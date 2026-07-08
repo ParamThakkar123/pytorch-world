@@ -41,6 +41,18 @@ The image is rendered from DMC physics with `physics.render(height, width, camer
 
 The action space is a Gymnasium `Box` built from DMC's action spec minimum and maximum arrays. Dreamer creation wraps the backend in `NormalizeActions`, so policy code can emit normalized actions while the wrapper maps finite bounds back to the native DMC range.
 
+## Seed determinism
+
+``DeepMindControlEnv`` passes its ``seed`` parameter directly to ``dm_control.suite.load(..., task_kwargs={"random": seed})``, which seeds the underlying MuJoCo simulation RNG. The wrapper also seeds its internal action-space RNG. Two environments constructed with the same seed produce identical initial states:
+
+```python
+env_a = DeepMindControlEnv("cartpole-swingup", seed=0)
+env_b = DeepMindControlEnv("cartpole-swingup", seed=0)
+obs_a = env_a.reset()["image"]
+obs_b = env_b.reset()["image"]
+assert (obs_a == obs_b).all()
+```
+
 ## Cameras and rendering
 
 Pass `camera=<id>` when constructing `DeepMindControlEnv` directly. If no camera is provided, TorchWM uses camera `2` for `quadruped` and camera `0` for other domains. Only `rgb_array` rendering is supported.
