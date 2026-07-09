@@ -21,7 +21,8 @@ TorchWM provides reusable PyTorch components and training utilities for Dreamer-
 pip install torchwm
 
 # With extras
-pip install torchwm[gym]       # Additional gym environments
+pip install torchwm[gym]       # Gym/Gymnasium environments (runnable quick start)
+pip install torchwm[dmc]       # DeepMind Control Suite (walker-walk, cheetah-run, ...)
 pip install torchwm[procgen]   # Procgen benchmark environments
 pip install torchwm[ml-agents] # Unity ML-Agents
 pip install torchwm[ml]        # TensorBoard, W&B logging
@@ -39,16 +40,27 @@ TorchWM depends on PyTorch but does not force a single PyTorch wheel index. If y
 uv add torch torchvision torchaudio --index https://download.pytorch.org/whl/cu121
 ```
 
-Use the friendly top-level API for the common path:
+Use the friendly top-level API for the common path. The example below runs on a
+base `pip install torchwm[gym]` — no simulator downloads required:
 
 ```python
 import torchwm
 
+# Trains a Dreamer agent on a Gymnasium task. Bump `total_steps` for real runs.
 agent = torchwm.create_model(
     "dreamer",
-    env="walker-walk",
-    total_steps=1_000_000,
+    env="Pendulum-v1",
+    env_backend="gym",
+    total_steps=5_000,
 )
+agent.train()
+```
+
+To train on DeepMind Control tasks such as `walker-walk`, install the DMC extra
+(`pip install torchwm[dmc]`) and use the default backend:
+
+```python
+agent = torchwm.create_model("dreamer", env="walker-walk", total_steps=1_000_000)
 agent.train()
 ```
 

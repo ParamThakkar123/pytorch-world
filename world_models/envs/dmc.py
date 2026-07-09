@@ -70,7 +70,16 @@ class DeepMindControlEnv:
         self._seed_spaces(self._seed)
 
     def _make_env(self, seed: int) -> Any:
-        from dm_control import suite
+        try:
+            from dm_control import suite
+        except ModuleNotFoundError as exc:
+            raise ModuleNotFoundError(
+                "The DeepMind Control backend requires the 'dm_control' package, "
+                "which is not installed. Install it with:\n\n"
+                "    pip install torchwm[dmc]\n\n"
+                "or pick a backend that is already available (for example a "
+                "Gymnasium task via env_backend='gym', such as 'Pendulum-v1')."
+            ) from exc
 
         return suite.load(self._domain, self._task, task_kwargs={"random": int(seed)})
 

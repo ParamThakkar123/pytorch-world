@@ -44,6 +44,10 @@ ml-agents = [
     "mlagents-envs>=0.28.0,<0.29.0",
     "protobuf>=3.20,<3.21",
 ]
+dmc = [
+    "dm-control>=1.0.0",
+    "gymnasium>=1.2.2",
+]
 mujoco = [
     "mujoco>=3.2.0",
 ]
@@ -91,7 +95,7 @@ selenium = [
     "selenium>=4.30.0",
 ]
 all = [
-    "torchwm[gym,viz,ml,ml-agents,mujoco,robotics,brax,procgen,bsuite,selenium,dev,docs]",
+    "torchwm[gym,dmc,viz,ml,ml-agents,mujoco,robotics,brax,procgen,bsuite,selenium,dev,docs]",
 ]
 docs = [
     "sphinx>=8.0.0,<9.0.0",

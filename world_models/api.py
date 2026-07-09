@@ -387,7 +387,9 @@ def create_model(model: str, config: Any | None = None, **overrides: Any) -> Any
     directly to the underlying constructor/factory.
 
     Examples:
-        >>> agent = create_model("dreamer", env="walker-walk", total_steps=1000)
+        >>> agent = create_model(
+        ...     "dreamer", env="Pendulum-v1", env_backend="gym", total_steps=1000
+        ... )
         >>> genie = create_model("genie-small", image_size=32)
     """
 

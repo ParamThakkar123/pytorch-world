@@ -41,9 +41,9 @@ class _FakeDiscreteEnv:
         pass
 
 
-@patch("world_models.models.dreamer.env_wrapper.TimeLimit")
-@patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
-@patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
+@patch("world_models.envs.wrappers.TimeLimit")
+@patch("world_models.envs.wrappers.NormalizeActions")
+@patch("world_models.envs.wrappers.ActionRepeat")
 @patch("world_models.envs.dmc.DeepMindControlEnv")
 def test_make_env_dmc_backend(
     mock_dmc,
@@ -68,10 +68,10 @@ def test_make_env_dmc_backend(
     mock_dmc.assert_called_once_with(cfg.env, cfg.seed, size=cfg.image_size)
 
 
-@patch("world_models.models.dreamer.env_wrapper.TimeLimit")
-@patch("world_models.models.dreamer.env_wrapper.FrameStack")
-@patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
-@patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
+@patch("world_models.envs.wrappers.TimeLimit")
+@patch("world_models.envs.wrappers.FrameStack")
+@patch("world_models.envs.wrappers.NormalizeActions")
+@patch("world_models.envs.wrappers.ActionRepeat")
 @patch("world_models.envs.gym_env.GymImageEnv")
 def test_make_env_gym_backend(
     mock_gym_env,
@@ -106,9 +106,9 @@ def test_make_env_gym_backend(
     )
 
 
-@patch("world_models.models.dreamer.env_wrapper.TimeLimit")
-@patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
-@patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
+@patch("world_models.envs.wrappers.TimeLimit")
+@patch("world_models.envs.wrappers.NormalizeActions")
+@patch("world_models.envs.wrappers.ActionRepeat")
 @patch("world_models.envs.unity_env.UnityMLAgentsEnv")
 def test_make_env_unity_backend(
     mock_unity_env,
@@ -511,7 +511,7 @@ def test_list_gymnasium_robotics_envs_uses_registered_package_envs(monkeypatch):
         robotics_env.gym, "register_envs", lambda module: None, raising=False
     )
     monkeypatch.setattr(
-        robotics_env.gym.envs,
+        robotics_env.gym,
         "registry",
         {
             "FetchReachDense-v4": SimpleNamespace(
@@ -714,9 +714,9 @@ def test_brax_image_env_adapts_functional_brax_api(monkeypatch):
     assert "discount" in info
 
 
-@patch("world_models.models.dreamer.env_wrapper.TimeLimit")
-@patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
-@patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
+@patch("world_models.envs.wrappers.TimeLimit")
+@patch("world_models.envs.wrappers.NormalizeActions")
+@patch("world_models.envs.wrappers.ActionRepeat")
 @patch("world_models.envs.mujoco_env.make_mujoco_env_from_config")
 def test_make_env_native_mujoco_backend(
     mock_make_mujoco_env,
@@ -744,9 +744,9 @@ def test_make_env_native_mujoco_backend(
     mock_make_mujoco_env.assert_called_once_with(cfg, cfg.image_size)
 
 
-@patch("world_models.models.dreamer.env_wrapper.TimeLimit")
-@patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
-@patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
+@patch("world_models.envs.wrappers.TimeLimit")
+@patch("world_models.envs.wrappers.NormalizeActions")
+@patch("world_models.envs.wrappers.ActionRepeat")
 @patch("world_models.envs.brax_env.BraxImageEnv")
 def test_make_env_brax_backend(
     mock_brax_env,
@@ -903,9 +903,9 @@ def test_make_mujoco_env_falls_back_to_gymnasium_robotics_for_legacy_ids(
     )
 
 
-@patch("world_models.models.dreamer.env_wrapper.TimeLimit")
-@patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
-@patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
+@patch("world_models.envs.wrappers.TimeLimit")
+@patch("world_models.envs.wrappers.NormalizeActions")
+@patch("world_models.envs.wrappers.ActionRepeat")
 @patch("world_models.envs.robotics_env.make_robotics_env")
 def test_make_env_robotics_backend(
     mock_robotics_env,
@@ -1168,9 +1168,9 @@ def test_procgen_image_env_wraps_single_vector_env(monkeypatch):
     assert env._env.closed is True
 
 
-@patch("world_models.models.dreamer.env_wrapper.TimeLimit")
-@patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
-@patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
+@patch("world_models.envs.wrappers.TimeLimit")
+@patch("world_models.envs.wrappers.NormalizeActions")
+@patch("world_models.envs.wrappers.ActionRepeat")
 @patch("world_models.envs.dmlab.DMLabEnv")
 def test_make_env_dmlab_backend(
     mock_dmlab,
@@ -1208,9 +1208,9 @@ def test_make_env_dmlab_backend(
     )
 
 
-@patch("world_models.models.dreamer.env_wrapper.TimeLimit")
-@patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
-@patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
+@patch("world_models.envs.wrappers.TimeLimit")
+@patch("world_models.envs.wrappers.NormalizeActions")
+@patch("world_models.envs.wrappers.ActionRepeat")
 @patch("world_models.envs.procgen_env.ProcgenImageEnv")
 def test_make_env_procgen_backend(
     mock_procgen_env,
@@ -1246,9 +1246,9 @@ def test_make_env_procgen_backend(
     )
 
 
-@patch("world_models.models.dreamer.env_wrapper.TimeLimit")
-@patch("world_models.models.dreamer.env_wrapper.NormalizeActions")
-@patch("world_models.models.dreamer.env_wrapper.ActionRepeat")
+@patch("world_models.envs.wrappers.TimeLimit")
+@patch("world_models.envs.wrappers.NormalizeActions")
+@patch("world_models.envs.wrappers.ActionRepeat")
 @patch("world_models.envs.bsuite_env.BSuiteImageEnv")
 def test_make_env_bsuite_backend(
     mock_bsuite_env,
