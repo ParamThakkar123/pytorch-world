@@ -10,10 +10,12 @@ DeepMind Lab <dmlab>
 Gym and Gymnasium <gym>
 Brax <brax>
 Atari <atari>
+BSuite <bsuite>
 Procgen <procgen>
 MuJoCo <mujoco>
 Gymnasium Robotics <robotics>
 Unity ML-Agents <unity>
+Info Contract <info_contract>
 Vectorized Environments <vectorized>
 World Model Env <world_model>
 Wrappers <wrappers>

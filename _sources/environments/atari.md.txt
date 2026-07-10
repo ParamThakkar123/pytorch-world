@@ -55,6 +55,7 @@ The factory creates the underlying Gymnasium Atari environment with `obs_type="r
 | `terminate_on_life_loss` | Mark the step done when an ALE life is lost and lives remain |
 | `reward_clip` | Clip summed rewards to `[-1, 1]` |
 | `resize` | Resize RGB Atari frames to `(height, width)` |
+| `seed` | Seed the internal RNG used for no-op count sampling at reset |
 
 `DiamondAtariWrapper.step()` returns a legacy four-tuple, `obs, reward, done, info`, while `reset()` returns Gymnasium's `(obs, info)` tuple. The preprocessed observation is an HWC `uint8` RGB frame, so transpose it if your model expects channel-first images.
 
@@ -81,6 +82,20 @@ This returns ALE's native `AtariVectorEnv`, not TorchWM's multiprocessing `Torch
 - IRIS and Atari-focused workflows can use ALE IDs discovered by `list_available_atari_envs()`.
 - Planet catalog entries include a subset of ALE environments.
 - Dreamer `make_env()` does not have a dedicated `env_backend="atari"` branch; wrap Atari as a Gym environment with `env_backend="gym"` if you want Dreamer-style image conversion. Use DIAMOND-style preprocessing only when your Atari training recipe expects that specific preprocessing stack.
+
+## Seed determinism
+
+``make_diamond_atari_env`` passes its ``seed`` parameter to the underlying ``gymnasium.make()`` (seeding the ALE RNG) and to ``DiamondAtariWrapper`` (seeding the no-op count RNG). Two consecutive calls with the same seed produce the same initial ALE state and the same number of reset no-ops:
+
+```python
+env_a = make_diamond_atari_env("ALE/Breakout-v5", seed=0)
+obs_a, _ = env_a.reset()  # deterministic no-op count
+
+env_b = make_diamond_atari_env("ALE/Breakout-v5", seed=0)
+obs_b, _ = env_b.reset()  # identical to env_a
+```
+
+The raw Atari factory (``make_atari_env``) delegates seeding to ``gymnasium.make()`` via the ``seed`` parameter passed through ``env.reset(seed=...)``.
 
 ## Observation and action contract
 

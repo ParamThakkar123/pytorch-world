@@ -7,19 +7,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Gym and Gymnasium" />
+<meta property="og:title" content="DeepMind BSuite" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://paramthakkar123.github.io/torchwm/environments/gym.html" />
+<meta property="og:url" content="https://paramthakkar123.github.io/torchwm/environments/bsuite.html" />
 <meta property="og:site_name" content="TorchWM Documentation" />
-<meta property="og:description" content="The Gym/Gymnasium backend adapts standard Gym-like environments to TorchWM’s image-first training interface. It accepts either an environment ID string or a pre-built environment instance and retur..." />
+<meta property="og:description" content="The BSuite backend adapts DeepMind’s Behaviour Suite for Reinforcement Learning (BSuite) diagnostic tasks to TorchWM’s image-first interface. BSuite tasks provide compact dm_env observations and mo..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="https://paramthakkar123.github.io/torchwm/_images/social_previews/summary_environments_gym_46fcad28.png" />
-<meta property="og:image:alt" content="The Gym/Gymnasium backend adapts standard Gym-like environments to TorchWM’s image-first training interface. It accepts either an environment ID string or a pre-built environment instance and retur..." />
-<meta name="description" content="The Gym/Gymnasium backend adapts standard Gym-like environments to TorchWM’s image-first training interface. It accepts either an environment ID string or a pre-built environment instance and retur..." />
+<meta property="og:image" content="https://paramthakkar123.github.io/torchwm/_images/social_previews/summary_environments_bsuite_43f8867d.png" />
+<meta property="og:image:alt" content="The BSuite backend adapts DeepMind’s Behaviour Suite for Reinforcement Learning (BSuite) diagnostic tasks to TorchWM’s image-first interface. BSuite tasks provide compact dm_env observations and mo..." />
+<meta name="description" content="The BSuite backend adapts DeepMind’s Behaviour Suite for Reinforcement Learning (BSuite) diagnostic tasks to TorchWM’s image-first interface. BSuite tasks provide compact dm_env observations and mo..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Gym and Gymnasium &#8212; TorchWM 0.4.2 documentation</title>
+    <title>DeepMind BSuite &#8212; TorchWM 0.4.2 documentation</title>
   
   
   
@@ -57,14 +57,14 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=3a14cefc"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'environments/gym';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'environments/bsuite';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <script src="../_static/fix_navbar.js?v=92322e29"></script>
-    <link rel="canonical" href="https://paramthakkar123.github.io/torchwm/environments/gym.html" />
+    <link rel="canonical" href="https://paramthakkar123.github.io/torchwm/environments/bsuite.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Brax Environments" href="brax.html" />
-    <link rel="prev" title="DeepMind Lab" href="dmlab.html" />
+    <link rel="next" title="Procgen" href="procgen.html" />
+    <link rel="prev" title="Atari" href="atari.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -276,10 +276,10 @@
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Environment Backends</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="dmc.html">DeepMind Control Suite</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmlab.html">DeepMind Lab</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Gym and Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gym.html">Gym and Gymnasium</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brax.html">Brax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="atari.html">Atari</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bsuite.html">BSuite</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">BSuite</a></li>
 <li class="toctree-l2"><a class="reference internal" href="procgen.html">Procgen</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mujoco.html">MuJoCo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="robotics.html">Gymnasium Robotics</a></li>
@@ -369,7 +369,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">Environment Backends</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Gym and Gymnasium</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">DeepMind BSuite</span></li>
   </ul>
 </nav>
 </div>
@@ -386,80 +386,103 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="gym-and-gymnasium">
-<h1>Gym and Gymnasium<a class="headerlink" href="#gym-and-gymnasium" title="Link to this heading">#</a></h1>
-<p>The Gym/Gymnasium backend adapts standard Gym-like environments to TorchWM’s image-first training interface. It accepts either an environment ID string or a pre-built environment instance and returns observations as <code class="docutils literal notranslate"><span class="pre">{&quot;image&quot;:</span> <span class="pre">...}</span></code>.</p>
-<p>Install: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">torchwm[gym]</span></code> for Gymnasium extras.</p>
-<section id="main-apis">
-<h2>Main APIs<a class="headerlink" href="#main-apis" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">GymImageEnv</span><span class="p">,</span> <span class="n">make_gym_env</span>
+  <section id="deepmind-bsuite">
+<h1>DeepMind BSuite<a class="headerlink" href="#deepmind-bsuite" title="Link to this heading">#</a></h1>
+<p>The BSuite backend adapts DeepMind’s Behaviour Suite for Reinforcement Learning (BSuite) diagnostic tasks to TorchWM’s image-first interface. BSuite tasks provide compact <code class="docutils literal notranslate"><span class="pre">dm_env</span></code> observations and mostly discrete actions with known optimal reward profiles, making them useful for detecting fundamental issues in world-model training (e.g. credit assignment, memory, exploration).</p>
+<p>Install: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">bsuite</span></code></p>
+<section id="main-api">
+<h2>Main API<a class="headerlink" href="#main-api" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_bsuite_env</span><span class="p">,</span> <span class="n">list_available_bsuite_ids</span>
 
-<span class="n">env</span> <span class="o">=</span> <span class="n">make_gym_env</span><span class="p">(</span><span class="s2">&quot;Pendulum-v1&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">render_mode</span><span class="o">=</span><span class="s2">&quot;rgb_array&quot;</span><span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">make_bsuite_env</span><span class="p">(</span><span class="s2">&quot;catch/0&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
 <span class="n">obs</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>You can also wrap an already-created environment:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gym</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">GymImageEnv</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (3, 64, 64)</span>
 
-<span class="n">base_env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">,</span> <span class="n">render_mode</span><span class="o">=</span><span class="s2">&quot;rgb_array&quot;</span><span class="p">)</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">GymImageEnv</span><span class="p">(</span><span class="n">base_env</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+<span class="c1"># List all installed BSuite task IDs</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">list_available_bsuite_ids</span><span class="p">()[:</span><span class="mi">5</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Dreamer uses <code class="docutils literal notranslate"><span class="pre">cfg.env_backend</span> <span class="pre">=</span> <span class="pre">&quot;gym&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;gymnasium&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;generic&quot;</span></code>) to select this backend. Set <code class="docutils literal notranslate"><span class="pre">cfg.gym_render_mode</span> <span class="pre">=</span> <span class="pre">&quot;rgb_array&quot;</span></code> for image observations. See <a class="reference internal" href="../dreamer.html"><span class="doc">Dreamer: Model-Based RL with Latent Dynamics</span></a> for the full Dreamer config reference.</p>
-</section>
-<section id="observation-conversion">
-<h2>Observation conversion<a class="headerlink" href="#observation-conversion" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">GymImageEnv</span></code> always exposes:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">uint8</span> <span class="n">array</span> <span class="k">with</span> <span class="n">shape</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">)}</span>
-</pre></div>
-</div>
-<p>The wrapper handles several observation styles:</p>
-<ul class="simple">
-<li><p>Tuple reset/step outputs from Gymnasium by taking the first item as the observation.</p></li>
-<li><p>Dict observations by preferring image-like keys such as <code class="docutils literal notranslate"><span class="pre">image</span></code>, <code class="docutils literal notranslate"><span class="pre">pixels</span></code>, <code class="docutils literal notranslate"><span class="pre">rgb</span></code>, <code class="docutils literal notranslate"><span class="pre">observation</span></code>, or <code class="docutils literal notranslate"><span class="pre">state</span></code>.</p></li>
-<li><p>Vector observations by rendering simple vertical intensity bands into an RGB image.</p></li>
-<li><p>HWC, CHW, grayscale, and RGBA images by converting to RGB, resizing, and transposing to CHW.</p></li>
-</ul>
-<p>When the wrapped environment supports <code class="docutils literal notranslate"><span class="pre">render()</span></code>, TorchWM attempts to use rendered frames for visual observations. If rendering fails or only vector observations are available, it falls back to vector-to-image synthesis.</p>
+<p>When BSuite is not installed, <code class="docutils literal notranslate"><span class="pre">list_available_bsuite_ids()</span></code> returns example IDs: <code class="docutils literal notranslate"><span class="pre">bandit/0</span></code>, <code class="docutils literal notranslate"><span class="pre">cartpole/0</span></code>, <code class="docutils literal notranslate"><span class="pre">catch/0</span></code>, <code class="docutils literal notranslate"><span class="pre">deep_sea/0</span></code>, <code class="docutils literal notranslate"><span class="pre">discounting_chain/0</span></code>, <code class="docutils literal notranslate"><span class="pre">memory_len/0</span></code>, <code class="docutils literal notranslate"><span class="pre">mnist/0</span></code>, <code class="docutils literal notranslate"><span class="pre">mountain_car/0</span></code>, <code class="docutils literal notranslate"><span class="pre">umbrella_chain/0</span></code>.</p>
 </section>
 <section id="seed-determinism">
 <h2>Seed determinism<a class="headerlink" href="#seed-determinism" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">GymImageEnv</span></code> accepts a <code class="docutils literal notranslate"><span class="pre">seed</span></code> parameter at construction. It calls <code class="docutils literal notranslate"><span class="pre">reset(seed=seed)</span></code> on the wrapped environment (seeding the simulation RNG) and also seeds its own action/observation spaces and internal <code class="docutils literal notranslate"><span class="pre">_rng</span></code> for discrete action sampling. Repeated construction with the same <code class="docutils literal notranslate"><span class="pre">seed</span></code> produces identical rollouts when the underlying Gym environment is deterministic:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env_a</span> <span class="o">=</span> <span class="n">GymImageEnv</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
-<span class="n">obs_a</span> <span class="o">=</span> <span class="n">env_a</span><span class="o">.</span><span class="n">reset</span><span class="p">()[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
+<p><code class="docutils literal notranslate"><span class="pre">BSuiteImageEnv</span></code> accepts a <code class="docutils literal notranslate"><span class="pre">seed</span></code> parameter at construction. The seed controls the internal RNG for action-space sampling in <code class="docutils literal notranslate"><span class="pre">_BSuiteDiscreteActionSpace</span></code>. BSuite itself does not expose a native <code class="docutils literal notranslate"><span class="pre">seed</span></code> API (its randomness is encoded in the <code class="docutils literal notranslate"><span class="pre">bsuite_id</span></code>), so <code class="docutils literal notranslate"><span class="pre">reset(seed=...)</span></code> reseeds only the wrapper’s action-space RNG:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">make_bsuite_env</span><span class="p">(</span><span class="s2">&quot;catch/0&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">action_a</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>  <span class="c1"># deterministic for seed=10</span>
 
-<span class="n">env_b</span> <span class="o">=</span> <span class="n">GymImageEnv</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
-<span class="n">obs_b</span> <span class="o">=</span> <span class="n">env_b</span><span class="o">.</span><span class="n">reset</span><span class="p">()[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
-<span class="k">assert</span> <span class="p">(</span><span class="n">obs_a</span> <span class="o">==</span> <span class="n">obs_b</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">action_b</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>  <span class="c1"># deterministic for seed=20</span>
 </pre></div>
 </div>
-<p>Calling <code class="docutils literal notranslate"><span class="pre">reset(seed=...)</span></code> on an existing instance reseeds both the simulation and the wrapper RNGs, so subsequent rollouts are also reproducible.</p>
 </section>
-<section id="action-conversion">
-<h2>Action conversion<a class="headerlink" href="#action-conversion" title="Link to this heading">#</a></h2>
-<p>For continuous action spaces, <code class="docutils literal notranslate"><span class="pre">GymImageEnv.action_space</span></code> mirrors the wrapped environment’s <code class="docutils literal notranslate"><span class="pre">Box</span></code> bounds.</p>
-<p>For discrete action spaces, <code class="docutils literal notranslate"><span class="pre">GymImageEnv.action_space</span></code> is a continuous <code class="docutils literal notranslate"><span class="pre">Box</span></code> of shape <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>. The wrapper expects a one-hot-like action vector and converts it to the discrete index with <code class="docutils literal notranslate"><span class="pre">argmax</span></code> before stepping the base environment. Its <code class="docutils literal notranslate"><span class="pre">sample()</span></code> method returns one-hot vectors with <code class="docutils literal notranslate"><span class="pre">1.0</span></code> at the selected action and <code class="docutils literal notranslate"><span class="pre">-1.0</span></code> elsewhere.</p>
-</section>
-<section id="example-environments">
-<h2>Example environments<a class="headerlink" href="#example-environments" title="Link to this heading">#</a></h2>
-<p>The lightweight catalog now queries the installed Gymnasium registry at runtime instead of maintaining a hardcoded list of versioned environment IDs. Use Gymnasium’s environment docs and <code class="docutils literal notranslate"><span class="pre">torchwm</span> <span class="pre">envs</span> <span class="pre">list</span></code> to inspect the IDs available in your local installation and optional extras.</p>
-</section>
-<section id="cli-collection">
-<h2>CLI collection<a class="headerlink" href="#cli-collection" title="Link to this heading">#</a></h2>
-<p>The CLI can collect random-policy rollouts from Gym-like environments:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span>collect<span class="w"> </span>--env<span class="w"> </span>CartPole-v1<span class="w"> </span>--steps<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--out<span class="w"> </span>cartpole.npz
+<section id="observations">
+<h2>Observations<a class="headerlink" href="#observations" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BSuiteImageEnv</span></code> converts BSuite’s compact <code class="docutils literal notranslate"><span class="pre">dm_env</span></code> observations into synthetic RGB images:</p>
+<ul class="simple">
+<li><p>Native BSuite observations are flattened and normalised to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p>The flattened array is arranged onto a square canvas and repeated to 3 channels.</p></li>
+<li><p>The canvas is resized to <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W)</span></code> using bilinear interpolation.</p></li>
+<li><p>The result is returned as <code class="docutils literal notranslate"><span class="pre">{&quot;image&quot;:</span> <span class="pre">uint8</span> <span class="pre">array</span> <span class="pre">with</span> <span class="pre">shape</span> <span class="pre">(3,</span> <span class="pre">H,</span> <span class="pre">W)}</span></code>.</p></li>
+</ul>
+<p>When <code class="docutils literal notranslate"><span class="pre">include_state=True</span></code>, observations also include a <code class="docutils literal notranslate"><span class="pre">&quot;state&quot;</span></code> key with the flattened raw observation vector.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">make_bsuite_env</span><span class="p">(</span><span class="s2">&quot;catch/0&quot;</span><span class="p">,</span> <span class="n">include_state</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">obs</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="k">assert</span> <span class="s2">&quot;image&quot;</span> <span class="ow">in</span> <span class="n">obs</span> <span class="ow">and</span> <span class="s2">&quot;state&quot;</span> <span class="ow">in</span> <span class="n">obs</span>
 </pre></div>
 </div>
-<p>The command first tries <code class="docutils literal notranslate"><span class="pre">torchwm.make_env()</span></code> and falls back to <code class="docutils literal notranslate"><span class="pre">gym.make()</span></code>.</p>
+</section>
+<section id="actions">
+<h2>Actions<a class="headerlink" href="#actions" title="Link to this heading">#</a></h2>
+<p>BSuite tasks expose discrete actions. <code class="docutils literal notranslate"><span class="pre">BSuiteImageEnv</span></code> maps them to a continuous one-hot <code class="docutils literal notranslate"><span class="pre">Box</span></code> of shape <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> with values in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>. The selected action is the index of the largest value. <code class="docutils literal notranslate"><span class="pre">info[&quot;action&quot;]</span></code> stores the one-hot vector; <code class="docutils literal notranslate"><span class="pre">info[&quot;executed_action&quot;]</span></code> stores the integer index.</p>
+</section>
+<section id="info-contract">
+<h2>Info contract<a class="headerlink" href="#info-contract" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Always?</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">discount</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float32</span></code> scalar from the BSuite <code class="docutils literal notranslate"><span class="pre">TimeStep</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bsuite_id</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>Task identifier string (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;catch/0&quot;</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">action</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>One-hot action vector</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">executed_action</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>Integer index sent to the BSuite environment</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vector_observation</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>Flattened raw observation array</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">terminated</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code> — True when BSuite <code class="docutils literal notranslate"><span class="pre">TimeStep.last()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">truncated</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>Always <code class="docutils literal notranslate"><span class="pre">False</span></code> (BSuite does not expose time limits)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </section>
 <section id="troubleshooting">
 <h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Black frames or missing render output</strong>: create the environment with <code class="docutils literal notranslate"><span class="pre">render_mode=&quot;rgb_array&quot;</span></code> and pass the same render mode to <code class="docutils literal notranslate"><span class="pre">GymImageEnv</span></code>.</p></li>
-<li><p><strong>Box2D import errors</strong>: install the Box2D Gymnasium extra.</p></li>
-<li><p><strong>Discrete policies produce invalid actions</strong>: emit vectors of length <code class="docutils literal notranslate"><span class="pre">env.action_space.shape[0]</span></code>; the wrapper chooses <code class="docutils literal notranslate"><span class="pre">argmax</span></code>.</p></li>
-<li><p><strong>Custom environment reset signatures</strong>: Gymnasium-style <code class="docutils literal notranslate"><span class="pre">(obs,</span> <span class="pre">info)</span></code> and Gym-style <code class="docutils literal notranslate"><span class="pre">obs</span></code> resets are both supported by the wrapper.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">ImportError:</span> <span class="pre">No</span> <span class="pre">module</span> <span class="pre">named</span> <span class="pre">bsuite</span></code></strong>: install the optional dependency with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">bsuite</span></code>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">&quot;catch/0&quot;</span> <span class="pre">not</span> <span class="pre">recognised</span></code></strong>: verify the task ID exists in your BSuite installation with <code class="docutils literal notranslate"><span class="pre">list_available_bsuite_ids()</span></code>.</p></li>
+<li><p><strong>Synthetic images are uninformative</strong>: BSuite observations are small numeric vectors tiled onto a canvas; the synthetic image preserves all information but may look unfamiliar. Use <code class="docutils literal notranslate"><span class="pre">include_state=True</span></code> to access the raw vector alongside the image.</p></li>
 </ul>
 </section>
 </section>
@@ -475,20 +498,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="dmlab.html"
+       href="atari.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">DeepMind Lab</p>
+        <p class="prev-next-title">Atari</p>
       </div>
     </a>
     <a class="right-next"
-       href="brax.html"
+       href="procgen.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Brax Environments</p>
+        <p class="prev-next-title">Procgen</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -511,12 +534,11 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#main-apis">Main APIs</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#observation-conversion">Observation conversion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#main-api">Main API</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seed-determinism">Seed determinism</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#action-conversion">Action conversion</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-environments">Example environments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-collection">CLI collection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#observations">Observations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#actions">Actions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#info-contract">Info contract</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>
 </ul>
   </nav></div>
@@ -524,7 +546,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../_sources/environments/gym.md.txt">
+    <a href="../_sources/environments/bsuite.md.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

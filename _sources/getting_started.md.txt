@@ -59,7 +59,11 @@ import torchwm
 print(torchwm.list_models())
 print(torchwm.list_env_backends())
 
-agent = torchwm.create_model("dreamer", env="walker-walk", total_steps=1_000_000)
+# Runs on `pip install torchwm[gym]`. Use env="walker-walk" (default backend)
+# with `pip install torchwm[dmc]` for DeepMind Control tasks.
+agent = torchwm.create_model(
+    "dreamer", env="Pendulum-v1", env_backend="gym", total_steps=5_000
+)
 env = torchwm.make_env("CartPole-v1", backend="gym")
 op = torchwm.get_operator("dreamer", image_size=64, action_dim=6)
 ```
@@ -71,7 +75,8 @@ need lower-level control:
 from torchwm import DreamerAgent, DreamerConfig
 
 cfg = DreamerConfig()
-cfg.env = "walker-walk"
+cfg.env_backend = "gym"       # or the default "dmc" with torchwm[dmc] installed
+cfg.env = "Pendulum-v1"
 agent = DreamerAgent(cfg)
 ```
 
