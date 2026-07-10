@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import numpy as np
-import gymnasium as gym
-from gymnasium import spaces
+from world_models.envs._contract import finalize_step_info
 from typing import Tuple, Dict, Optional, Any
 
 
-class DiamondAtariWrapper(gym.Wrapper):
+class DiamondAtariWrapper:
     """
     Atari wrapper for DIAMOND following the paper specifications:
     - frameskip: number of frames to skip (default 4)
@@ -16,19 +17,24 @@ class DiamondAtariWrapper(gym.Wrapper):
 
     def __init__(
         self,
-        env: gym.Env,
+        env: Any,
         frameskip: int = 4,
         max_noop: int = 30,
         terminate_on_life_loss: bool = True,
         reward_clip: bool = True,
         resize: Optional[Tuple[int, int]] = (64, 64),
+        seed: int | None = None,
     ):
-        super().__init__(env)
+        from world_models.utils.gym_compat import spaces
+
+        self.env = env
+        self.action_space = env.action_space
         self.frameskip = frameskip
         self.max_noop = max_noop
         self.terminate_on_life_loss = terminate_on_life_loss
         self.reward_clip = reward_clip
         self.resize = resize
+        self._rng = np.random.default_rng(seed)
 
         self.lives = 0
         self._last_lives = 0
@@ -47,6 +53,8 @@ class DiamondAtariWrapper(gym.Wrapper):
         """
         total_reward = 0.0
         done = False
+        terminated = False
+        truncated = False
         info: Dict[str, Any] = {}
         obs: Any = None
 
@@ -58,12 +66,14 @@ class DiamondAtariWrapper(gym.Wrapper):
             else:
                 # older gym: (obs, reward, done, info)
                 obs, reward, single_done, info = ret
-                terminated = bool(single_done)
-                truncated = False
+                truncated = (
+                    bool(info.get("TimeLimit.truncated", False)) if info else False
+                )
+                terminated = bool(single_done and not truncated)
 
             total_reward += float(reward)
 
-            if terminated or (locals().get("truncated", False)):
+            if terminated or truncated:
                 done = True
                 break
 
@@ -90,7 +100,16 @@ class DiamondAtariWrapper(gym.Wrapper):
             total_reward = float(np.clip(total_reward, -1, 1))
 
         assert obs is not None
+        info = finalize_step_info(
+            info,
+            done=done,
+            terminated=terminated,
+            truncated=truncated,
+        )
         return obs, total_reward, done, info
+
+    def seed(self, seed: int | None = None) -> None:
+        self._rng = np.random.default_rng(seed)
 
     def step(self, action: int) -> Any:
         """Step the environment.
@@ -108,6 +127,9 @@ class DiamondAtariWrapper(gym.Wrapper):
         return obs, reward, bool(done), info
 
     def reset(self, **kwargs: Any) -> Tuple[Any, Dict[str, Any]]:
+        seed = kwargs.get("seed")
+        if seed is not None:
+            self._rng = np.random.default_rng(seed)
         obs, info = self.env.reset(**kwargs)
 
         if self.resize is not None:
@@ -120,7 +142,7 @@ class DiamondAtariWrapper(gym.Wrapper):
                 self.lives = 0
             self._last_lives = self.lives
 
-        noops = np.random.randint(1, self.max_noop + 1)
+        noops = int(self._rng.integers(1, self.max_noop + 1))
         for _ in range(noops):
             action = self.env.action_space.sample()
             if action == 0:
@@ -181,6 +203,8 @@ def make_diamond_atari_env(
     Returns:
         DiamondAtariWrapper: Configured Atari environment
     """
+    from world_models.utils.gym_compat import gym
+
     env = gym.make(
         game,
         obs_type="rgb",
@@ -200,6 +224,7 @@ def make_diamond_atari_env(
         terminate_on_life_loss=terminate_on_life_loss,
         reward_clip=reward_clip,
         resize=resize,
+        seed=seed,
     )
 
     return env

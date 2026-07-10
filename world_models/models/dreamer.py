@@ -1,6 +1,5 @@
 import os
 import random
-import sys
 import time
 import importlib.util
 import numpy as np
@@ -13,19 +12,8 @@ import torch.distributions as distributions
 
 from collections import OrderedDict
 from pathlib import Path
-from typing import Dict, Union
 from typing import Any
 
-import world_models.envs.wrappers as env_wrapper
-from world_models.envs.dmc import DeepMindControlEnv
-from world_models.envs.gym_env import GymImageEnv
-from world_models.envs.mujoco_env import make_mujoco_env_from_config
-from world_models.envs.procgen_env import ProcgenImageEnv
-from world_models.envs.robotics_env import make_robotics_env
-from world_models.envs.brax_env import BraxImageEnv
-from world_models.envs.dmlab import DMLabEnv
-from world_models.envs.bsuite_env import BSuiteImageEnv
-from world_models.envs.unity_env import UnityMLAgentsEnv
 from world_models.memory.dreamer_memory import ReplayBuffer
 from world_models.models.dreamer_rssm import RSSM
 from world_models.vision.dreamer_decoder import ConvDecoder, DenseDecoder, ActionDecoder
@@ -112,11 +100,15 @@ def make_env(args: Any) -> Any:
     and applies the standard wrapper stack: action repeat, action normalization,
     and time limit.
     """
+    import world_models.envs.wrappers as env_wrapper
+
     size = _resolve_image_size(args)
     backend = str(getattr(args, "env_backend", "dmc")).lower()
 
     env_instance = getattr(args, "env_instance", None)
     if env_instance is not None:
+        from world_models.envs.gym_env import GymImageEnv
+
         env: Any = GymImageEnv(
             env_instance,
             seed=args.seed,
@@ -124,8 +116,12 @@ def make_env(args: Any) -> Any:
             render_mode=getattr(args, "gym_render_mode", "rgb_array"),
         )
     elif backend == "dmc":
+        from world_models.envs.dmc import DeepMindControlEnv
+
         env = DeepMindControlEnv(args.env, args.seed, size=size)
     elif backend in {"dmlab", "deepmind_lab", "deepmindlab"}:
+        from world_models.envs.dmlab import DMLabEnv
+
         env = DMLabEnv(
             args.env,
             seed=args.seed,
@@ -137,6 +133,8 @@ def make_env(args: Any) -> Any:
             renderer=getattr(args, "dmlab_renderer", "hardware"),
         )
     elif backend in {"gym", "gymnasium", "generic"}:
+        from world_models.envs.gym_env import GymImageEnv
+
         env = GymImageEnv(
             args.env,
             seed=args.seed,
@@ -144,8 +142,12 @@ def make_env(args: Any) -> Any:
             render_mode=getattr(args, "gym_render_mode", "rgb_array"),
         )
     elif backend in {"mujoco", "mjcf", "native_mujoco"}:
+        from world_models.envs.mujoco_env import make_mujoco_env_from_config
+
         env = make_mujoco_env_from_config(args, size)
     elif backend in {"procgen", "coinrun"}:
+        from world_models.envs.procgen_env import ProcgenImageEnv
+
         env = ProcgenImageEnv(
             args.env,
             seed=args.seed,
@@ -156,6 +158,8 @@ def make_env(args: Any) -> Any:
             max_episode_steps=int(getattr(args, "time_limit", 1000)),
         )
     elif backend in {"robotics", "gymnasium_robotics"}:
+        from world_models.envs.robotics_env import make_robotics_env
+
         env = make_robotics_env(
             args.env,
             seed=args.seed,
@@ -163,12 +167,16 @@ def make_env(args: Any) -> Any:
             render_mode=getattr(args, "gym_render_mode", "rgb_array"),
         )
     elif backend in {"bsuite", "behavior_suite", "behaviour_suite"}:
+        from world_models.envs.bsuite_env import BSuiteImageEnv
+
         env = BSuiteImageEnv(
             args.env,
             seed=args.seed,
             size=size,
         )
     elif backend in {"brax", "jax_brax"}:
+        from world_models.envs.brax_env import BraxImageEnv
+
         env = BraxImageEnv(
             args.env,
             seed=args.seed,
@@ -182,6 +190,8 @@ def make_env(args: Any) -> Any:
             ),
         )
     elif backend in {"unity", "unity_mlagents", "mlagents"}:
+        from world_models.envs.unity_env import UnityMLAgentsEnv
+
         unity_file_name = getattr(args, "unity_file_name", None)
         if not unity_file_name:
             raise ValueError(
@@ -207,6 +217,9 @@ def make_env(args: Any) -> Any:
 
     env = env_wrapper.ActionRepeat(env, int(args.action_repeat))
     env = env_wrapper.NormalizeActions(env)
+    frame_stack = max(1, int(getattr(args, "frame_stack", 1)))
+    if frame_stack > 1:
+        env = env_wrapper.FrameStack(env, frame_stack)
     repeat = max(1, int(args.action_repeat))
     duration = max(1, int(args.time_limit) // repeat)
     env = env_wrapper.TimeLimit(env, duration)

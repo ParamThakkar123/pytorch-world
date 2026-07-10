@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- `dmc` optional-dependency extra (`pip install torchwm[dmc]`) that installs
+  `dm-control` for the default DeepMind Control backend
+- Actionable error from the DMC backend that names the missing `dm_control`
+  dependency and points to `torchwm[dmc]` or the gym backend
+
+### Changed
+- Quick-start examples (README, docs landing page, getting-started guide) now use
+  the base-installable `Pendulum-v1` gym backend so they run on
+  `pip install torchwm[gym]` out of the box; DMC usage is documented separately
+
+### Fixed
+- `create_model("dreamer", env="walker-walk")` no longer raises a bare
+  `ModuleNotFoundError`; the DMC dependency is installable and the error is clear
+- Broken landing-page example that called `train(env_name=..., total_steps=...)`
+  (the `train` method only accepts `total_steps`)
+- Env-adapter tests patched non-existent module attributes
+  (`world_models.models.dreamer.env_wrapper.*`) and the wrong Gymnasium registry
+  reference, causing 10 spurious failures
+- Removed stray build artifacts (`nul`, empty `testsdata/` directories) and added
+  `.gitignore` guards
+
 ## [0.4.2] — 2026-06-20
 
 ### Added

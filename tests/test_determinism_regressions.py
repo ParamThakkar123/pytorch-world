@@ -1,17 +1,33 @@
 from __future__ import annotations
 
+import importlib.util
+import json
 import math
+import os
 import random
+from collections.abc import Callable
+from pathlib import Path
 
-import gymnasium as gym
-import numpy as np
 import pytest
+
+if (
+    importlib.util.find_spec("gymnasium") is None
+    and importlib.util.find_spec("gym") is None
+):
+    pytest.skip("gym/gymnasium is not installed", allow_module_level=True)
+
+from world_models.utils.gym_compat import gym
+import numpy as np
 import torch
 from torch.distributions import Categorical
 
 from world_models.envs.gym_env import GymImageEnv
 from world_models.models.dreamer_rssm import RSSM
 from world_models.training.rl_harness import PPOTrainer
+
+
+_DATA_DIR = Path(__file__).resolve().parent / "data"
+_GOLDEN_PATH = _DATA_DIR / "regression_baselines.json"
 
 
 def _set_all_seeds(seed: int) -> None:
@@ -167,47 +183,56 @@ def _dreamer_rssm_regression_metrics():
     }
 
 
+_GENERATORS: dict[str, Callable[[], dict[str, float]]] = {
+    "ppo": _ppo_regression_metrics,
+    "dreamer_rssm": _dreamer_rssm_regression_metrics,
+}
+
+
+# --- Golden baseline loading / update -------------------------------------------
+
+
+def _load_golden_cases() -> list:
+    with open(_GOLDEN_PATH) as f:
+        raw = json.load(f)
+    cases = []
+    for name in raw:
+        if name not in _GENERATORS:
+            continue
+        entry = raw[name]
+        metrics = {k: v for k, v in entry.items() if k != "_tolerances"}
+        tolerances = entry.get("_tolerances", {})
+        cases.append(pytest.param(name, metrics, tolerances, id=name))
+    return cases
+
+
+_UPDATE_GOLDEN = os.environ.get("TORCHWM_UPDATE_GOLDEN")
+
+if _UPDATE_GOLDEN:
+    with open(_GOLDEN_PATH) as f:
+        current = json.load(f)
+    for name, gen_fn in _GENERATORS.items():
+        metrics = gen_fn()
+        tolerances = current.get(name, {}).get("_tolerances", {})
+        tolerances_new = {k: tolerances.get(k, 1e-6) for k in metrics}
+        current[name] = {**metrics, "_tolerances": tolerances_new}
+    with open(_GOLDEN_PATH, "w") as f:
+        json.dump(current, f, indent=2)
+        f.write("\n")
+
+_GOLDEN_CASES = _load_golden_cases()
+
+
 @pytest.mark.parametrize(
-    ("name", "metrics_fn", "baseline", "tolerances"),
-    [
-        pytest.param(
-            "ppo",
-            _ppo_regression_metrics,
-            {
-                "pre_loss": 0.12020242214202881,
-                "reward_sum": 1.875,
-                "post_logits_mean": -0.0017883889377117157,
-                "post_values_mean": 0.06977157294750214,
-            },
-            {
-                "pre_loss": 1e-6,
-                "reward_sum": 1e-7,
-                "post_logits_mean": 1e-6,
-                "post_values_mean": 1e-6,
-            },
-            id="ppo",
-        ),
-        pytest.param(
-            "dreamer_rssm",
-            _dreamer_rssm_regression_metrics,
-            {
-                "loss": 0.5829974412918091,
-                "kl_loss": 0.49302515387535095,
-                "posterior_stoch_mean": 0.4101625978946686,
-            },
-            {
-                "loss": 1e-6,
-                "kl_loss": 1e-6,
-                "posterior_stoch_mean": 1e-6,
-            },
-            id="dreamer_rssm",
-        ),
-    ],
+    ("name", "baseline", "tolerances"),
+    _GOLDEN_CASES,
 )
-def test_tiny_model_regression_baselines(name, metrics_fn, baseline, tolerances):
-    metrics = metrics_fn()
+def test_tiny_model_regression_baselines(name, baseline, tolerances):
+    gen_fn = _GENERATORS[name]
+    metrics = gen_fn()
     assert metrics.keys() == baseline.keys()
     for metric_name, expected in baseline.items():
-        assert metrics[metric_name] == pytest.approx(
-            expected, abs=tolerances[metric_name]
-        ), f"{name}.{metric_name} drifted: {metrics}"
+        tol = tolerances.get(metric_name, 1e-6)
+        assert metrics[metric_name] == pytest.approx(expected, abs=tol), (
+            f"{name}.{metric_name} drifted: {metrics}"
+        )

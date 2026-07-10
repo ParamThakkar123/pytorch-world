@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 import inspect
 import warnings
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable, TypeVar, cast
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -39,7 +39,7 @@ def deprecated(
                 obj.__init__(self, *args, **kwargs)
 
             obj.__init__ = wrapped_init
-            return obj
+            return cast(F, obj)
 
         @functools.wraps(obj)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -51,7 +51,7 @@ def deprecated(
             )
             return obj(*args, **kwargs)
 
-        return wrapper
+        return cast(F, wrapper)
 
     return decorator
 

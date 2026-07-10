@@ -9,17 +9,18 @@ import gymnasium as gym
 
 from world_models.envs.gym_env import GymImageEnv
 
+
 _GYMNASIUM_ROBOTICS_PACKAGE = "gymnasium_robotics"
 _MOVED_MUJOCO_MESSAGE = "gymnasium-robotics"
 
 
 def _registry_ids() -> set[str]:
-    return {str(env_id) for env_id in gym.envs.registry.keys()}
+    return {str(env_id) for env_id in gym.registry}
 
 
 def _robotics_ids_from_registry() -> set[str]:
     env_ids: set[str] = set()
-    for env_id, spec in gym.envs.registry.items():
+    for env_id, spec in gym.registry.items():
         entry_point = getattr(spec, "entry_point", "")
         if isinstance(entry_point, str):
             is_robotics_entry = entry_point.startswith(

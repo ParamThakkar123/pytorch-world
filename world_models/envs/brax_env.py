@@ -4,6 +4,9 @@ import importlib
 import importlib.util
 from typing import Any
 
+from world_models.envs._actions import clip_box_action
+from world_models.envs._contract import finalize_step_info
+from world_models.envs._observations import add_optional_state_space
 import gymnasium as gym
 import numpy as np
 from PIL import Image
@@ -36,7 +39,8 @@ class BraxImageEnv:
     If a Brax renderer is not available, vector observations are rendered as
     deterministic feature-band images so training code can still consume a pixel
     stream. The original vector observation is also exposed through
-    ``info["vector_observation"]`` after ``step`` for diagnostics.
+    ``info["vector_observation"]`` after ``step`` for diagnostics. When
+    ``include_state=True``, observations also expose a flattened ``"state"`` key.
     """
 
     def __init__(
@@ -49,11 +53,13 @@ class BraxImageEnv:
         auto_reset: bool = False,
         jit: bool = True,
         suppress_warp_warnings: bool = True,
+        include_state: bool = False,
         **env_kwargs: Any,
     ) -> None:
         self._size = (int(size[0]), int(size[1]))
         self._seed = int(seed)
         self._jit = bool(jit)
+        self._include_state = bool(include_state)
         self._state = None
 
         install_hint = "Install Brax support with `pip install torchwm[brax]`."
@@ -91,16 +97,26 @@ class BraxImageEnv:
             shape=(self._action_size,),
             dtype=np.float32,
         )
-        self._observation_space = gym.spaces.Dict(
-            {
-                "image": gym.spaces.Box(
-                    low=0,
-                    high=255,
-                    shape=(3, self._size[0], self._size[1]),
-                    dtype=np.uint8,
+        state_space = None
+        if self._include_state:
+            obs_size = getattr(self._env, "observation_size", None)
+            if obs_size is not None:
+                state_space = gym.spaces.Box(
+                    low=-np.inf,
+                    high=np.inf,
+                    shape=(int(obs_size),),
+                    dtype=np.float32,
                 )
-            }
+        self._observation_space = add_optional_state_space(
+            gym.spaces.Box(
+                low=0,
+                high=255,
+                shape=(3, self._size[0], self._size[1]),
+                dtype=np.uint8,
+            ),
+            state_space=state_space,
         )
+        self._seed_spaces(self._seed)
 
     def _make_env(
         self,
@@ -147,6 +163,16 @@ class BraxImageEnv:
     def _split_key(self) -> Any:
         self._rng, key = self._jax.random.split(self._rng)
         return key
+
+    def _seed_spaces(self, seed: int | None) -> None:
+        if seed is None:
+            return
+        for space in (self._action_space, self._observation_space):
+            if hasattr(space, "seed"):
+                try:
+                    space.seed(seed)
+                except Exception:
+                    pass
 
     def _to_numpy(self, value: Any) -> np.ndarray:
         return np.asarray(self._jax.device_get(value))
@@ -213,7 +239,13 @@ class BraxImageEnv:
         return image.transpose(2, 0, 1).copy()
 
     def _state_to_obs(self, state: Any) -> dict[str, Any]:
-        return {"image": self._to_chw_uint8_image(state.obs)}
+        image = self._to_chw_uint8_image(state.obs)
+        observation = {"image": image}
+        if self._include_state:
+            observation["state"] = (
+                self._to_numpy(state.obs).astype(np.float32).reshape(-1).copy()
+            )
+        return observation
 
     def _metrics_to_info(self, state: Any) -> dict[str, Any]:
         info = {}
@@ -227,7 +259,12 @@ class BraxImageEnv:
                         info[key] = value
         return info
 
-    def reset(self) -> dict[str, Any]:
+    def reset(self, seed: int | None = None) -> dict[str, Any]:
+        if seed is not None:
+            self._seed = int(seed)
+            self._rng = self._jax.random.PRNGKey(self._seed)
+            self._seed_spaces(self._seed)
+        self._state = None
         self._state = self._reset_fn(self._split_key())
         return self._state_to_obs(self._state)
 
@@ -235,19 +272,24 @@ class BraxImageEnv:
         if self._state is None:
             raise RuntimeError("Must call reset() before step().")
 
-        clipped = np.clip(
-            np.asarray(action, dtype=np.float32).reshape(self._action_size),
-            -1.0,
-            1.0,
+        clipped = clip_box_action(
+            action,
+            -np.ones((self._action_size,), dtype=np.float32),
+            np.ones((self._action_size,), dtype=np.float32),
         )
         brax_action = self._jnp.asarray(clipped)
         self._state = self._step_fn(self._state, brax_action)
 
         reward = float(np.asarray(self._to_numpy(self._state.reward)).reshape(()))
         done = bool(np.asarray(self._to_numpy(self._state.done)).reshape(()))
-        info = self._metrics_to_info(self._state)
-        info.setdefault("discount", np.array(0.0 if done else 1.0, dtype=np.float32))
+        info = finalize_step_info(
+            self._metrics_to_info(self._state),
+            done=done,
+            terminated=done,
+            truncated=False,
+        )
         info["action"] = clipped.copy()
+        info["executed_action"] = clipped.copy()
         info["vector_observation"] = self._to_numpy(self._state.obs).copy()
         return self._state_to_obs(self._state), reward, done, info
 

@@ -1,4 +1,10 @@
+import importlib.util
+
+import pytest
 from types import ModuleType, SimpleNamespace
+
+if importlib.util.find_spec("gymnasium") is None and importlib.util.find_spec("gym") is None:
+    pytest.skip("gym/gymnasium is not installed", allow_module_level=True)
 
 import numpy as np
 

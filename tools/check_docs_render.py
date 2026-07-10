@@ -5,9 +5,8 @@ Saves output to tools/render_check/ with screenshots and console logs.
 """
 
 from pathlib import Path
-import sys
 import time
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import ConsoleMessage, Error, sync_playwright
 
 
 OUT_DIR = Path("tools/render_check")
@@ -20,7 +19,7 @@ def file_url(path: Path) -> str:
     return "file:///" + p.as_posix()
 
 
-def check_page(page_path: Path, name: str):
+def check_page(page_path: Path, name: str) -> None:
     url = file_url(page_path)
     print(f"Opening {url}")
     logs = []
@@ -29,7 +28,7 @@ def check_page(page_path: Path, name: str):
         context = browser.new_context(viewport={"width": 1200, "height": 900})
         page = context.new_page()
 
-        def on_console(msg):
+        def on_console(msg: ConsoleMessage) -> None:
             text = f"CONSOLE [{msg.type}] {msg.text}"
             logs.append(text)
             print(text)
@@ -37,8 +36,8 @@ def check_page(page_path: Path, name: str):
         page.on("console", on_console)
 
         # Catch page errors
-        def on_page_error(err):
-            text = f"PAGE_ERROR {err}"
+        def on_page_error(err: Error) -> None:
+            text = f"PAGE_ERROR {err.message}"
             logs.append(text)
             print(text)
 
@@ -57,7 +56,10 @@ def check_page(page_path: Path, name: str):
                 print("No .mermaid svg found within timeout")
         if page.locator(".math").count():
             try:
-                page.wait_for_function("() => window.MathJax && document.querySelector('.MathJax, mjx-container')", timeout=3000)
+                page.wait_for_function(
+                    "() => window.MathJax && document.querySelector('.MathJax, mjx-container')",
+                    timeout=3000,
+                )
                 print("Found rendered MathJax element")
             except Exception:
                 print("No rendered MathJax element found within timeout")
@@ -79,7 +81,7 @@ def check_page(page_path: Path, name: str):
         browser.close()
 
 
-def main():
+def main() -> None:
     base = Path("docs/build/html")
     pages = [
         (base / "dit.html", "dit"),

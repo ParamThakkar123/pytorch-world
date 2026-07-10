@@ -3,7 +3,7 @@ import pytest
 
 gym = pytest.importorskip("gymnasium")
 
-from world_models.envs import WorldModelEnv, make_world_model_env
+from world_models.envs import WorldModelEnv, make_world_model_env  # noqa: E402
 
 
 class _CountingWorldModel:
@@ -40,7 +40,9 @@ def test_world_model_env_is_gymnasium_compliant_and_rolls_model_state():
     assert info == {"seed": 7}
     assert env.state == {"count": 0}
 
-    obs, reward, terminated, truncated, info = env.step(np.array([0.5], dtype=np.float32))
+    obs, reward, terminated, truncated, info = env.step(
+        np.array([0.5], dtype=np.float32)
+    )
 
     assert np.array_equal(obs, np.array([1.0, 0.5], dtype=np.float32))
     assert reward == 1.5
@@ -94,7 +96,9 @@ def test_make_world_model_env_and_adapter_callables_support_dict_observations():
     assert np.array_equal(obs["latent"], np.array([0.0, 1.0], dtype=np.float32))
     assert info == {"source": "fake"}
 
-    obs, reward, terminated, truncated, info = env.step(np.array([1.0], dtype=np.float32))
+    obs, reward, terminated, truncated, info = env.step(
+        np.array([1.0], dtype=np.float32)
+    )
     assert np.array_equal(obs["latent"], np.array([1.0, 1.0], dtype=np.float32))
     assert reward == 1.0
     assert terminated is True
@@ -134,7 +138,61 @@ def test_world_model_env_supports_action_transform_and_dict_tuple_reset():
     assert reward == 2.0
     assert terminated is False
     assert truncated is False
-    assert np.array_equal(info["model_state"]["latent"], np.array([2.0], dtype=np.float32))
+    assert np.array_equal(
+        info["model_state"]["latent"], np.array([2.0], dtype=np.float32)
+    )
+
+
+def test_world_model_env_discount_preserved_when_provided_by_model():
+    class _DiscountModel:
+        def reset(self, seed=None, options=None):
+            return {"count": 0}, np.array([0.0], dtype=np.float32), {}
+
+        def step(self, state, action):
+            count = state["count"] + 1
+            return {
+                "state": {"count": count},
+                "observation": np.array([float(count)], dtype=np.float32),
+                "reward": 1.0,
+                "terminated": count >= 3,
+                "info": {"discount": np.array(0.5, dtype=np.float32)},
+            }
+
+    env = WorldModelEnv(
+        _DiscountModel(),
+        observation_space=gym.spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
+        action_space=gym.spaces.Box(-1.0, 1.0, shape=(1,), dtype=np.float32),
+        torch_actions=False,
+    )
+    env.reset()
+    _, _, _, _, info = env.step(np.array([0.0], dtype=np.float32))
+    assert "discount" in info
+    assert np.asarray(info["discount"]).item() == 0.5
+
+
+def test_world_model_env_no_discount_when_model_omits_it():
+    class _NoDiscountModel:
+        def reset(self, seed=None, options=None):
+            return {}, np.array([0.0], dtype=np.float32), {}
+
+        def step(self, state, action):
+            return {
+                "state": {},
+                "observation": np.array([1.0], dtype=np.float32),
+                "reward": 1.0,
+                "terminated": False,
+                "info": {},
+            }
+
+    env = WorldModelEnv(
+        _NoDiscountModel(),
+        observation_space=gym.spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
+        action_space=gym.spaces.Box(-1.0, 1.0, shape=(1,), dtype=np.float32),
+        torch_actions=False,
+    )
+    env.reset()
+    _, _, _, _, info = env.step(np.array([0.0], dtype=np.float32))
+    assert "discount" not in info
 
 
 def test_world_model_env_requires_reset_before_step():

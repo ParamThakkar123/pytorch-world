@@ -1,10 +1,12 @@
 import pytest
 from world_models.configs.dreamer_config import DreamerConfig
-from world_models.models.dreamer import DreamerAgent
 
 
 @pytest.mark.integration
 def test_dreamer_pendulum_no_crash(tmp_path):
+    pytest.importorskip("gymnasium")
+    from world_models.models.dreamer import DreamerAgent
+
     config = DreamerConfig()
     config.env = "Pendulum-v1"
     config.env_backend = "gym"

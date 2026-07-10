@@ -17,11 +17,10 @@ classifiers = [
 dependencies = [
     "torch>=2.1.0",
     "torchvision>=0.16.0",
+    "click>=8.0.0",
     "einops>=0.8.2",
-    "gymnasium[box2d]>=1.2.2",
     "tqdm>=4.67.1",
     "pyyaml>=6.0.3",
-    "wandb>=0.16.0",
 ]
 
 [project.urls]
@@ -31,17 +30,23 @@ Issues = "https://github.com/paramthakkar123/torchwm/issues"
 Changelog = "https://github.com/paramthakkar123/torchwm/releases"
 
 [project.scripts]
-torchwm = "tools.cli:run"
-torchwm-train = "tools.cli:run_train"
+torchwm = "torchwm.cli:run"
+torchwm-train = "torchwm.cli:run_train"
 
 [project.optional-dependencies]
 gym = [
+    "gymnasium[box2d]>=1.2.2",
     "huggingface-hub>=0.23.0",
     "pygame>=2.6.1",
     "autorom>=0.6.1",
 ]
 ml-agents = [
-    "mlagents-envs>=0.29.0",
+    "mlagents-envs>=0.28.0,<0.29.0",
+    "protobuf>=3.20,<3.21",
+]
+dmc = [
+    "dm-control>=1.0.0",
+    "gymnasium>=1.2.2",
 ]
 mujoco = [
     "mujoco>=3.2.0",
@@ -53,8 +58,9 @@ brax = [
     "brax>=0.13.0",
     "jax>=0.10.1",
 ]
+# Upstream Procgen wheels currently publish support through Python 3.10.
 procgen = [
-    "procgen>=0.10.7",
+    "procgen>=0.10.7; python_version < '3.11'",
 ]
 bsuite = [
     "bsuite>=0.3.5",
@@ -73,9 +79,9 @@ viz = [
 ]
 ml = [
     "torchaudio>=0.13.0",
+    "wandb>=0.16.0",
     "tensorboard>=2.20.0",
     "tensorboardx>=2.6.4",
-    "wandb>=0.16.0",
 ]
 dev = [
     "pytest>=9.0.3",
@@ -89,7 +95,7 @@ selenium = [
     "selenium>=4.30.0",
 ]
 all = [
-    "torchwm[gym,viz,ml,ml-agents,mujoco,robotics,brax,procgen,bsuite,selenium,dev,docs]",
+    "torchwm[gym,dmc,viz,ml,ml-agents,mujoco,robotics,brax,procgen,bsuite,selenium,dev,docs]",
 ]
 docs = [
     "sphinx>=8.0.0,<9.0.0",
@@ -108,7 +114,7 @@ docs = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["world_models", "world_models.*", "torchwm", "torchwm.*"]
+include = ["world_models", "world_models.*", "torchwm", "torchwm.*", "tools", "tools.*"]
 
 [tool.setuptools.package-data]
 torchwm = ["py.typed", "__init__.pyi"]
@@ -137,3 +143,4 @@ markers = [
     "integration: tests that exercise external services, optional backends, or cross-package workflows",
     "selenium: tests that require Selenium WebDriver and a running web stack",
 ]
+

@@ -9,8 +9,11 @@ agents with a unified API.
 
    import torchwm
 
-   agent = torchwm.create_model("dreamer", action_size=6)
-   agent.train(env_name="walker-walk", total_steps=100_000)
+   # Runs on ``pip install torchwm[gym]``.
+   agent = torchwm.create_model(
+       "dreamer", env="Pendulum-v1", env_backend="gym", total_steps=5_000
+   )
+   agent.train()
 
 .. toctree::
    :maxdepth: 1

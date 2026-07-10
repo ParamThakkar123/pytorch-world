@@ -4,6 +4,8 @@ import importlib
 import importlib.util
 from typing import Any
 
+from world_models.envs._contract import finalize_step_info
+from world_models.envs._observations import add_optional_state_space
 import gymnasium as gym
 import numpy as np
 from PIL import Image
@@ -44,16 +46,21 @@ def make_bsuite_env(bsuite_id: str, **kwargs: Any) -> "BSuiteImageEnv":
 class _BSuiteDiscreteActionSpace(gym.spaces.Box):
     """Box action space that samples normalized one-hot actions for BSuite."""
 
-    def __init__(self, n: int):
+    def __init__(self, n: int, seed: int | None = None):
         self.n = int(n)
+        self._rng = np.random.default_rng(seed)
         super().__init__(low=-1.0, high=1.0, shape=(self.n,), dtype=np.float32)
+
+    def seed(self, seed: int | None = None) -> list[int]:
+        self._rng = np.random.default_rng(seed)
+        return [seed] if seed is not None else []
 
     def sample(
         self, mask: Any | None = None, probability: Any | None = None
     ) -> np.ndarray:
         del mask, probability
         action: np.ndarray = np.full((self.n,), -1.0, dtype=np.float32)
-        action[np.random.randint(self.n)] = 1.0
+        action[self._rng.integers(self.n)] = 1.0
         return action
 
 
@@ -62,9 +69,10 @@ class BSuiteImageEnv:
 
     BSuite tasks expose compact ``dm_env`` observations and mostly discrete
     actions. This adapter presents a Gym/Gymnasium-style API with image
-    observations under ``{"image": (C, H, W)}`` so TorchWM's pixel-based world
-    models can train and evaluate on BSuite diagnostic tasks without requiring
-    the base environment to implement rendering.
+    observations under a dict with required ``"image"`` key so TorchWM's
+    pixel-based world models can train and evaluate on BSuite diagnostic tasks
+    without requiring the base environment to implement rendering. When
+    ``include_state=True``, observations also include a flattened ``"state"`` key.
     """
 
     def __init__(
@@ -73,24 +81,36 @@ class BSuiteImageEnv:
         seed: int = 0,
         size: tuple[int, int] = (64, 64),
         env: Any | None = None,
+        include_state: bool = False,
     ):
         self.bsuite_id = bsuite_id
         self._seed = int(seed)
         self._size = (int(size[0]), int(size[1]))
         self._env = env if env is not None else self._load_bsuite_env(bsuite_id)
+        self._include_state = bool(include_state)
         self._discrete_n: int | None = None
         self._last_time_step: Any | None = None
+        bootstrap_time_step = self._env.reset()
         self._action_space = self._make_action_space(self._env.action_spec())
-        self._observation_space = gym.spaces.Dict(
-            {
-                "image": gym.spaces.Box(
-                    low=0,
-                    high=255,
-                    shape=(3, self._size[0], self._size[1]),
-                    dtype=np.uint8,
-                )
-            }
+        state_space = None
+        if self._include_state:
+            flattened = self._flatten_observation(bootstrap_time_step.observation)
+            state_space = gym.spaces.Box(
+                low=-np.inf,
+                high=np.inf,
+                shape=flattened.shape,
+                dtype=np.float32,
+            )
+        self._observation_space = add_optional_state_space(
+            gym.spaces.Box(
+                low=0,
+                high=255,
+                shape=(3, self._size[0], self._size[1]),
+                dtype=np.uint8,
+            ),
+            state_space=state_space,
         )
+        self._pending_reset_time_step = bootstrap_time_step
 
     @staticmethod
     def _load_bsuite_env(bsuite_id: str) -> Any:
@@ -119,7 +139,13 @@ class BSuiteImageEnv:
         # this wrapper compatible with Gym-style callers.
         if seed is not None:
             self._seed = int(seed)
-        time_step = self._env.reset()
+            if isinstance(self._action_space, _BSuiteDiscreteActionSpace):
+                self._action_space.seed(seed)
+        if self._pending_reset_time_step is not None:
+            time_step = self._pending_reset_time_step
+            self._pending_reset_time_step = None
+        else:
+            time_step = self._env.reset()
         self._last_time_step = time_step
         return self._time_step_to_obs(time_step)
 
@@ -132,14 +158,22 @@ class BSuiteImageEnv:
         obs = self._time_step_to_obs(time_step)
         reward = float(time_step.reward or 0.0)
         done = bool(time_step.last())
-        info = {
-            "discount": np.asarray(
-                0.0 if time_step.discount is None else time_step.discount,
-                dtype=np.float32,
-            ),
-            "bsuite_id": self.bsuite_id,
-            "action": self._one_hot_action(native_action),
-        }
+        info = finalize_step_info(
+            {
+                "discount": np.asarray(
+                    0.0 if time_step.discount is None else time_step.discount,
+                    dtype=np.float32,
+                ),
+                "bsuite_id": self.bsuite_id,
+                "action": self._one_hot_action(native_action),
+                "vector_observation": self._flatten_observation(
+                    time_step.observation
+                ).astype(np.float32, copy=False),
+            },
+            done=done,
+            terminated=done,
+            truncated=False,
+        )
         return obs, reward, done, info
 
     def render(self, *args: Any, **kwargs: Any) -> np.ndarray:
@@ -159,7 +193,7 @@ class BSuiteImageEnv:
         if num_values is not None:
             n = int(num_values)
             self._discrete_n = n
-            return _BSuiteDiscreteActionSpace(n)
+            return _BSuiteDiscreteActionSpace(n, seed=self._seed)
 
         minimum = np.asarray(getattr(action_spec, "minimum", -1.0), dtype=np.float32)
         maximum = np.asarray(getattr(action_spec, "maximum", 1.0), dtype=np.float32)
@@ -185,11 +219,16 @@ class BSuiteImageEnv:
         return out
 
     def _time_step_to_obs(self, time_step: Any) -> dict[str, np.ndarray]:
-        return {
+        observation = {
             "image": self._obs_to_hwc_image(time_step.observation)
             .transpose(2, 0, 1)
             .copy()
         }
+        if self._include_state:
+            observation["state"] = self._flatten_observation(
+                time_step.observation
+            ).astype(np.float32, copy=False)
+        return observation
 
     def _obs_to_hwc_image(self, obs: Any) -> np.ndarray:
         arr = self._flatten_observation(obs)

@@ -11,7 +11,7 @@ Reference:
 import torch
 import torch.nn as nn
 from torchvision import models
-from typing import Sequence, Optional
+
 
 
 class VGGFeatureExtractor(nn.Module):
@@ -92,7 +92,7 @@ class LPIPS:
         Returns:
             Per-image distance [B].
         """
-        total = 0.0
+        total: torch.Tensor = torch.zeros(feat_a[0].shape[0], device=feat_a[0].device)
         for f_a, f_b in zip(feat_a, feat_b):
             diff = (f_a - f_b).pow(2)
             # Spatial average per channel -> [B, C] -> mean over channels -> [B]

@@ -7,9 +7,13 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from world_models.envs._actions import clip_box_action
+from world_models.envs._contract import finalize_step_info
+from world_models.envs._observations import add_optional_state_space
 import gymnasium as gym
 import numpy as np
 from PIL import Image
+
 
 from world_models.envs.gym_env import GymImageEnv
 from world_models.envs.robotics_env import (
@@ -98,7 +102,8 @@ class MuJoCoImageEnv:
     compiled from MJCF XML strings/files or MJB binaries via ``mujoco.MjModel``;
     simulation state lives in ``mujoco.MjData``; actions are written to
     ``data.ctrl``; and images are produced with ``mujoco.Renderer``. Observations
-    follow TorchWM's Dreamer-style contract: ``{"image": uint8[C, H, W]}``.
+    follow TorchWM's Dreamer-style contract: a dict with required key
+    ``"image"`` containing ``uint8[C, H, W]`` frames.
 
     Native MuJoCo models do not define task rewards or episode termination by
     themselves, so callers can supply ``reward_fn`` and ``terminal_fn`` callbacks.
@@ -121,6 +126,7 @@ class MuJoCoImageEnv:
         frame_skip: int = 1,
         reset_noise_scale: float = 0.0,
         default_control_range: tuple[float, float] = (-1.0, 1.0),
+        include_state: bool = False,
     ) -> None:
         _validate_model_source(
             xml_path=xml_path,
@@ -136,6 +142,7 @@ class MuJoCoImageEnv:
         self._frame_skip = max(1, int(frame_skip))
         self._reset_noise_scale = float(reset_noise_scale)
         self._rng = np.random.default_rng(seed)
+        self._include_state = bool(include_state)
         self._closed = False
 
         if xml_string is not None:
@@ -149,15 +156,25 @@ class MuJoCoImageEnv:
         height, width = self._size
         self._renderer = self._mujoco.Renderer(self.model, height=height, width=width)
 
-        self._observation_space = gym.spaces.Dict(
-            {
-                "image": gym.spaces.Box(
-                    low=0,
-                    high=255,
-                    shape=(3, height, width),
-                    dtype=np.uint8,
-                )
-            }
+        state_space = None
+        if self._include_state:
+            state_dim = int(getattr(self.model, "nq", 0)) + int(
+                getattr(self.model, "nv", 0)
+            )
+            state_space = gym.spaces.Box(
+                low=-np.inf,
+                high=np.inf,
+                shape=(state_dim,),
+                dtype=np.float32,
+            )
+        self._observation_space = add_optional_state_space(
+            gym.spaces.Box(
+                low=0,
+                high=255,
+                shape=(3, height, width),
+                dtype=np.uint8,
+            ),
+            state_space=state_space,
         )
         self._action_space = self._build_action_space(default_control_range)
         self.max_episode_steps = 1000
@@ -204,6 +221,25 @@ class MuJoCoImageEnv:
     def action_space(self) -> gym.spaces.Box:
         return self._action_space
 
+    def _vector_state(self) -> np.ndarray:
+        return np.concatenate(
+            [
+                np.asarray(getattr(self.data, "qpos", []), dtype=np.float32).reshape(
+                    -1
+                ),
+                np.asarray(getattr(self.data, "qvel", []), dtype=np.float32).reshape(
+                    -1
+                ),
+            ],
+            axis=0,
+        )
+
+    def _build_observation(self) -> dict[str, np.ndarray]:
+        observation = {"image": self._render_chw()}
+        if self._include_state:
+            observation["state"] = self._vector_state().copy()
+        return observation
+
     def _render_chw(self) -> np.ndarray:
         if self._camera is None:
             self._renderer.update_scene(self.data)
@@ -236,25 +272,28 @@ class MuJoCoImageEnv:
                     0.0, self._reset_noise_scale, size=self.data.qvel.shape
                 )
         self._mujoco.mj_forward(self.model, self.data)
-        return {"image": self._render_chw()}
+        return self._build_observation()
 
     def step(
         self, action: Any
     ) -> tuple[dict[str, np.ndarray], float, bool, dict[str, Any]]:
-        action_arr = np.asarray(action, dtype=np.float32).reshape(
-            self.action_space.shape
+        clipped = clip_box_action(
+            action,
+            self.action_space.low,
+            self.action_space.high,
         )
-        clipped = np.clip(action_arr, self.action_space.low, self.action_space.high)
         if clipped.size:
             self.data.ctrl[:] = clipped
         self._mujoco.mj_step(self.model, self.data, nstep=self._frame_skip)
 
         info = {
             "action": clipped.astype(np.float32, copy=True),
+            "executed_action": clipped.astype(np.float32, copy=True),
             "time": float(getattr(self.data, "time", 0.0)),
             "qpos": np.asarray(getattr(self.data, "qpos", []), dtype=np.float64).copy(),
             "qvel": np.asarray(getattr(self.data, "qvel", []), dtype=np.float64).copy(),
         }
+        info["vector_observation"] = self._vector_state().copy()
         if self._reward_fn is None:
             reward = 0.0
         else:
@@ -264,7 +303,13 @@ class MuJoCoImageEnv:
             if self._terminal_fn
             else False
         )
-        return {"image": self._render_chw()}, reward, done, info
+        info = finalize_step_info(
+            info,
+            done=done,
+            terminated=done,
+            truncated=False,
+        )
+        return self._build_observation(), reward, done, info
 
     def render(self) -> Any:
         return self._render_chw().transpose(1, 2, 0).copy()

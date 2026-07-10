@@ -9,7 +9,12 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.12', '3.13']
 
     steps:
     - uses: actions/checkout@v4
@@ -17,7 +22,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.13'
+        python-version: ${{ matrix.python-version }}
         cache: 'pip'
         cache-dependency-path: |
           pyproject.toml
@@ -34,7 +39,12 @@ jobs:
         pytest tests/ --ignore=tests/selenium --tb=short --timeout=30 --maxfail=5
 
   integration:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.12', '3.13']
 
     steps:
     - uses: actions/checkout@v4
@@ -42,7 +52,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.13'
+        python-version: ${{ matrix.python-version }}
         cache: 'pip'
         cache-dependency-path: |
           pyproject.toml
@@ -57,5 +67,150 @@ jobs:
     - name: Run integration tests
       run: |
         pytest tests/ -m integration --ignore=tests/selenium --tb=short --timeout=120 --maxfail=3
+
+  optional-backends-real:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      MUJOCO_GL: egl
+      PYOPENGL_PLATFORM: egl
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+        cache: 'pip'
+        cache-dependency-path: |
+          pyproject.toml
+
+    - name: Install MuJoCo rendering system libraries
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libegl1 libgles2
+
+    - name: Install optional backend dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        pip install -e '.[dev,brax,mujoco,robotics,ml-agents]'
+
+    - name: Run real optional backend tests
+      run: |
+        pytest tests/test_optional_backends_real.py -q --tb=short --timeout=240
+
+  build-artifact-smoke:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+        cache: 'pip'
+        cache-dependency-path: |
+          pyproject.toml
+
+    - name: Build distribution artifacts
+      run: |
+        python -m pip install --upgrade pip build
+        python -m build
+
+    - name: Install wheel into a clean virtualenv and smoke test it (Unix)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        python -m venv "$RUNNER_TEMP/torchwm-wheel-smoke"
+        source "$RUNNER_TEMP/torchwm-wheel-smoke/bin/activate"
+        python -m pip install --upgrade pip
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+        wheels=(dist/torchwm-*.whl)
+        if [ "${#wheels[@]}" -ne 1 ]; then
+          echo "Expected exactly one torchwm wheel in dist/, found ${#wheels[@]}"
+          ls -la dist
+          exit 1
+        fi
+
+        pip install "${wheels[0]}"
+
+        pushd "$RUNNER_TEMP" >/dev/null
+        python -c "import torchwm"
+        torchwm version
+        popd >/dev/null
+
+    - name: Install sdist into a clean virtualenv and smoke test it (Unix)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        python -m venv "$RUNNER_TEMP/torchwm-sdist-smoke"
+        source "$RUNNER_TEMP/torchwm-sdist-smoke/bin/activate"
+        python -m pip install --upgrade pip
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+        sdists=(dist/torchwm-*.tar.gz)
+        if [ "${#sdists[@]}" -ne 1 ]; then
+          echo "Expected exactly one torchwm sdist in dist/, found ${#sdists[@]}"
+          ls -la dist
+          exit 1
+        fi
+
+        pip install "${sdists[0]}"
+
+        pushd "$RUNNER_TEMP" >/dev/null
+        python -c "import torchwm"
+        torchwm version
+        popd >/dev/null
+
+    - name: Install wheel into a clean virtualenv and smoke test it (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        python -m venv "$env:RUNNER_TEMP\torchwm-wheel-smoke"
+        & "$env:RUNNER_TEMP\torchwm-wheel-smoke\Scripts\python.exe" -m pip install --upgrade pip
+        & "$env:RUNNER_TEMP\torchwm-wheel-smoke\Scripts\pip.exe" install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+        $wheels = Get-ChildItem dist\torchwm-*.whl
+        if ($wheels.Count -ne 1) {
+          Write-Host "Expected exactly one torchwm wheel in dist/, found $($wheels.Count)"
+          Get-ChildItem dist
+          exit 1
+        }
+
+        & "$env:RUNNER_TEMP\torchwm-wheel-smoke\Scripts\pip.exe" install $wheels[0].FullName
+
+        Push-Location $env:RUNNER_TEMP
+        & "$env:RUNNER_TEMP\torchwm-wheel-smoke\Scripts\python.exe" -c "import torchwm"
+        & "$env:RUNNER_TEMP\torchwm-wheel-smoke\Scripts\torchwm.exe" version
+        Pop-Location
+
+    - name: Install sdist into a clean virtualenv and smoke test it (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        python -m venv "$env:RUNNER_TEMP\torchwm-sdist-smoke"
+        & "$env:RUNNER_TEMP\torchwm-sdist-smoke\Scripts\python.exe" -m pip install --upgrade pip
+        & "$env:RUNNER_TEMP\torchwm-sdist-smoke\Scripts\pip.exe" install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+        $sdists = Get-ChildItem dist\torchwm-*.tar.gz
+        if ($sdists.Count -ne 1) {
+          Write-Host "Expected exactly one torchwm sdist in dist/, found $($sdists.Count)"
+          Get-ChildItem dist
+          exit 1
+        }
+
+        & "$env:RUNNER_TEMP\torchwm-sdist-smoke\Scripts\pip.exe" install $sdists[0].FullName
+
+        Push-Location $env:RUNNER_TEMP
+        & "$env:RUNNER_TEMP\torchwm-sdist-smoke\Scripts\python.exe" -c "import torchwm"
+        & "$env:RUNNER_TEMP\torchwm-sdist-smoke\Scripts\torchwm.exe" version
+        Pop-Location
 
   # mypy type checks were moved to a dedicated workflow: .github/workflows/mypy.yml

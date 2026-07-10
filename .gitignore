@@ -24,3 +24,8 @@ mypy_out.txt
 .coverage
 coverage_report.json
 htmlcov/
+.benchmarks/
+# Stray artifacts (Windows reserved name; mis-joined test paths)
+/nul
+/testsdata/
+/testsdataregression_baselines/
