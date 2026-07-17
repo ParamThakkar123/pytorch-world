@@ -18,8 +18,8 @@ from PIL import Image
 import numpy as np
 from omegaconf import OmegaConf
 
-from world_models.training.train_genie import create_genie_trainer
-from world_models.datasets import create_tinyworlds_dataloader
+from torchwm.training.train_genie import create_genie_trainer
+from torchwm.datasets import create_tinyworlds_dataloader
 
 
 def tensor_to_uint8_img(t: torch.Tensor) -> np.ndarray:

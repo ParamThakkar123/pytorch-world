@@ -1,4 +1,4 @@
-from world_models.benchmarks.cli import main
+from torchwm.benchmarks.cli import main
 
 
 if __name__ == "__main__":

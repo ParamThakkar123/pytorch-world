@@ -35,7 +35,7 @@ Importing `world_models.export` installs the `.export()` method on every
 
 ```python
 import torch
-import world_models.export  # installs nn.Module.export
+import torchwm.export  # installs nn.Module.export
 
 class MyModel(torch.nn.Module):
     def __init__(self):

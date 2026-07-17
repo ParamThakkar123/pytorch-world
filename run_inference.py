@@ -1,9 +1,9 @@
 import torch
 import numpy as np
 import cv2
-from world_models.configs.iris_config import IRISConfig
-from world_models.models.iris_agent import IRISAgent
-from world_models.envs.ale_atari_env import make_atari_env
+from torchwm.configs.iris_config import IRISConfig
+from torchwm.models.iris_agent import IRISAgent
+from torchwm.envs.ale_atari_env import make_atari_env
 
 
 def preprocess_frame(frame, size=64):

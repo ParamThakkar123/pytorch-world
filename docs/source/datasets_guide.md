@@ -29,7 +29,7 @@ top-level package or the `world_models.datasets` module.
 ### CIFAR-10
 
 ```python
-from world_models.datasets.cifar10 import make_cifar10
+from torchwm.datasets.cifar10 import make_cifar10
 
 dataset, loader, sampler = make_cifar10(
     transform=transform,
@@ -56,7 +56,7 @@ dataloader. Used for JEPA and DiT prototyping.
 ### ImageNet-1K
 
 ```python
-from world_models.datasets.imagenet1k import make_imagenet1k
+from torchwm.datasets.imagenet1k import make_imagenet1k
 
 dataset, loader, sampler = make_imagenet1k(
     transform=transform,
@@ -77,7 +77,7 @@ The `ImageNet` class extends `torchvision.datasets.ImageFolder` with:
 
 ```python
 # Custom image folder (any directory structure)
-from world_models.datasets.imagenet1k import make_imagefolder
+from torchwm.datasets.imagenet1k import make_imagefolder
 
 dataset, loader, sampler = make_imagefolder(
     transform=transform,
@@ -107,7 +107,7 @@ video = dataset[0]  # (16, 3, 64, 64) float
 ### `VideoFolderDataset` — raw video files
 
 ```python
-from world_models.datasets.video_datasets import VideoFolderDataset
+from torchwm.datasets.video_datasets import VideoFolderDataset
 
 dataset = VideoFolderDataset(
     data_source="/data/videos",
@@ -124,7 +124,7 @@ Scans a directory for video files, loads them with OpenCV, samples
 ### `ImageFolderDataset` — per-frame sequences
 
 ```python
-from world_models.datasets.video_datasets import ImageFolderDataset
+from torchwm.datasets.video_datasets import ImageFolderDataset
 
 dataset = ImageFolderDataset(
     data_source="/data/sequences",
@@ -145,7 +145,7 @@ stems first, then lexicographic). Shorter sequences pad with the last frame.
 ### `NumPyDataset` — pre-encoded numpy arrays
 
 ```python
-from world_models.datasets.video_datasets import NumPyDataset
+from torchwm.datasets.video_datasets import NumPyDataset
 
 # .npy file with shape (N, T, H, W, C)
 dataset = NumPyDataset(
@@ -166,7 +166,7 @@ Supports both `.npy` and `.npz` files. For `.npz`, specify the array key.
 ### `HDF5Dataset` — HDF5 video stores
 
 ```python
-from world_models.datasets.video_datasets import HDF5Dataset
+from torchwm.datasets.video_datasets import HDF5Dataset
 
 dataset = HDF5Dataset(
     data_source="/data/videos.h5",
@@ -183,7 +183,7 @@ The `memmap=True` option reads on demand instead of loading into RAM.
 ### Factory function
 
 ```python
-from world_models.datasets.video_datasets import create_video_dataloader
+from torchwm.datasets.video_datasets import create_video_dataloader
 
 dataset, loader = create_video_dataloader(
     dataset_type="video_folder",  # "video_folder" | "image_folder" | "numpy" | "rl"
@@ -199,7 +199,7 @@ dataset, loader = create_video_dataloader(
 ### `RLEnvironmentDataset` — episode recordings
 
 ```python
-from world_models.datasets.video_datasets import RLEnvironmentDataset
+from torchwm.datasets.video_datasets import RLEnvironmentDataset
 
 dataset = RLEnvironmentDataset(
     data_source="/data/episodes",
@@ -217,7 +217,7 @@ directories of `.npz` files.
 ### `RolloutDataset` — World Models pipeline
 
 ```python
-from world_models.datasets.wm_dataset import RolloutDataset
+from torchwm.datasets.wm_dataset import RolloutDataset
 
 dataset = RolloutDataset(
     root="data/carracing",
@@ -239,7 +239,7 @@ Curated game-video datasets from HuggingFace for training Genie-style
 world models.
 
 ```python
-from world_models.datasets.tinyworlds import (
+from torchwm.datasets.tinyworlds import (
     TinyWorldsDataset,
     TinyWorldsDataLoader,
     create_tinyworlds_dataloader,
@@ -270,7 +270,7 @@ dataset, loader = create_tinyworlds_dataloader(
 )
 
 # List available datasets
-from world_models.datasets.tinyworlds import TinyWorldsDataLoader
+from torchwm.datasets.tinyworlds import TinyWorldsDataLoader
 print(TinyWorldsDataLoader.list_available_datasets())
 
 # Get metadata without downloading
@@ -295,7 +295,7 @@ locally. Requires `h5py` and `huggingface_hub`.
 ## DIAMOND replay buffer
 
 ```python
-from world_models.datasets.diamond_dataset import ReplayBuffer, SequenceDataset
+from torchwm.datasets.diamond_dataset import ReplayBuffer, SequenceDataset
 
 buffer = ReplayBuffer(capacity=100000, obs_shape=(64, 64, 3), action_dim=4)
 buffer.add(obs, action, reward, done, next_obs)

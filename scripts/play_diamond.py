@@ -30,8 +30,8 @@ import cv2
 from pathlib import Path
 from typing import Optional
 
-from world_models.configs.diamond_config import DiamondConfig
-from world_models.training.train_diamond import DiamondAgent
+from torchwm.configs.diamond_config import DiamondConfig
+from torchwm.training.train_diamond import DiamondAgent
 from scripts.play_base import (
     get_action_from_key,
     resolve_checkpoint_path,

@@ -79,22 +79,22 @@ class VectorQuantizer(nn.Module):
         # Find nearest codebook entries (indices)
         indices: torch.Tensor = torch.argmin(d, dim=-1)  # (B, H*W) or (B, 1)
 
-        # Get the quantized values (straight-through)
-        z_q: torch.Tensor = F.embedding(indices, codebook)
+        # Get the quantized values
+        z_q: torch.Tensor = F.embedding(indices, codebook)  # (B, H*W, C)
 
-        # Straight-through estimator: use z_q for forward, z for backward
-        # This allows gradients to flow through while using discrete codes
-        z_q_detached: torch.Tensor = z_q.detach()
+        # VQ-VAE loss with a gradient-trained codebook:
+        #   codebook loss: pull codebook vectors toward encoder outputs
+        #   commitment loss (weighted by beta): pull encoder outputs toward codebook
+        codebook_loss: torch.Tensor = F.mse_loss(z_q, z_flat.detach())
+        commitment_loss: torch.Tensor = F.mse_loss(z_q.detach(), z_flat)
+        vq_loss: torch.Tensor = codebook_loss + self.commitment_weight * commitment_loss
 
-        # Compute losses
-        # 1. Reconstruction loss: ||z - z_q||^2 (stop gradient on z_q)
-        commitment_loss: torch.Tensor = F.mse_loss(z_q_detached, z_flat)
+        # Straight-through estimator: forward uses z_q, backward copies gradients
+        # to the encoder as if z_q == z (argmin is non-differentiable).
+        z_q = z_flat + (z_q - z_flat).detach()
 
-        # 2. Codebook loss: encourage z_q to move toward z (stop gradient on z)
-        # Actually this is handled by the commitment loss since we use detached z_q
-
-        # 3. Perplexity: measure of how many codebook entries are used
-        encodings: torch.Tensor = F.one_hot(indices, self.vocab_size).float()
+        # Perplexity: measure of how many codebook entries are used
+        encodings: torch.Tensor = F.one_hot(indices.reshape(-1), self.vocab_size).float()
         avg_probs: torch.Tensor = torch.mean(encodings, dim=0)
         perplexity: torch.Tensor = torch.exp(
             -torch.sum(avg_probs * torch.log(avg_probs + 1e-10))
@@ -111,7 +111,7 @@ class VectorQuantizer(nn.Module):
         )
 
         loss: Dict[str, torch.Tensor] = {
-            "vq_loss": commitment_loss,
+            "vq_loss": vq_loss,
             "perplexity": perplexity,
         }
 
@@ -189,51 +189,64 @@ class VectorQuantizerEMA(nn.Module):
 
         indices: torch.Tensor = torch.argmin(d, dim=-1)
 
-        # Quantize (using straight-through)
-        z_q: torch.Tensor = F.embedding(indices, codebook)
+        # Quantize: nearest codebook lookup (non-differentiable in indices)
+        z_q: torch.Tensor = F.embedding(indices, codebook)  # (B, H*W, C)
 
-        # EMA update (only during training)
+        # EMA update (only during training). The codebook is updated by
+        # exponential moving averages of the assigned encoder outputs (Van Den
+        # Oord et al., 2017), not by gradient descent.
         if self.training:
             with torch.no_grad():
-                encodings_train: torch.Tensor = F.one_hot(
-                    indices, self.vocab_size
-                ).float()
+                V = self.vocab_size
+                flat_enc: torch.Tensor = F.one_hot(
+                    indices.reshape(-1), V
+                ).float()  # (N, V)
+                z_in: torch.Tensor = z_flat.reshape(-1, C)  # (N, C)
+
+                cluster_counts = flat_enc.sum(dim=0)  # (V,)
+                dw = flat_enc.t() @ z_in  # (V, C) sum of z assigned to each code
+
                 self.ema_cluster_size.mul_(self.ema_decay).add_(
-                    encodings_train.sum(dim=(0, 1, 2)), alpha=1 - self.ema_decay
+                    cluster_counts, alpha=1 - self.ema_decay
+                )
+                self.ema_embed_avg.mul_(self.ema_decay).add_(
+                    dw, alpha=1 - self.ema_decay
                 )
 
-                # Update cluster averages
-                n: torch.Tensor = self.ema_cluster_size.sum()
-                new_ema_embed_avg: torch.Tensor = (
-                    self.ema_embed_avg * self.ema_decay
-                    + (z_flat.transpose(1, 2) @ encodings_train).sum(0)
-                    * (1 - self.ema_decay)
-                ) / (n + self.epsilon)
+                # Laplace smoothing to avoid dividing by zero for unused codes.
+                n = self.ema_cluster_size.sum()
+                smoothed = (
+                    (self.ema_cluster_size + self.epsilon)
+                    / (n + V * self.epsilon)
+                    * n
+                )  # (V,)
+                self.codebook.weight.data.copy_(
+                    self.ema_embed_avg / smoothed.unsqueeze(1)
+                )
 
-                self.ema_embed_avg.copy_(new_ema_embed_avg)
-
-                # Normalize and update codebook properly (avoid breaking gradient graph)
-                normalized = F.normalize(self.ema_embed_avg, dim=1)
-                self.codebook.weight.data.copy_(normalized)
-
-        # Reshape back
+        # Reshape back to (B, C, H, W)
         z_q = z_q.reshape(B, H, W, C).permute(0, 3, 1, 2)
 
-        # Compute losses
-        # Codebook loss: move codebook toward encoder output (stop gradient on encoder)
-        codebook_loss: torch.Tensor = F.mse_loss(z_q, z.detach())
-        # Commitment loss: move encoder output toward codebook (stop gradient on codebook)
+        # Commitment loss: pull encoder outputs toward the codebook (the codebook
+        # itself is moved by EMA, so there is no gradient-based codebook loss).
         commitment_loss: torch.Tensor = F.mse_loss(z_q.detach(), z)
+
+        # Straight-through estimator: forward returns z_q, but gradients flow to
+        # the encoder as if z_q == z. Without this the encoder receives no
+        # reconstruction gradient (argmin is non-differentiable).
+        z_q = z + (z_q - z).detach()
 
         # Perplexity
         encodings_eval: torch.Tensor = F.one_hot(indices, self.vocab_size).float()
-        avg_probs: torch.Tensor = torch.mean(encodings_eval, dim=0)
+        avg_probs: torch.Tensor = torch.mean(
+            encodings_eval.reshape(-1, self.vocab_size), dim=0
+        )
         perplexity: torch.Tensor = torch.exp(
             -torch.sum(avg_probs * torch.log(avg_probs + 1e-10))
         )
 
         loss: Dict[str, torch.Tensor] = {
-            "vq_loss": codebook_loss + commitment_loss * self.commitment_weight,
+            "vq_loss": commitment_loss * self.commitment_weight,
             "perplexity": perplexity,
         }
 

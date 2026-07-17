@@ -15,7 +15,7 @@ The dataset is ~1.8 TB for the full split. For prototyping, use the mini split (
 ## Main API
 
 ```python
-from world_models.datasets.nuplan import NuPlanDataset, make_nuplan_dataloader
+from torchwm.datasets.nuplan import NuPlanDataset, make_nuplan_dataloader
 
 # Build a dataset over the mini split.
 dataset = NuPlanDataset(

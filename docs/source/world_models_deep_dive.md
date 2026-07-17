@@ -97,7 +97,7 @@ Defined in `world_models.losses.convae_loss`:
 **Training data** is collected by running the environment with random actions:
 
 ```python
-from world_models.training.train_world_model import generate_rollouts
+from torchwm.training.train_world_model import generate_rollouts
 
 generate_rollouts(
     data_dir="./data/carracing",

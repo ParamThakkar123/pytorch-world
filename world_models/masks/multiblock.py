@@ -3,7 +3,7 @@ import math
 from multiprocessing import Value
 
 from logging import getLogger
-from typing import Any, Optional
+from typing import Any
 
 import torch
 
@@ -76,15 +76,15 @@ class MaskCollator(object):
     ) -> tuple:
         h, w = b_size
 
-        def constrain_mask(mask_bool: torch.Tensor) -> None:
-            # If acceptable_regions provided, mask out invalid positions (in-place)
-            if acceptable_regions is None:
-                return
-            try:
-                # acceptable_regions expected as same HxW boolean mask
-                mask_bool &= acceptable_regions.bool()
-            except Exception:
-                pass
+        def constrain_mask(mask: torch.Tensor, tries: int = 0) -> None:
+            # Restrict the candidate block to the intersection of the
+            # acceptable regions (the complements of the already-sampled
+            # target blocks), so the context block does not overlap the
+            # targets. As failed attempts accumulate, progressively drop the
+            # last acceptable regions to avoid an infinite loop.
+            n = max(int(len(acceptable_regions) - tries), 0)
+            for k in range(n):
+                mask *= acceptable_regions[k]
 
         tries = 0
         timeout = og_timeout = 20
@@ -96,7 +96,7 @@ class MaskCollator(object):
             mask = torch.zeros((self.height, self.width), dtype=torch.int32)
             mask[top : top + h, left : left + w] = 1
             if acceptable_regions is not None:
-                constrain_mask(mask)
+                constrain_mask(mask, tries)
 
             mask = torch.nonzero(mask.flatten())
             valid_mask = len(mask) > self.min_keep

@@ -8,10 +8,10 @@
     <a href="https://paramthakkar123.github.io/torchwm/"><img alt="Documentation" src="https://img.shields.io/badge/docs-link-blue.svg"></a>
     <a href="https://github.com/paramthakkar123/torchwm/actions/workflows/test.yml"><img alt="CI" src="https://github.com/paramthakkar123/torchwm/actions/workflows/test.yml/badge.svg"></a>
   </p>
-  <p><strong>Modular PyTorch library for world models, latent dynamics, and representation learning.</strong></p>
+  <p><strong>Modular PyTorch library for world models — many algorithms, one consistent API.</strong></p>
 </div>
 
-TorchWM provides reusable PyTorch components and training utilities for Dreamer-style agents, JEPA representations, IRIS, DiT, and related world-model workflows.
+**TorchWM brings the major world-model families together under a single PyTorch API.** Train Dreamer, PlaNet, JEPA, IRIS, DIAMOND, DiT, and Genie agents through `create_config` / `create_model` / `make_env`, or drop down to their encoders, decoders, and latent-dynamics backbones to compose your own architecture. Environment adapters (Gym/Gymnasium, DeepMind Control, MuJoCo, Brax, Atari, Unity ML-Agents) and ONNX / TorchScript / TensorRT export come built in.
 
 ## Quick Start
 

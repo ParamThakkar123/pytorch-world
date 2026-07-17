@@ -156,7 +156,7 @@ The DIAMOND buffer works with a PyTorch `Dataset` wrapper for integration
 with DataLoader-based training loops.
 
 ```python
-from world_models.datasets.diamond_dataset import ReplayBuffer, SequenceDataset
+from torchwm.datasets.diamond_dataset import ReplayBuffer, SequenceDataset
 
 buffer = ReplayBuffer(
     capacity=100000,

@@ -137,6 +137,43 @@ def test_layer_and_helper_packages_are_importable():
     assert AdaLNNormalization.__name__ == "AdaLNNormalization"
 
 
+def test_torchwm_submodules_alias_world_models():
+    import world_models.envs
+    import world_models.models
+    import world_models.utils.deprecation
+
+    import torchwm.envs
+    import torchwm.models
+    import torchwm.utils.deprecation
+
+    # The friendly ``torchwm.<name>`` surface resolves to the same module object
+    # as the internal ``world_models.<name>`` implementation.
+    assert torchwm.models is world_models.models
+    assert torchwm.envs is world_models.envs
+    assert torchwm.utils.deprecation is world_models.utils.deprecation
+    # Canonical module identity stays on the internal package.
+    assert torchwm.models.__name__ == "world_models.models"
+
+
+def test_torchwm_submodule_from_imports_resolve():
+    from torchwm.envs import make_gym_env
+    from torchwm.models import Dreamer
+    from torchwm.utils.deprecation import deprecated
+
+    assert Dreamer.__name__ == "Dreamer"
+    assert callable(make_gym_env)
+    assert callable(deprecated)
+
+
+def test_torchwm_cli_is_the_real_submodule_not_an_alias():
+    # ``torchwm.cli`` is a genuine module shipped in the ``torchwm`` package and
+    # must not be shadowed by the ``world_models`` alias finder.
+    import torchwm.cli
+
+    assert torchwm.cli.__name__ == "torchwm.cli"
+    assert torchwm.cli.__file__.replace("\\", "/").endswith("torchwm/cli.py")
+
+
 def test_diamond_and_dit_are_registered_in_public_api():
     assert "diamond" in torchwm.list_models()
     assert "dit" in torchwm.list_models()

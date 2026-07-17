@@ -245,7 +245,7 @@ embeddings = tokenizer.decode_indices(indices)  # (B, T, 16, 16, 32)
 recon = tokenizer.decode(z_q)
 
 # Factory shortcut
-from world_models.vision.video_tokenizer import create_video_tokenizer
+from torchwm.vision.video_tokenizer import create_video_tokenizer
 tokenizer = create_video_tokenizer(num_frames=16, image_size=64)
 ```
 
@@ -277,7 +277,7 @@ encodes targets into a categorical distribution over `num_buckets` evenly
 spaced bins within `[-symlog_range, symlog_range]`, then decodes via symexp.
 
 ```python
-from world_models.vision.dreamer_decoder import _TwoHotDistribution
+from torchwm.vision.dreamer_decoder import _TwoHotDistribution
 
 dist = _TwoHotDistribution(logits, num_buckets=255, symlog_range=10.0)
 dist.log_prob(target)  # categorical cross-entropy in symlog space
@@ -287,7 +287,7 @@ dist.mean()            # expectation decoded via symexp
 ## ConvVAE
 
 ```python
-from world_models.vision.VAE.ConvVAE import ConvVAE
+from torchwm.vision.VAE.ConvVAE import ConvVAE
 
 vae = ConvVAE(
     latent_dim=32,

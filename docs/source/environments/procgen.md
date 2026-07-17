@@ -7,7 +7,7 @@ Install: `pip install torchwm[procgen]`
 ## Main APIs
 
 ```python
-from world_models.envs.procgen_env import make_procgen_env, list_procgen_envs
+from torchwm.envs.procgen_env import make_procgen_env, list_procgen_envs
 
 env = make_procgen_env("coinrun", seed=0, size=(64, 64))
 obs = env.reset()

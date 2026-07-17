@@ -8,12 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Complete `torchwm` public import surface: every implementation submodule is now
+  reachable through the friendly namespace (`from torchwm.models import Dreamer`,
+  `import torchwm.envs`, ...), not just top-level factory helpers. The internal
+  `world_models` package remains importable for backward compatibility
 - `dmc` optional-dependency extra (`pip install torchwm[dmc]`) that installs
   `dm-control` for the default DeepMind Control backend
 - Actionable error from the DMC backend that names the missing `dm_control`
   dependency and points to `torchwm[dmc]` or the gym backend
 
 ### Changed
+- Documentation, examples, and scripts now import through the `torchwm` public
+  namespace instead of the internal `world_models` package
 - Quick-start examples (README, docs landing page, getting-started guide) now use
   the base-installable `Pendulum-v1` gym backend so they run on
   `pip install torchwm[gym]` out of the box; DMC usage is documented separately

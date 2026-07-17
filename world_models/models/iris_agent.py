@@ -387,19 +387,23 @@ class IRISAgent(nn.Module):
         with torch.no_grad():
             _, initial_tokens, _ = self.encoder(initial_frame)
 
-        # Lists to store trajectory
-        frames_imagined = [initial_frame]
+        # Lists to store trajectory. The policy consumes reconstructed frames, so
+        # every stored frame is a decode of the current tokens (no raw/decoded
+        # duplicate at t=0). We collect ``horizon`` (frame, action, reward)
+        # triples plus one trailing frame -> ``horizon + 1`` frames total.
+        frames_imagined = []
         actions_imagined = []
         rewards_imagined = []
 
         current_tokens = initial_tokens
 
         for step in range(horizon):
-            # Decode current tokens to get "observation"
+            # Decode current tokens to get the "observation" the policy sees.
             with torch.no_grad():
                 reconstructed_frame = self.decoder(
                     self.encoder.quantizer.decode_indices(current_tokens)
                 )
+                frames_imagined.append(reconstructed_frame)
 
             # Get action from policy
             with torch.no_grad():
@@ -425,8 +429,13 @@ class IRISAgent(nn.Module):
 
             actions_imagined.append(action)
             rewards_imagined.append(reward_pred)
-            frames_imagined.append(reconstructed_frame)
             current_tokens = next_tokens
+
+        # Append the final imagined frame so ``frames`` has ``horizon + 1`` entries.
+        with torch.no_grad():
+            frames_imagined.append(
+                self.decoder(self.encoder.quantizer.decode_indices(current_tokens))
+            )
 
         return {
             "frames": torch.stack(frames_imagined, dim=1),  # (B, H+1, C, H, W)
@@ -525,9 +534,10 @@ class IRISAgent(nn.Module):
             device_type=getattr(self.device, "type", str(self.device)),
             enabled=self.use_amp,
         ):
-            # Get predictions
+            # Get predictions. The transformer consumes the full T+1 frame
+            # sequence (teacher forcing) and predicts frames 1..T.
             token_logits, rewards_pred, terms_pred = self.transformer(
-                tokens[:, :-1],  # (B, T, K)
+                tokens,  # (B, T+1, K)
                 actions,  # (B, T)
             )
 
