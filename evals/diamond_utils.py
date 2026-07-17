@@ -6,13 +6,11 @@ data loading from environments or replay buffers.
 
 import torch
 import numpy as np
-from typing import Callable, Optional, Tuple, Dict, List
-from pathlib import Path
+from typing import Callable, Optional, Dict, List
 
 from world_models.models.diffusion.diamond_diffusion import (
     DiffusionUNet,
     EulerSampler,
-    EDMPreconditioner,
 )
 
 

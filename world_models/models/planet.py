@@ -13,7 +13,7 @@ from world_models.utils.utils import (
     postprocess_img,
     TorchImageEnvWrapper,
 )
-from typing import Any, Optional
+from typing import Any
 from world_models.memory.planet_memory import Memory, Episode
 from world_models.training.train_planet import train as planet_train
 from world_models.export import ExportableAgentMixin

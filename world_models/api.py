@@ -212,7 +212,7 @@ def _resolve_model_name(name: str) -> str:
     aliases = _alias_map(MODEL_SPECS)
     try:
         return aliases[_normalize(name)]
-    except KeyError as exc:
+    except KeyError:
         pass
     from world_models.registry import get_registered_model_spec
 

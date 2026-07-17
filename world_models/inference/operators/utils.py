@@ -1,7 +1,6 @@
 import torch
 import torchvision.transforms as T
 from typing import Any, Union
-import numpy as np
 
 
 def normalize_image(

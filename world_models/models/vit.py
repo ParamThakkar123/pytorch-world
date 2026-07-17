@@ -66,7 +66,7 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim: int, pos: np.ndarray) -> np.nda
     and cosine components.
     """
     assert embed_dim % 2 == 0
-    omega = np.arange(embed_dim // 2, dtype=float)
+    omega: np.ndarray = np.arange(embed_dim // 2, dtype=float)
     omega /= embed_dim / 2.0
     omega = 1.0 / (10000**omega)
 

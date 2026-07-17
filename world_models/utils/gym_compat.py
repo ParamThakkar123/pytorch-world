@@ -26,8 +26,42 @@ def import_gym() -> Any:
     return legacy_gym
 
 
-gym = import_gym()
-spaces = gym.spaces
+class _LazyGym:
+    """Proxy that resolves gymnasium/gym on first attribute access.
+
+    Importing modules that merely *reference* gym (type annotations, space
+    construction inside methods) must not require the optional dependency to be
+    installed. The real import -- and its helpful ``torchwm[gym]`` error -- is
+    therefore deferred until an attribute such as ``gym.spaces`` or ``gym.make``
+    is actually accessed at runtime.
+    """
+
+    _module: Any = None
+
+    @classmethod
+    def _resolve(cls) -> Any:
+        if cls._module is None:
+            cls._module = import_gym()
+        return cls._module
+
+    def __getattr__(self, name: str) -> Any:
+        # Never resolve the backend just to answer dunder probes (copy, pickle,
+        # ``hasattr`` on special names); those must behave as "not present".
+        if name.startswith("__") and name.endswith("__"):
+            raise AttributeError(name)
+        return getattr(self._resolve(), name)
 
 
-__all__ = ["gym", "spaces", "import_gym", "import_gymnasium"]
+gym: Any = _LazyGym()
+
+
+def __getattr__(name: str) -> Any:
+    if name == "spaces":
+        return gym.spaces
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+# ``spaces`` is still importable (``from ... import spaces``) via the lazy
+# module-level ``__getattr__`` above; it is deliberately kept out of ``__all__``
+# because static analysis cannot see dynamically provided names.
+__all__ = ["gym", "import_gym", "import_gymnasium"]

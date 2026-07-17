@@ -29,14 +29,9 @@ from typing import Any
 
 def __getattr__(name: str) -> Any:
     if name in ("Logger", "FreezeParameters", "get_parameters", "compute_return"):
-        from .dreamer_utils import (
-            Logger,
-            FreezeParameters,
-            get_parameters,
-            compute_return,
-        )
+        from . import dreamer_utils
 
-        return locals()[name]
+        return getattr(dreamer_utils, name)
     if name in (
         "MetricsLogger",
         "assert_finite",
@@ -45,16 +40,9 @@ def __getattr__(name: str) -> Any:
         "get_package_logger",
         "setup_logging",
     ):
-        from .logging_utils import (
-            MetricsLogger,
-            assert_finite,
-            assert_finite_values,
-            collect_system_stats,
-            get_package_logger,
-            setup_logging,
-        )
+        from . import logging_utils
 
-        return locals()[name]
+        return getattr(logging_utils, name)
     if name == "preprocess_obs":
         from world_models.models.dreamer import preprocess_obs
 

@@ -266,7 +266,6 @@ class DynamicsModel(nn.Module):
         current_actions = prompt_actions
 
         for step in range(T_remaining):
-            mask = torch.ones(B, N, device=prompt_tokens.device, dtype=torch.long)
 
             logits = self.forward(current_tokens, current_actions)
 

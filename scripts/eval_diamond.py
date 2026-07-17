@@ -216,7 +216,7 @@ def run_eval(
     gen_frames = gen_trajs["observations"]
     gen_frames_flat = gen_frames.reshape(-1, C_f, H, W)
 
-    print(f"\nFrames for evaluation:")
+    print("\nFrames for evaluation:")
     print(f"  Real frames: {real_frames_flat.shape}")
     print(f"  Generated frames: {gen_frames_flat.shape}")
 

@@ -44,7 +44,6 @@ class VectorQuantizer(nn.Module):
             loss: Dictionary containing VQ loss components
         """
         # Reshape for quantization
-        original_shape: torch.Size = z.shape
 
         z_flat: torch.Tensor
         B: int

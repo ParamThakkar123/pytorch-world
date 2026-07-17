@@ -137,7 +137,6 @@ def main() -> None:
     else:
         device = torch.device("cpu")
         print("WARNING: CUDA not available, using CPU")
-    free_nats_tensor = torch.full((1,), FREE_NATS).to(device)
     rssm = RecurrentStateSpaceModel(1, STATE_SIZE, LATENT_SIZE, EMBEDDING_SIZE).to(
         device
     )

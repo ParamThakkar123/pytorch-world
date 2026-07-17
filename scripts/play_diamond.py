@@ -27,7 +27,6 @@ import time
 import torch
 import numpy as np
 import cv2
-from pathlib import Path
 from typing import Optional
 
 from torchwm.configs.diamond_config import DiamondConfig

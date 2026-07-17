@@ -14,7 +14,7 @@ author = "Param Thakkar"
 
 # Auto-read version from the public torchwm package
 
-import torchwm
+import torchwm  # noqa: E402  (must follow the sys.path insertion above)
 
 release = torchwm.__version__
 

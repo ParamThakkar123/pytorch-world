@@ -1,7 +1,6 @@
 import pytest
 import numpy as np
 import torch
-from unittest.mock import Mock, patch
 from world_models.memory.planet_memory import Episode, Memory
 from world_models.memory.iris_memory import IRISReplayBuffer, IRISOnPolicyBuffer
 

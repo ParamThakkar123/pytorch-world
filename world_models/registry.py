@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import functools
-import warnings
-from typing import Any, Callable
+from typing import Callable
 
 from world_models.api import EnvBackendSpec, ModelSpec
 

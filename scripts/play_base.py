@@ -8,7 +8,6 @@ Provides:
 
 from pathlib import Path
 from typing import Optional
-import cv2
 
 # OpenCV arrow key codes (platform-independent via unmasked waitKey)
 _ARROW_UP = 0x26

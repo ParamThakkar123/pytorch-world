@@ -11,8 +11,6 @@ from world_models.models.vit import (
     MLP,
     Attention,
     Block,
-    PatchEmbed,
-    VisionTransformer,
 )
 
 
