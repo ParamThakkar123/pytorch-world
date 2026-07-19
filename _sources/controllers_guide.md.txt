@@ -222,7 +222,7 @@ critic_loss = F.mse_loss(values, target_values)
 deterministic states to an action vector:
 
 ```python
-from world_models.models.controller import Controller
+from torchwm.models.controller import Controller
 
 ctrl = Controller(latent_size=32, hidden_size=256, action_size=3)
 action = ctrl(torch.cat([z, h], dim=-1))   # (B, action_size)

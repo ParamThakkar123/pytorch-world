@@ -67,45 +67,49 @@ processed = op.process({"image": image, "action": action})
 
 ## Core Modules
 
-- `world_models.models`: High-level models and agents (`Dreamer`, `DreamerAgent`, `Planet`, `JEPAAgent`)
-- `world_models.configs`: Configuration containers for Dreamer, JEPA, and diffusion runs
-- `world_models.training`: Script-style training entrypoints for world models (VAE, MDNRNN, Controller, Planet, RSSM, JEPA)
+The module paths below are the public `torchwm.*` surface. They mirror the
+internal `world_models` implementation package one-to-one, so every submodule is
+importable either way (`from torchwm.models import Dreamer`).
+
+- `torchwm.models`: High-level models and agents (`Dreamer`, `DreamerAgent`, `Planet`, `JEPAAgent`)
+- `torchwm.configs`: Configuration containers for Dreamer, JEPA, and diffusion runs
+- `torchwm.training`: Script-style training entrypoints for world models (VAE, MDNRNN, Controller, Planet, RSSM, JEPA)
 
 ## Environment Integration
 
-- `world_models.envs`: DMC, Gym/Gymnasium, Atari, MuJoCo, Unity ML-Agents adapters
-- `world_models.envs.wrappers`: Action repeat, normalization, time limits
+- `torchwm.envs`: DMC, Gym/Gymnasium, Atari, MuJoCo, Unity ML-Agents adapters
+- `torchwm.envs.wrappers`: Action repeat, normalization, time limits
 
 ## World Model Building Blocks
 
-- `world_models.models.dreamer_rssm`: Recurrent state-space model used by Dreamer
-- `world_models.models.modular_rssm`: Modular RSSM with swappable encoder/decoder/backbone for research experiments
-- `world_models.vision`: Encoders/decoders and action heads for latent dynamics models
-- `world_models.reward`: Reward and value prediction heads
-- `world_models.observations`: Symbolic and visual observation reconstruction modules
+- `torchwm.models.dreamer_rssm`: Recurrent state-space model used by Dreamer
+- `torchwm.models.modular_rssm`: Modular RSSM with swappable encoder/decoder/backbone for research experiments
+- `torchwm.vision`: Encoders/decoders and action heads for latent dynamics models
+- `torchwm.reward`: Reward and value prediction heads
+- `torchwm.observations`: Symbolic and visual observation reconstruction modules
 
 ## Representation Learning and Diffusion
 
-- `world_models.models.vit`: Vision Transformer and JEPA predictor components
-- `world_models.models.diffusion`: DDPM scheduler and DiT model implementation
-- `world_models.masks`: Mask collators for JEPA-style context/target masking
+- `torchwm.models.vit`: Vision Transformer and JEPA predictor components
+- `torchwm.models.diffusion`: DDPM scheduler and DiT model implementation
+- `torchwm.masks`: Mask collators for JEPA-style context/target masking
 
 ## Data and Memory
 
-- `world_models.datasets`: CIFAR-10, ImageNet-1K, and generic `ImageFolder` dataset loaders
-- `world_models.memory`: Replay buffers for Dreamer and episode-based memory for PlaNet/RSSM
+- `torchwm.datasets`: CIFAR-10, ImageNet-1K, and generic `ImageFolder` dataset loaders
+- `torchwm.memory`: Replay buffers for Dreamer and episode-based memory for PlaNet/RSSM
 
 ## Utilities
 
-- `world_models.utils`: Logging, parameter freezing, transforms
-- `world_models.transforms`: Data augmentation pipelines
-- `world_models.benchmarks`: CLI and reporting utilities
+- `torchwm.utils`: Logging, parameter freezing, transforms
+- `torchwm.transforms`: Data augmentation pipelines
+- `torchwm.benchmarks`: CLI and reporting utilities
 
 ## Which API Should I Use?
 
 - End-to-end Dreamer training: `DreamerAgent`
 - End-to-end JEPA training: `JEPAAgent`
-- World model training scripts: `world_models.training` modules (e.g., `train_world_model` for VAE+MDNRNN+Controller pipeline)
+- World model training scripts: `torchwm.training` modules (e.g., `train_world_model` for VAE+MDNRNN+Controller pipeline)
 - Low-level model experimentation: `Dreamer`, `RSSM`, decoder/encoder modules
 - Custom world model architectures: `ModularRSSM` with swappable encoder/decoder/backbone
 - Custom data pipelines: `make_cifar10`, `make_imagenet1k`, `make_imagefolder`

@@ -471,7 +471,7 @@ each model to implement its own export logic.</p>
 <p>Importing <code class="docutils literal notranslate"><span class="pre">world_models.export</span></code> installs the <code class="docutils literal notranslate"><span class="pre">.export()</span></code> method on every
 <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> instance once:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">world_models.export</span>  <span class="c1"># installs nn.Module.export</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchwm.export</span>  <span class="c1"># installs nn.Module.export</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

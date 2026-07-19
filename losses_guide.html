@@ -370,7 +370,7 @@
 <h1><a class="toc-backref" href="#id1" role="doc-backlink">Loss Functions</a><a class="headerlink" href="#loss-functions" title="Link to this heading">#</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">world_models.losses</span></code> module provides loss functions for the classic
 World Models pipeline (VAE + MDNRNN). Both are importable from the top level:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_vae_loss_fn</span><span class="p">,</span> <span class="n">gmm_loss</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_vae_loss_fn</span><span class="p">,</span> <span class="n">gmm_loss</span>
 </pre></div>
 </div>
 <nav class="contents" id="contents">
@@ -422,7 +422,7 @@ World Models pipeline (VAE + MDNRNN). Both are importable from the top level:</p
 <div class="math notranslate nohighlight">
 \[\mathcal{L} = \underbrace{\|\hat{x} - x\|^2}_{\text{MSE}} \;+\;
 \underbrace{-\frac{1}{2} \sum \left(1 + 2\log\sigma - \mu^2 - \sigma^2\right)}_{\text{KL divergence}}\]</div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_vae_loss_fn</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_vae_loss_fn</span>
 
 <span class="n">reconst</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">logsigma</span> <span class="o">=</span> <span class="n">vae</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 <span class="n">loss</span> <span class="o">=</span> <span class="n">conv_vae_loss_fn</span><span class="p">(</span><span class="n">reconst</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">logsigma</span><span class="p">)</span>
@@ -465,7 +465,7 @@ a standard normal prior, and the MSE term drives accurate reconstruction.</p>
 MDNRNN’s mixture predictions:</p>
 <div class="math notranslate nohighlight">
 \[p(x \mid \{\pi_k, \mu_k, \sigma_k\}) = \sum_{k} \pi_k \cdot \mathcal{N}(x \mid \mu_k, \sigma_k)\]</div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">gmm_loss</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">gmm_loss</span>
 
 <span class="c1"># MDNRNN outputs mixture parameters for each timestep</span>
 <span class="n">latent_next_obs</span> <span class="o">=</span> <span class="n">targets</span>        <span class="c1"># (B, T, latent_dim)</span>
@@ -522,7 +522,7 @@ or a per-sample loss tensor when <code class="docutils literal notranslate"><spa
 <section id="pipeline-example">
 <h2><a class="toc-backref" href="#id5" role="doc-backlink">Pipeline example</a><a class="headerlink" href="#pipeline-example" title="Link to this heading">#</a></h2>
 <p>Both losses are used together in the complete World Models training script:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_vae_loss_fn</span><span class="p">,</span> <span class="n">gmm_loss</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_vae_loss_fn</span><span class="p">,</span> <span class="n">gmm_loss</span>
 
 <span class="c1"># --- Stage 1: Train VAE ---</span>
 <span class="k">for</span> <span class="n">images</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>

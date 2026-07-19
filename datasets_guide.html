@@ -482,7 +482,7 @@ top-level package or the <code class="docutils literal notranslate"><span class=
 <h2><a class="toc-backref" href="#id3" role="doc-backlink">Image datasets</a><a class="headerlink" href="#image-datasets" title="Link to this heading">#</a></h2>
 <section id="cifar-10">
 <h3><a class="toc-backref" href="#id4" role="doc-backlink">CIFAR-10</a><a class="headerlink" href="#cifar-10" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.cifar10</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_cifar10</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.cifar10</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_cifar10</span>
 
 <span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">make_cifar10</span><span class="p">(</span>
     <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
@@ -534,7 +534,7 @@ dataloader. Used for JEPA and DiT prototyping.</p>
 </section>
 <section id="imagenet-1k">
 <h3><a class="toc-backref" href="#id5" role="doc-backlink">ImageNet-1K</a><a class="headerlink" href="#imagenet-1k" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.imagenet1k</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_imagenet1k</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.imagenet1k</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_imagenet1k</span>
 
 <span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">make_imagenet1k</span><span class="p">(</span>
     <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
@@ -564,7 +564,7 @@ dataloader. Used for JEPA and DiT prototyping.</p>
 </table>
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Custom image folder (any directory structure)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.imagenet1k</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_imagefolder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.imagenet1k</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_imagefolder</span>
 
 <span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">make_imagefolder</span><span class="p">(</span>
     <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
@@ -593,7 +593,7 @@ interface:</p>
 </div>
 <section id="videofolderdataset-raw-video-files">
 <h3><a class="toc-backref" href="#id7" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">VideoFolderDataset</span></code> — raw video files</a><a class="headerlink" href="#videofolderdataset-raw-video-files" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">VideoFolderDataset</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">VideoFolderDataset</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">VideoFolderDataset</span><span class="p">(</span>
     <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;/data/videos&quot;</span><span class="p">,</span>
@@ -609,7 +609,7 @@ interface:</p>
 </section>
 <section id="imagefolderdataset-per-frame-sequences">
 <h3><a class="toc-backref" href="#id8" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">ImageFolderDataset</span></code> — per-frame sequences</a><a class="headerlink" href="#imagefolderdataset-per-frame-sequences" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageFolderDataset</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageFolderDataset</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">ImageFolderDataset</span><span class="p">(</span>
     <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;/data/sequences&quot;</span><span class="p">,</span>
@@ -629,7 +629,7 @@ stems first, then lexicographic). Shorter sequences pad with the last frame.</p>
 </section>
 <section id="numpydataset-pre-encoded-numpy-arrays">
 <h3><a class="toc-backref" href="#id9" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">NumPyDataset</span></code> — pre-encoded numpy arrays</a><a class="headerlink" href="#numpydataset-pre-encoded-numpy-arrays" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">NumPyDataset</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">NumPyDataset</span>
 
 <span class="c1"># .npy file with shape (N, T, H, W, C)</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">NumPyDataset</span><span class="p">(</span>
@@ -649,7 +649,7 @@ stems first, then lexicographic). Shorter sequences pad with the last frame.</p>
 </section>
 <section id="hdf5dataset-hdf5-video-stores">
 <h3><a class="toc-backref" href="#id10" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">HDF5Dataset</span></code> — HDF5 video stores</a><a class="headerlink" href="#hdf5dataset-hdf5-video-stores" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDF5Dataset</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDF5Dataset</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">HDF5Dataset</span><span class="p">(</span>
     <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;/data/videos.h5&quot;</span><span class="p">,</span>
@@ -665,7 +665,7 @@ The <code class="docutils literal notranslate"><span class="pre">memmap=True</sp
 </section>
 <section id="factory-function">
 <h3><a class="toc-backref" href="#id11" role="doc-backlink">Factory function</a><a class="headerlink" href="#factory-function" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_video_dataloader</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_video_dataloader</span>
 
 <span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span> <span class="o">=</span> <span class="n">create_video_dataloader</span><span class="p">(</span>
     <span class="n">dataset_type</span><span class="o">=</span><span class="s2">&quot;video_folder&quot;</span><span class="p">,</span>  <span class="c1"># &quot;video_folder&quot; | &quot;image_folder&quot; | &quot;numpy&quot; | &quot;rl&quot;</span>
@@ -682,7 +682,7 @@ The <code class="docutils literal notranslate"><span class="pre">memmap=True</sp
 <h2><a class="toc-backref" href="#id12" role="doc-backlink">RL trajectory datasets</a><a class="headerlink" href="#rl-trajectory-datasets" title="Link to this heading">#</a></h2>
 <section id="rlenvironmentdataset-episode-recordings">
 <h3><a class="toc-backref" href="#id13" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">RLEnvironmentDataset</span></code> — episode recordings</a><a class="headerlink" href="#rlenvironmentdataset-episode-recordings" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">RLEnvironmentDataset</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">RLEnvironmentDataset</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">RLEnvironmentDataset</span><span class="p">(</span>
     <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;/data/episodes&quot;</span><span class="p">,</span>
@@ -699,7 +699,7 @@ directories of <code class="docutils literal notranslate"><span class="pre">.npz
 </section>
 <section id="rolloutdataset-world-models-pipeline">
 <h3><a class="toc-backref" href="#id14" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">RolloutDataset</span></code> — World Models pipeline</a><a class="headerlink" href="#rolloutdataset-world-models-pipeline" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.wm_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">RolloutDataset</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.wm_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">RolloutDataset</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">RolloutDataset</span><span class="p">(</span>
     <span class="n">root</span><span class="o">=</span><span class="s2">&quot;data/carracing&quot;</span><span class="p">,</span>
@@ -720,7 +720,7 @@ sequences, actions, rewards, and terminal flags.</p>
 <h2><a class="toc-backref" href="#id15" role="doc-backlink">TinyWorlds</a><a class="headerlink" href="#tinyworlds" title="Link to this heading">#</a></h2>
 <p>Curated game-video datasets from HuggingFace for training Genie-style
 world models.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.tinyworlds</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.tinyworlds</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">TinyWorldsDataset</span><span class="p">,</span>
     <span class="n">TinyWorldsDataLoader</span><span class="p">,</span>
     <span class="n">create_tinyworlds_dataloader</span><span class="p">,</span>
@@ -774,7 +774,7 @@ world models.</p>
 <span class="p">)</span>
 
 <span class="c1"># List available datasets</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.tinyworlds</span><span class="w"> </span><span class="kn">import</span> <span class="n">TinyWorldsDataLoader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.tinyworlds</span><span class="w"> </span><span class="kn">import</span> <span class="n">TinyWorldsDataLoader</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">TinyWorldsDataLoader</span><span class="o">.</span><span class="n">list_available_datasets</span><span class="p">())</span>
 
 <span class="c1"># Get metadata without downloading</span>
@@ -799,7 +799,7 @@ locally. Requires <code class="docutils literal notranslate"><span class="pre">h
 </section>
 <section id="diamond-replay-buffer">
 <h2><a class="toc-backref" href="#id18" role="doc-backlink">DIAMOND replay buffer</a><a class="headerlink" href="#diamond-replay-buffer" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.datasets.diamond_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReplayBuffer</span><span class="p">,</span> <span class="n">SequenceDataset</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.diamond_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReplayBuffer</span><span class="p">,</span> <span class="n">SequenceDataset</span>
 
 <span class="n">buffer</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span><span class="n">capacity</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span> <span class="n">obs_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">action_dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="n">buffer</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">next_obs</span><span class="p">)</span>

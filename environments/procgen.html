@@ -392,7 +392,7 @@
 <p>Install: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">torchwm[procgen]</span></code></p>
 <section id="main-apis">
 <h2>Main APIs<a class="headerlink" href="#main-apis" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.envs.procgen_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_procgen_env</span><span class="p">,</span> <span class="n">list_procgen_envs</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.envs.procgen_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_procgen_env</span><span class="p">,</span> <span class="n">list_procgen_envs</span>
 
 <span class="n">env</span> <span class="o">=</span> <span class="n">make_procgen_env</span><span class="p">(</span><span class="s2">&quot;coinrun&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
 <span class="n">obs</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>

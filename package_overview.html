@@ -473,50 +473,53 @@ API without importing optional training backends until you use them.</p>
 </section>
 <section id="core-modules">
 <h2>Core Modules<a class="headerlink" href="#core-modules" title="Link to this heading">#</a></h2>
+<p>The module paths below are the public <code class="docutils literal notranslate"><span class="pre">torchwm.*</span></code> surface. They mirror the
+internal <code class="docutils literal notranslate"><span class="pre">world_models</span></code> implementation package one-to-one, so every submodule is
+importable either way (<code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">torchwm.models</span> <span class="pre">import</span> <span class="pre">Dreamer</span></code>).</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.models</span></code>: High-level models and agents (<code class="docutils literal notranslate"><span class="pre">Dreamer</span></code>, <code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code>, <code class="docutils literal notranslate"><span class="pre">Planet</span></code>, <code class="docutils literal notranslate"><span class="pre">JEPAAgent</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.configs</span></code>: Configuration containers for Dreamer, JEPA, and diffusion runs</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.training</span></code>: Script-style training entrypoints for world models (VAE, MDNRNN, Controller, Planet, RSSM, JEPA)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.models</span></code>: High-level models and agents (<code class="docutils literal notranslate"><span class="pre">Dreamer</span></code>, <code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code>, <code class="docutils literal notranslate"><span class="pre">Planet</span></code>, <code class="docutils literal notranslate"><span class="pre">JEPAAgent</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs</span></code>: Configuration containers for Dreamer, JEPA, and diffusion runs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.training</span></code>: Script-style training entrypoints for world models (VAE, MDNRNN, Controller, Planet, RSSM, JEPA)</p></li>
 </ul>
 </section>
 <section id="environment-integration">
 <h2>Environment Integration<a class="headerlink" href="#environment-integration" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.envs</span></code>: DMC, Gym/Gymnasium, Atari, MuJoCo, Unity ML-Agents adapters</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.wrappers</span></code>: Action repeat, normalization, time limits</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs</span></code>: DMC, Gym/Gymnasium, Atari, MuJoCo, Unity ML-Agents adapters</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.wrappers</span></code>: Action repeat, normalization, time limits</p></li>
 </ul>
 </section>
 <section id="world-model-building-blocks">
 <h2>World Model Building Blocks<a class="headerlink" href="#world-model-building-blocks" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.models.dreamer_rssm</span></code>: Recurrent state-space model used by Dreamer</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.models.modular_rssm</span></code>: Modular RSSM with swappable encoder/decoder/backbone for research experiments</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.vision</span></code>: Encoders/decoders and action heads for latent dynamics models</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.reward</span></code>: Reward and value prediction heads</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.observations</span></code>: Symbolic and visual observation reconstruction modules</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.dreamer_rssm</span></code>: Recurrent state-space model used by Dreamer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.modular_rssm</span></code>: Modular RSSM with swappable encoder/decoder/backbone for research experiments</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision</span></code>: Encoders/decoders and action heads for latent dynamics models</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.reward</span></code>: Reward and value prediction heads</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.observations</span></code>: Symbolic and visual observation reconstruction modules</p></li>
 </ul>
 </section>
 <section id="representation-learning-and-diffusion">
 <h2>Representation Learning and Diffusion<a class="headerlink" href="#representation-learning-and-diffusion" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.models.vit</span></code>: Vision Transformer and JEPA predictor components</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.models.diffusion</span></code>: DDPM scheduler and DiT model implementation</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.masks</span></code>: Mask collators for JEPA-style context/target masking</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.vit</span></code>: Vision Transformer and JEPA predictor components</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.diffusion</span></code>: DDPM scheduler and DiT model implementation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.masks</span></code>: Mask collators for JEPA-style context/target masking</p></li>
 </ul>
 </section>
 <section id="data-and-memory">
 <h2>Data and Memory<a class="headerlink" href="#data-and-memory" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.datasets</span></code>: CIFAR-10, ImageNet-1K, and generic <code class="docutils literal notranslate"><span class="pre">ImageFolder</span></code> dataset loaders</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.memory</span></code>: Replay buffers for Dreamer and episode-based memory for PlaNet/RSSM</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.datasets</span></code>: CIFAR-10, ImageNet-1K, and generic <code class="docutils literal notranslate"><span class="pre">ImageFolder</span></code> dataset loaders</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.memory</span></code>: Replay buffers for Dreamer and episode-based memory for PlaNet/RSSM</p></li>
 </ul>
 </section>
 <section id="utilities">
 <h2>Utilities<a class="headerlink" href="#utilities" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.utils</span></code>: Logging, parameter freezing, transforms</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.transforms</span></code>: Data augmentation pipelines</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.benchmarks</span></code>: CLI and reporting utilities</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.utils</span></code>: Logging, parameter freezing, transforms</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.transforms</span></code>: Data augmentation pipelines</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.benchmarks</span></code>: CLI and reporting utilities</p></li>
 </ul>
 </section>
 <section id="which-api-should-i-use">
@@ -524,7 +527,7 @@ API without importing optional training backends until you use them.</p>
 <ul class="simple">
 <li><p>End-to-end Dreamer training: <code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code></p></li>
 <li><p>End-to-end JEPA training: <code class="docutils literal notranslate"><span class="pre">JEPAAgent</span></code></p></li>
-<li><p>World model training scripts: <code class="docutils literal notranslate"><span class="pre">world_models.training</span></code> modules (e.g., <code class="docutils literal notranslate"><span class="pre">train_world_model</span></code> for VAE+MDNRNN+Controller pipeline)</p></li>
+<li><p>World model training scripts: <code class="docutils literal notranslate"><span class="pre">torchwm.training</span></code> modules (e.g., <code class="docutils literal notranslate"><span class="pre">train_world_model</span></code> for VAE+MDNRNN+Controller pipeline)</p></li>
 <li><p>Low-level model experimentation: <code class="docutils literal notranslate"><span class="pre">Dreamer</span></code>, <code class="docutils literal notranslate"><span class="pre">RSSM</span></code>, decoder/encoder modules</p></li>
 <li><p>Custom world model architectures: <code class="docutils literal notranslate"><span class="pre">ModularRSSM</span></code> with swappable encoder/decoder/backbone</p></li>
 <li><p>Custom data pipelines: <code class="docutils literal notranslate"><span class="pre">make_cifar10</span></code>, <code class="docutils literal notranslate"><span class="pre">make_imagenet1k</span></code>, <code class="docutils literal notranslate"><span class="pre">make_imagefolder</span></code></p></li>

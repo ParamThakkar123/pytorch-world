@@ -436,7 +436,7 @@ the factory, or can be provided manually.</p>
 <section id="quick-start">
 <h2><a class="toc-backref" href="#id3" role="doc-backlink">Quick start</a><a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
 <p>Use the factory for the most common combinations:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_modular_rssm</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_modular_rssm</span>
 
 <span class="n">rssm</span> <span class="o">=</span> <span class="n">create_modular_rssm</span><span class="p">(</span>
     <span class="n">encoder_type</span><span class="o">=</span><span class="s2">&quot;conv&quot;</span><span class="p">,</span>      <span class="c1"># &quot;conv&quot; | &quot;mlp&quot; | &quot;vit&quot;</span>
@@ -458,7 +458,7 @@ for direct construction.</p>
 <h2><a class="toc-backref" href="#id4" role="doc-backlink">Components</a><a class="headerlink" href="#components" title="Link to this heading">#</a></h2>
 <section id="encoders">
 <h3><a class="toc-backref" href="#id5" role="doc-backlink">Encoders</a><a class="headerlink" href="#encoders" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvEncoder</span><span class="p">,</span> <span class="n">MLPEncoder</span><span class="p">,</span> <span class="n">ViTEncoder</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvEncoder</span><span class="p">,</span> <span class="n">MLPEncoder</span><span class="p">,</span> <span class="n">ViTEncoder</span>
 
 <span class="c1"># Convolutional encoder — Dreamer-style, for image observations</span>
 <span class="n">enc</span> <span class="o">=</span> <span class="n">ConvEncoder</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">embed_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
@@ -496,7 +496,7 @@ for direct construction.</p>
 </section>
 <section id="backbones">
 <h3><a class="toc-backref" href="#id6" role="doc-backlink">Backbones</a><a class="headerlink" href="#backbones" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">GRUBackbone</span><span class="p">,</span> <span class="n">LSTMBackbone</span><span class="p">,</span> <span class="n">TransformerBackbone</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">GRUBackbone</span><span class="p">,</span> <span class="n">LSTMBackbone</span><span class="p">,</span> <span class="n">TransformerBackbone</span>
 
 <span class="c1"># GRU — standard RSSM recurrent dynamics</span>
 <span class="n">bb</span> <span class="o">=</span> <span class="n">GRUBackbone</span><span class="p">(</span><span class="n">action_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">stoch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
@@ -537,7 +537,7 @@ for direct construction.</p>
 </section>
 <section id="decoders">
 <h3><a class="toc-backref" href="#id7" role="doc-backlink">Decoders</a><a class="headerlink" href="#decoders" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvDecoder</span><span class="p">,</span> <span class="n">MLPDecoder</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvDecoder</span><span class="p">,</span> <span class="n">MLPDecoder</span>
 
 <span class="c1"># Convolutional decoder — reconstructs images from latent features</span>
 <span class="n">dec</span> <span class="o">=</span> <span class="n">ConvDecoder</span><span class="p">(</span><span class="n">stoch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
@@ -556,7 +556,7 @@ returns a pixel-wise <code class="docutils literal notranslate"><span class="pre
 <h2><a class="toc-backref" href="#id8" role="doc-backlink">Direct construction</a><a class="headerlink" href="#direct-construction" title="Link to this heading">#</a></h2>
 <p>When you need fine-grained control over component configuration, construct
 each piece and pass them to <code class="docutils literal notranslate"><span class="pre">ModularRSSM</span></code> directly:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ModularRSSM</span><span class="p">,</span> <span class="n">ConvEncoder</span><span class="p">,</span> <span class="n">ConvDecoder</span><span class="p">,</span> <span class="n">GRUBackbone</span><span class="p">,</span> <span class="n">MLPDecoder</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -653,7 +653,7 @@ imagination (prior only):</p>
 <h2><a class="toc-backref" href="#id14" role="doc-backlink">Custom components</a><a class="headerlink" href="#custom-components" title="Link to this heading">#</a></h2>
 <p>Subclass <code class="docutils literal notranslate"><span class="pre">EncoderBase</span></code>, <code class="docutils literal notranslate"><span class="pre">DecoderBase</span></code>, or <code class="docutils literal notranslate"><span class="pre">BackboneBase</span></code> and implement the
 required interface:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">world_models.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">EncoderBase</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">EncoderBase</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MyEncoder</span><span class="p">(</span><span class="n">EncoderBase</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">embed_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>

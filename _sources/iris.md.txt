@@ -94,15 +94,13 @@ The encoder maps a 64×64 RGB frame to **16 tokens** from a **512-entry** codebo
 
 ```
 Input:  (3, 64, 64)
-  └─ Conv2D(3, 64, 4, stride 2) → (64, 31, 31)
-  └─ ResBlock(64, 64)
-  └─ Conv2D(64, 64, 4, stride 2) → (64, 14, 14)
-  └─ ResBlock(64, 64)
-  └─ Conv2D(64, 64, 4, stride 2) → (64, 6, 6)
-  └─ ResBlock(64, 64)
-  └─ Conv2D(64, 64, 4, stride 2) → (64, 2, 2)
-  └─ VQ layer → (16,) discrete indices
-Output: 16 token indices (each ∈ {0, ..., 511})
+  └─ Conv2D(3, 64, 3, stride 2, pad 1)   → (64, 32, 32)
+  └─ Conv2D(64, 128, 3, stride 2, pad 1) → (128, 16, 16)  + self-attention
+  └─ Conv2D(128, 256, 3, stride 2, pad 1) → (256, 8, 8)   + self-attention
+  └─ Conv2D(256, 512, 3, stride 2, pad 1) → (512, 4, 4)
+  └─ ResBlocks + 1x1 projection to embedding dim
+  └─ VQ layer over the 4×4 grid → 16 discrete indices
+Output: 16 token indices (4 × 4, each ∈ {0, ..., 511})
 ```
 
 ### Transformer World Model
@@ -111,20 +109,28 @@ The transformer is a GPT-style autoregressive model:
 
 ```
 Params:
-  - vocab_size: 512 (visual) + action_size + 2 (reward/terminal tokens)
+  - vocab_size: 512 visual tokens (separate embedding table for the actions)
   - embed_dim: 256
   - num_layers: 10
   - num_heads: 4
-  - seq_length: 20 timesteps × 16 tokens = 320 tokens
+  - seq_length: 20 timesteps × (16 tokens + 1 action) = 340 positions
 
 Architecture:
-  Token Embedding → Positional Embedding → Transformer Blocks → LM Head
+  Token/Action Embedding → Positional Embedding → Causal Transformer Blocks
+    → token head (next tokens) + reward head + termination head
 ```
 
-**Input sequence format** (per timestep):
+Reward and termination are predicted by dedicated linear heads (read from the
+action position), **not** encoded as extra tokens in the sequence.
+
+**Input sequence format** — frame tokens and actions are interleaved with a
+causal mask, and the next frame's tokens are generated autoregressively from the
+action position onward:
 
 ```
-[zₜ_0, zₜ_1, ..., zₜ_15 | aₜ | rₜ | γₜ] → [zₜ₊₁_0, zₜ₊₁_1, ..., zₜ₊₁_15]
+[zₜ_0, zₜ_1, ..., zₜ_15, aₜ] → predict zₜ₊₁_0, then zₜ₊₁_1, ..., zₜ₊₁_15
+                              (each conditioned on previously generated tokens)
+plus, from the aₜ position:   predict reward rₜ and termination dₜ
 ```
 
 ### Actor-Critic
@@ -155,8 +161,8 @@ for h in range(imagination_horizon):
 | Component | Start Epoch | Description |
 |-----------|-------------|-------------|
 | Autoencoder | 5 | Learn frame compression first |
-| Transformer | 15 | Learn dynamics once tokens are good |
-| Actor-Critic | 35 | Learn policy in imagination |
+| Transformer | 25 | Learn dynamics once tokens are good |
+| Actor-Critic | 50 | Learn policy in imagination |
 
 ### Key Hyperparameters
 

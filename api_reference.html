@@ -473,51 +473,51 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Dreamer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.dreamer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.dreamer</span></code></p></td>
 <td><p>Base Dreamer world model (RSSM-based, V1-style).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV1</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.dreamer_v1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.dreamer_v1</span></code></p></td>
 <td><p>DreamerV1 (alias for base Dreamer).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV2</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.dreamer_v2</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.dreamer_v2</span></code></p></td>
 <td><p>DreamerV2 (symlog two-hot heads, balanced KL).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV3</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.dreamer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.dreamer</span></code></p></td>
 <td><p>DreamerV3-style agent (currently mapped to DreamerAgent).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.dreamer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.dreamer</span></code></p></td>
 <td><p>High-level Dreamer agent with train/evaluate helpers.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Planet</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.planet</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.planet</span></code></p></td>
 <td><p>PlaNet: Deep Planning Network.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">JEPAAgent</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.jepa_agent</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.jepa_agent</span></code></p></td>
 <td><p>I-JEPA agent for self-supervised visual representation learning.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IRISAgent</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.iris_agent</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.iris_agent</span></code></p></td>
 <td><p>IRIS agent for sample-efficient RL with Transformers.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Genie</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.genie</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.genie</span></code></p></td>
 <td><p>Genie generative interactive environment.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">create_genie</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.genie</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.genie</span></code></p></td>
 <td><p>Create a Genie model with specified parameters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">create_genie_small</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.genie</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.genie</span></code></p></td>
 <td><p>Create Genie-small variant (~50M params).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">create_genie_large</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.genie</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.genie</span></code></p></td>
 <td><p>Create Genie-large variant (~11B params).</p></td>
 </tr>
 </tbody>
@@ -535,19 +535,19 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LatentActionModel</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.latent_action_model</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.latent_action_model</span></code></p></td>
 <td><p>Learns latent actions from pairs of video frames.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DynamicsModel</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.dynamics_model</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.dynamics_model</span></code></p></td>
 <td><p>Transformer-based dynamics for future token prediction.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">create_latent_action_model</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.latent_action_model</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.latent_action_model</span></code></p></td>
 <td><p>Factory for LatentActionModel.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">create_dynamics_model</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.dynamics_model</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.dynamics_model</span></code></p></td>
 <td><p>Factory for DynamicsModel.</p></td>
 </tr>
 </tbody>
@@ -565,23 +565,23 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RSSM</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.rssm</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.rssm</span></code></p></td>
 <td><p>Recurrent State-Space Model (standalone).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RecurrentStateSpaceModel</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.rssm</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.rssm</span></code></p></td>
 <td><p>Alias for RSSM.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerRSSM</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.dreamer_rssm</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.dreamer_rssm</span></code></p></td>
 <td><p>RSSM variant used in Dreamer training loop.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ModularRSSM</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.modular_rssm</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.modular_rssm</span></code></p></td>
 <td><p>Modular RSSM with swappable encoder/backbone/decoder.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">create_modular_rssm</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.modular_rssm</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.modular_rssm</span></code></p></td>
 <td><p>Factory for ModularRSSM.</p></td>
 </tr>
 </tbody>
@@ -599,35 +599,35 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DiT</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.diffusion</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.diffusion</span></code></p></td>
 <td><p>Diffusion Transformer model.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">create_dit</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.diffusion</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.diffusion</span></code></p></td>
 <td><p>Factory for DiT.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PatchEmbed</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.diffusion</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.diffusion</span></code></p></td>
 <td><p>Image-to-patch embedding layer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PatchUnEmbed</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.diffusion</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.diffusion</span></code></p></td>
 <td><p>Patch-to-image un-embedding layer.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DDPM</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.diffusion</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.diffusion</span></code></p></td>
 <td><p>Denoising Diffusion Probabilistic Model.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ActorCriticNetwork</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.diffusion</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.diffusion</span></code></p></td>
 <td><p>Actor-critic head for DIAMOND-style RL.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RewardTerminationModel</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.diffusion</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.diffusion</span></code></p></td>
 <td><p>Reward + termination predictor for DIAMOND.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sinusoidal_time_embedding</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.diffusion</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.diffusion</span></code></p></td>
 <td><p>Time-step embedding for diffusion.</p></td>
 </tr>
 </tbody>
@@ -645,59 +645,59 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ConvEncoder</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.dreamer_encoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.dreamer_encoder</span></code></p></td>
 <td><p>Dreamer convolutional encoder (image → embedding).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CNNEncoder</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.planet_encoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.planet_encoder</span></code></p></td>
 <td><p>PlaNet CNN encoder (image → embedding).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IRISEncoder</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.iris_encoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.iris_encoder</span></code></p></td>
 <td><p>IRIS encoder (image → discrete tokens).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ConvDecoder</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.dreamer_decoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.dreamer_decoder</span></code></p></td>
 <td><p>Dreamer convolutional decoder (latent → image distribution).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CNNDecoder</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.planet_decoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.planet_decoder</span></code></p></td>
 <td><p>PlaNet CNN decoder.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DenseDecoder</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.dreamer_decoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.dreamer_decoder</span></code></p></td>
 <td><p>MLP decoder for reward/value/discount.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ActionDecoder</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.dreamer_decoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.dreamer_decoder</span></code></p></td>
 <td><p>Dreamer policy head (latent → tanh-squashed action).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IRISDecoder</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.iris_decoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.iris_decoder</span></code></p></td>
 <td><p>IRIS decoder (tokens → image).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VideoTokenizer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.video_tokenizer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.video_tokenizer</span></code></p></td>
 <td><p>Genie VQ-VAE video tokenizer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">create_video_tokenizer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.video_tokenizer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.video_tokenizer</span></code></p></td>
 <td><p>Factory for VideoTokenizer.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VectorQuantizer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.vq_layer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.vq_layer</span></code></p></td>
 <td><p>VQ-VAE vector quantization layer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VectorQuantizerEMA</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.vq_layer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.vq_layer</span></code></p></td>
 <td><p>VQ-VAE with EMA codebook updates.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TanhBijector</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.dreamer_decoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.dreamer_decoder</span></code></p></td>
 <td><p>Tanh bijection for action squashing.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SampleDist</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.dreamer_decoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.dreamer_decoder</span></code></p></td>
 <td><p>MC-sampled distribution statistics.</p></td>
 </tr>
 </tbody>
@@ -715,51 +715,51 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerConfig</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.dreamer_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.dreamer_config</span></code></p></td>
 <td><p>Dreamer hyperparameter config.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">JEPAConfig</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.jepa_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.jepa_config</span></code></p></td>
 <td><p>JEPA hyperparameter config.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DiTConfig</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.dit_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.dit_config</span></code></p></td>
 <td><p>DiT hyperparameter config.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_dit_config</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.dit_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.dit_config</span></code></p></td>
 <td><p>Factory for DiTConfig with presets.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DiamondConfig</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.diamond_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.diamond_config</span></code></p></td>
 <td><p>DIAMOND hyperparameter config.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IRISConfig</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.iris_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.iris_config</span></code></p></td>
 <td><p>IRIS hyperparameter config.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GenieConfig</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.genie_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.genie_config</span></code></p></td>
 <td><p>Genie hyperparameter config.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GenieSmallConfig</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.genie_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.genie_config</span></code></p></td>
 <td><p>Genie-small preset config.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">STTransformerConfig</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.st_transformer_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.st_transformer_config</span></code></p></td>
 <td><p>ST-Transformer config.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VideoTokenizerConfig</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.video_tokenizer_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.video_tokenizer_config</span></code></p></td>
 <td><p>Video tokenizer config.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LatentActionModelConfig</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.lam_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.lam_config</span></code></p></td>
 <td><p>Latent action model config.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DynamicsModelConfig</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.dynamics_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.dynamics_config</span></code></p></td>
 <td><p>Dynamics model config.</p></td>
 </tr>
 </tbody>
@@ -805,23 +805,23 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ReplayBuffer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.memory.dreamer_memory</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.memory.dreamer_memory</span></code></p></td>
 <td><p>Dreamer ring buffer (transitions → sequences).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Memory</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.memory.planet_memory</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.memory.planet_memory</span></code></p></td>
 <td><p>Episode-based memory for PlaNet.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Episode</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.memory.planet_memory</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.memory.planet_memory</span></code></p></td>
 <td><p>Single episode recording.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IRISReplayBuffer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.memory.iris_memory</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.memory.iris_memory</span></code></p></td>
 <td><p>Ring buffer for IRIS (uint8 images).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IRISOnPolicyBuffer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.memory.iris_memory</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.memory.iris_memory</span></code></p></td>
 <td><p>On-policy buffer for episode collection.</p></td>
 </tr>
 </tbody>
@@ -839,143 +839,143 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DeepMindControlEnv</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.dmc_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.dmc_env</span></code></p></td>
 <td><p>DeepMind Control Suite adapter.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DMLabEnv</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.dmlab_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.dmlab_env</span></code></p></td>
 <td><p>DeepMind Lab adapter.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make_dmlab_env</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.dmlab_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.dmlab_env</span></code></p></td>
 <td><p>Factory for DeepMind Lab.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DMLAB_LEVELS</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.dmlab_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.dmlab_env</span></code></p></td>
 <td><p>Available DMLab level names.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GymImageEnv</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.gym_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.gym_env</span></code></p></td>
 <td><p>Gymnasium image adapter.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">make_gym_env</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.gym_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.gym_env</span></code></p></td>
 <td><p>Factory for GymImageEnv.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MuJoCoImageEnv</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.mujoco_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.mujoco_env</span></code></p></td>
 <td><p>MuJoCo image adapter.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">make_mujoco_env</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.mujoco_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.mujoco_env</span></code></p></td>
 <td><p>Factory for MuJoCo environments.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MujocoEnv</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.mujoco_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.mujoco_env</span></code></p></td>
 <td><p>Raw MuJoCo environment wrapper.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BraxImageEnv</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.brax_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.brax_env</span></code></p></td>
 <td><p>Brax image adapter.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make_brax_env</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.brax_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.brax_env</span></code></p></td>
 <td><p>Factory for BraxImageEnv.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BSuiteImageEnv</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.bsuite_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.bsuite_env</span></code></p></td>
 <td><p>BSuite image adapter.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make_bsuite_env</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.bsuite_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.bsuite_env</span></code></p></td>
 <td><p>Factory for BSuiteImageEnv.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">list_available_bsuite_ids</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.bsuite_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.bsuite_env</span></code></p></td>
 <td><p>List BSuite environment IDs.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make_atari_env</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.atari_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.atari_env</span></code></p></td>
 <td><p>Factory for Atari ALE environments.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">list_available_atari_envs</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.atari_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.atari_env</span></code></p></td>
 <td><p>List available Atari game IDs.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make_atari_vector_env</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.atari_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.atari_env</span></code></p></td>
 <td><p>Factory for vectorized Atari.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">make_diamond_atari_env</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.diamond_atari</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.diamond_atari</span></code></p></td>
 <td><p>DIAMOND-style Atari preprocessing.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make_procgen_env</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.procgen_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.procgen_env</span></code></p></td>
 <td><p>Factory for Procgen environments.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">make_robotics_env</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.robotics_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.robotics_env</span></code></p></td>
 <td><p>Factory for Gymnasium Robotics.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">register_gymnasium_robotics_envs</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.robotics_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.robotics_env</span></code></p></td>
 <td><p>Register Robotics envs.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">list_gymnasium_robotics_envs</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.robotics_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.robotics_env</span></code></p></td>
 <td><p>List installed Robotics envs.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">UnityMLAgentsEnv</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.unity_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.unity_env</span></code></p></td>
 <td><p>Unity ML-Agents adapter.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">make_unity_mlagents_env</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.unity_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.unity_env</span></code></p></td>
 <td><p>Factory for UnityMLAgentsEnv.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WorldModelEnv</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.world_model_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.world_model_env</span></code></p></td>
 <td><p>Environment inside a learned world model.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">make_world_model_env</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.world_model_env</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.world_model_env</span></code></p></td>
 <td><p>Factory for WorldModelEnv.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TimeLimit</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.wrappers</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.wrappers</span></code></p></td>
 <td><p>Episode time limit wrapper.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ActionRepeat</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.wrappers</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.wrappers</span></code></p></td>
 <td><p>Action repeat wrapper.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NormalizeActions</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.wrappers</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.wrappers</span></code></p></td>
 <td><p>Action normalization to [-1, 1].</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ObsDict</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.wrappers</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.wrappers</span></code></p></td>
 <td><p>Observation-to-dict conversion.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">OneHotAction</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.wrappers</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.wrappers</span></code></p></td>
 <td><p>Discrete to one-hot action conversion.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RewardObs</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.wrappers</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.wrappers</span></code></p></td>
 <td><p>Reward observation injection.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ResizeImage</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.wrappers</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.wrappers</span></code></p></td>
 <td><p>Image resizing wrapper.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RenderImage</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.wrappers</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.wrappers</span></code></p></td>
 <td><p>Render-based image observation.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SelectAction</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.envs.wrappers</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.envs.wrappers</span></code></p></td>
 <td><p>Action selection wrapper.</p></td>
 </tr>
 </tbody>
@@ -993,27 +993,27 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RSSMPolicy</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.controller</span></code></p></td>
 <td><p>RSSM-based policy for Dreamer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RolloutGenerator</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.controller</span></code></p></td>
 <td><p>Policy rollouts in the environment.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IRISActor</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.controller</span></code></p></td>
 <td><p>IRIS actor head.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IRISCritic</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.controller</span></code></p></td>
 <td><p>IRIS critic head.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IRISPolicy</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.controller</span></code></p></td>
 <td><p>IRIS combined actor-critic policy.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CNNFeatureExtractor</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.controller</span></code></p></td>
 <td><p>CNN feature extractor for policy inputs.</p></td>
 </tr>
 </tbody>
@@ -1031,19 +1031,19 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerOperator</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.inference.operators</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.inference.operators</span></code></p></td>
 <td><p>Dreamer input preprocessing.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">JEPAOperator</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.inference.operators</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.inference.operators</span></code></p></td>
 <td><p>JEPA image masking and patching.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IrisOperator</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.inference.operators</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.inference.operators</span></code></p></td>
 <td><p>IRIS sequence tokenization.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PlaNetOperator</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.inference.operators</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.inference.operators</span></code></p></td>
 <td><p>PlaNet action/state preprocessing.</p></td>
 </tr>
 </tbody>
@@ -1061,15 +1061,15 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">export_any(obj,</span> <span class="pre">path,</span> <span class="pre">format,</span> <span class="pre">...)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.export</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.export</span></code></p></td>
 <td><p>Export a model or agent to ONNX/TorchScript/TensorRT.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">export_model(module,</span> <span class="pre">path,</span> <span class="pre">format,</span> <span class="pre">...)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.export</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.export</span></code></p></td>
 <td><p>Export a raw nn.Module.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ExportableAgentMixin</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.export</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.export</span></code></p></td>
 <td><p>Mixin that adds <code class="docutils literal notranslate"><span class="pre">.export()</span></code> to custom agents.</p></td>
 </tr>
 </tbody>
@@ -1087,19 +1087,19 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RewardModel</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.reward</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.reward</span></code></p></td>
 <td><p>Base reward model.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ValueModel</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.reward</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.reward</span></code></p></td>
 <td><p>Base value model.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerRewardModel</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.reward</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.reward</span></code></p></td>
 <td><p>Dreamer reward predictor.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerValueModel</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.reward</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.reward</span></code></p></td>
 <td><p>Dreamer value function.</p></td>
 </tr>
 </tbody>
@@ -1117,23 +1117,23 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">STTransformer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.blocks</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.blocks</span></code></p></td>
 <td><p>Spatiotemporal Transformer (Genie).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.blocks</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.blocks</span></code></p></td>
 <td><p>Multi-head self-attention.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MultiHeadAttention</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.blocks</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.blocks</span></code></p></td>
 <td><p>Multi-head cross-attention.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AdaLNNormalization</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.blocks</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.blocks</span></code></p></td>
 <td><p>Adaptive layer norm for diffusion.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RMSNorm</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.blocks</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.blocks</span></code></p></td>
 <td><p>Root mean square layer norm.</p></td>
 </tr>
 </tbody>
@@ -1151,31 +1151,31 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">register_world_model(name,</span> <span class="pre">import_path,</span> <span class="pre">...)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.registry</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.registry</span></code></p></td>
 <td><p>Register a custom world model architecture.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deregister_world_model(name)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.registry</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.registry</span></code></p></td>
 <td><p>Remove a registered model.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_registered_model_spec(name)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.registry</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.registry</span></code></p></td>
 <td><p>Look up a registered model spec.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">list_registered_models()</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.registry</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.registry</span></code></p></td>
 <td><p>List all externally registered model names.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">register_env_backend(name,</span> <span class="pre">factory_path,</span> <span class="pre">...)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.registry</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.registry</span></code></p></td>
 <td><p>Register a custom environment backend.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deregister_env_backend(name)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.registry</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.registry</span></code></p></td>
 <td><p>Remove a registered env backend.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">list_registered_env_backends()</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.registry</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.registry</span></code></p></td>
 <td><p>List all registered env backends.</p></td>
 </tr>
 </tbody>
@@ -1193,15 +1193,15 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deprecated(version,</span> <span class="pre">reason)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.utils.deprecation</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.utils.deprecation</span></code></p></td>
 <td><p>Decorator to mark functions/classes as deprecated.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deprecated_class(version,</span> <span class="pre">alternative)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.utils.deprecation</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.utils.deprecation</span></code></p></td>
 <td><p>Shortcut for deprecating a class.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deprecated_function(version,</span> <span class="pre">alternative)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.utils.deprecation</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.utils.deprecation</span></code></p></td>
 <td><p>Shortcut for deprecating a function.</p></td>
 </tr>
 </tbody>
@@ -1219,19 +1219,19 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Logger</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.utils</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.utils</span></code></p></td>
 <td><p>Logging utility.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FreezeParameters</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.utils</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.utils</span></code></p></td>
 <td><p>Context manager to freeze model parameters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compute_return(rewards,</span> <span class="pre">values,</span> <span class="pre">gamma,</span> <span class="pre">lambda_)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.utils</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.utils</span></code></p></td>
 <td><p>Compute GAE or λ-return.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preprocess_obs(obs)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.utils</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.utils</span></code></p></td>
 <td><p>Observation preprocessing (resize, normalize).</p></td>
 </tr>
 </tbody>
