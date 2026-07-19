@@ -23,7 +23,6 @@ import time
 from torchvision.utils import save_image
 import os
 from pathlib import Path
-from typing import Any
 
 
 def sinusoidal_time_embedding(timesteps: torch.Tensor, dim: int) -> torch.Tensor:

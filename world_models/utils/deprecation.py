@@ -38,7 +38,7 @@ def deprecated(
                 )
                 obj.__init__(self, *args, **kwargs)
 
-            obj.__init__ = wrapped_init
+            obj.__init__ = wrapped_init  # type: ignore[method-assign]
             return cast(F, obj)
 
         @functools.wraps(obj)

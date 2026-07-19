@@ -5,9 +5,9 @@ import os
 import torch
 from omegaconf import OmegaConf
 
-from world_models.configs.genie_config import GenieSmallConfig
-from world_models.training.train_genie import create_genie_trainer
-from world_models.datasets import create_tinyworlds_dataloader
+from torchwm.configs.genie_config import GenieSmallConfig
+from torchwm.training.train_genie import create_genie_trainer
+from torchwm.datasets import create_tinyworlds_dataloader
 
 
 def main():

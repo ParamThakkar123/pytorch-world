@@ -37,14 +37,14 @@ class IRISConfig(SerializableConfigMixin):
     transformer_heads: int = 4
     transformer_dropout: float = 0.1
 
-    # === Actor-Critic ===
-    imagination_horizon: int = 15
-    discount: float = 0.99
-    td_lambda: float = 0.9
-    entropy_coef: float = 0.01
+    # === Actor-Critic === (paper Appendix B, Table 6)
+    imagination_horizon: int = 20
+    discount: float = 0.995
+    td_lambda: float = 0.95
+    entropy_coef: float = 0.001
 
     actor_hidden_size: int = 512
-    actor_layers: int = 4
+    actor_layers: int = 1
 
     value_hidden_size: int = 512
     value_layers: int = 3
@@ -53,7 +53,7 @@ class IRISConfig(SerializableConfigMixin):
     total_epochs: int = 600
     collection_epochs: int = 500
     env_steps_per_epoch: int = 200
-    training_steps_per_epoch: int = 250
+    training_steps_per_epoch: int = 200
 
     model_learning_rate: float = 1e-4
     actor_learning_rate: float = 1e-4
@@ -65,12 +65,12 @@ class IRISConfig(SerializableConfigMixin):
     use_amp: bool = True
     gradient_checkpointing: bool = True
 
-    collect_epsilon: float = 0.1
-    eval_temperature: float = 0.1
+    collect_epsilon: float = 0.01
+    eval_temperature: float = 0.5
 
-    start_autoencoder_after: int = 1
-    start_transformer_after: int = 15
-    start_actor_critic_after: int = 35
+    start_autoencoder_after: int = 5
+    start_transformer_after: int = 25
+    start_actor_critic_after: int = 50
 
     autoencoder_batch_size: int = 256
     transformer_batch_size: int = 64

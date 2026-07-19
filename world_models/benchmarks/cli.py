@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List
 import torch
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import DictConfig
 import hydra
 
 from world_models.benchmarks.runner import BenchmarkRunner, MultiAgentBenchmarkRunner

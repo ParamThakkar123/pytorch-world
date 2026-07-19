@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple, Optional, Union
+from typing import Tuple, Union
 
 from world_models.vision.vq_layer import VectorQuantizer, VectorQuantizerEMA
 from world_models.blocks.st_transformer import STTransformer

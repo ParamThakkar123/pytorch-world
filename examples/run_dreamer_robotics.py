@@ -21,7 +21,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def make_config(cli_cfg):
-    from world_models.configs.dreamer_config import DreamerConfig
+    from torchwm.configs.dreamer_config import DreamerConfig
 
     cfg = DreamerConfig()
     cfg.env_backend = "robotics"
@@ -53,7 +53,7 @@ def main() -> None:
     logging.getLogger("world_models").setLevel(logging.INFO)
 
     if cli_cfg.get("list_envs", False):
-        from world_models.envs.robotics_env import list_gymnasium_robotics_envs
+        from torchwm.envs.robotics_env import list_gymnasium_robotics_envs
 
         env_ids = list_gymnasium_robotics_envs()
         if not env_ids:
@@ -65,7 +65,7 @@ def main() -> None:
             print(env_id)
         return
 
-    from world_models.models.dreamer import DreamerAgent
+    from torchwm.models.dreamer import DreamerAgent
 
     cfg = make_config(cli_cfg)
     LOGGER.info("Running DreamerV1 on Gymnasium Robotics env='%s'", cfg.env)

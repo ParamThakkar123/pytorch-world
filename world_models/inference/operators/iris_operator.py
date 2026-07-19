@@ -1,6 +1,6 @@
 import torch
 from .base import OperatorABC
-from typing import Dict, Any, List
+from typing import Dict, Any
 import numpy as np
 
 

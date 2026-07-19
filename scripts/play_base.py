@@ -8,7 +8,6 @@ Provides:
 
 from pathlib import Path
 from typing import Optional
-import cv2
 
 # OpenCV arrow key codes (platform-independent via unmasked waitKey)
 _ARROW_UP = 0x26
@@ -77,6 +76,6 @@ def init_video_recorder(record_path: Optional[str], fps: int = 20, frame_shape=N
     """
     if record_path is None:
         return None
-    from world_models.utils.utils import StreamingVideoWriter
+    from torchwm.utils.utils import StreamingVideoWriter
 
     return StreamingVideoWriter(record_path, fps=fps, frame_shape=frame_shape)

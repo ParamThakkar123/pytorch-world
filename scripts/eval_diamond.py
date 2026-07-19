@@ -18,13 +18,13 @@ import numpy as np
 from pathlib import Path
 from tqdm import tqdm
 
-from world_models.configs.diamond_config import DiamondConfig
-from world_models.models.diffusion.diamond_diffusion import (
+from torchwm.configs.diamond_config import DiamondConfig
+from torchwm.models.diffusion.diamond_diffusion import (
     DiffusionUNet,
     EulerSampler,
     EDMPreconditioner,
 )
-from world_models.envs.diamond_atari import make_diamond_atari_env
+from torchwm.envs.diamond_atari import make_diamond_atari_env
 
 from evals import FID, FVD, LPIPS, PSNR
 from evals.diamond_utils import (
@@ -216,7 +216,7 @@ def run_eval(
     gen_frames = gen_trajs["observations"]
     gen_frames_flat = gen_frames.reshape(-1, C_f, H, W)
 
-    print(f"\nFrames for evaluation:")
+    print("\nFrames for evaluation:")
     print(f"  Real frames: {real_frames_flat.shape}")
     print(f"  Generated frames: {gen_frames_flat.shape}")
 
@@ -257,7 +257,7 @@ def run_eval(
         print(f"  FVD: {fvd_score:.2f}  ({time.time() - t0:.1f}s)")
 
     if record:
-        from world_models.utils.utils import save_video
+        from torchwm.utils.utils import save_video
 
         record_path = Path(record)
         record_path.parent.mkdir(parents=True, exist_ok=True)

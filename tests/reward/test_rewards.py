@@ -1,4 +1,3 @@
-import pytest
 import torch
 from world_models.reward.dreamer_v1_reward import RewardModel
 from world_models.reward.dreamer_v1_value import ValueModel

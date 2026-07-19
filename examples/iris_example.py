@@ -9,8 +9,8 @@ for imagination and planning.
 import logging
 import torch
 from omegaconf import OmegaConf
-from world_models.models.iris_agent import IRISAgent
-from world_models.configs.iris_config import IRISConfig
+from torchwm.models.iris_agent import IRISAgent
+from torchwm.configs.iris_config import IRISConfig
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

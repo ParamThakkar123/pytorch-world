@@ -284,10 +284,10 @@ Use the Ha & Schmidhuber world model when you want:
 ### Quick-start example
 
 ```python
-from world_models.configs.wm_config import WMVAEConfig, WMMDNRNNConfig, WMControllerConfig
-from world_models.training.train_convvae import train_convae
-from world_models.training.train_mdn_rnn import train_mdn_rnn
-from world_models.training.train_controller import train_controller
+from torchwm.configs.wm_config import WMVAEConfig, WMMDNRNNConfig, WMControllerConfig
+from torchwm.training.train_convvae import train_convae
+from torchwm.training.train_mdn_rnn import train_mdn_rnn
+from torchwm.training.train_controller import train_controller
 
 # Stage 1: Train VAE
 vae_config = WMVAEConfig({
@@ -317,7 +317,7 @@ train_controller(ctrl_config)
 ### Testing a trained model
 
 ```python
-from world_models.training.train_world_model import test_trained_model
+from torchwm.training.train_world_model import test_trained_model
 
 test_trained_model(
     logdir="./results/carracing",

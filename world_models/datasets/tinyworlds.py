@@ -14,7 +14,6 @@ Available datasets:
 
 import torch
 import numpy as np
-from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from typing import Optional, Tuple, Dict, List, Any
@@ -22,9 +21,6 @@ from dataclasses import dataclass
 import logging
 import os
 from pathlib import Path
-import hashlib
-import urllib.request
-import zipfile
 import shutil
 
 logger = logging.getLogger(__name__)
@@ -36,7 +32,7 @@ except ImportError:
     logger.warning("h5py not installed. Install with: pip install h5py")
 
 try:
-    from huggingface_hub import hf_hub_download, list_repo_files
+    from huggingface_hub import hf_hub_download
 
     HF_AVAILABLE = True
 except ImportError:
@@ -150,7 +146,7 @@ class TinyWorldsDataset(Dataset):
             )
 
         logger.info(f"Downloading {self.dataset_name} dataset from HuggingFace...")
-        logger.info(f"This may take several minutes depending on your connection.")
+        logger.info("This may take several minutes depending on your connection.")
 
         try:
             downloaded_path = hf_hub_download(

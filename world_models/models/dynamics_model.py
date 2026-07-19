@@ -34,36 +34,73 @@ class MaskGITSampler:
         else:
             raise ValueError(f"Unknown mask schedule: {self.mask_schedule}")
 
+    def sample_frame(self, logits: torch.Tensor) -> torch.Tensor:
+        """Sample a full frame of tokens from per-token logits in one shot.
+
+        Genie samples each frame with a temperature (2.0 in the paper) using
+        random sampling. This helper draws one categorical sample per spatial
+        position.
+
+        Args:
+            logits: (B, N, vocab_size) next-frame token logits.
+
+        Returns:
+            tokens: (B, N) sampled token indices.
+        """
+        B, N, V = logits.shape
+        probs = F.softmax(logits / self.temperature, dim=-1)
+        tokens = torch.multinomial(probs.reshape(B * N, V), 1)
+        return tokens.reshape(B, N)
+
     def sample(
         self,
         logits: torch.Tensor,
+        tokens: torch.Tensor,
         mask: torch.Tensor,
         step: int,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Sample tokens from logits with mask.
+        """One MaskGIT refinement step over a single frame's tokens.
 
         Args:
-            logits: (B, T, vocab_size)
-            mask: (B, T) - 1 for tokens to predict, 0 for fixed tokens
-            step: Current step in refinement
+            logits: (B, N, vocab_size) per-position logits for the frame.
+            tokens: (B, N) tokens committed so far (values at masked
+                positions are placeholders and ignored).
+            mask: (B, N) - 1 for positions still to predict, 0 for committed.
+            step: Current refinement step in ``[0, num_steps)``.
 
         Returns:
-            sampled_tokens: (B, T)
-            new_mask: (B, T)
+            new_tokens: (B, N) with newly revealed positions filled in.
+            new_mask: (B, N) with newly revealed positions set to 0.
         """
-        probs = F.softmax(logits / self.temperature, dim=-1)
+        mask_bool = mask.bool()
 
+        probs = F.softmax(logits / self.temperature, dim=-1)
         sampled = torch.multinomial(probs.reshape(-1, probs.size(-1)), 1)
         sampled = sampled.reshape(mask.shape)
 
-        current_mask_prob = self.get_mask_prob(step)
+        # Confidence of each freshly sampled token; only masked positions are
+        # eligible to be revealed this step.
+        confidence = probs.gather(-1, sampled.unsqueeze(-1)).squeeze(-1)
+        confidence = confidence.masked_fill(~mask_bool, -1.0)
 
-        keep_mask = mask.float() * (torch.rand_like(mask.float()) > current_mask_prob)
-        new_mask = mask * keep_mask
+        # Fraction of positions that should remain masked after this step
+        # (cosine schedule: reveal more as ``step`` grows).
+        keep_masked_frac = self.get_mask_prob(step)
+        N = mask.shape[-1]
+        num_keep_masked = int(math.floor(keep_masked_frac * N))
 
-        new_tokens = torch.where(keep_mask.bool(), mask.long(), sampled)
+        # Reveal the highest-confidence masked positions this step.
+        reveal = mask_bool.clone()
+        if num_keep_masked < N:
+            threshold = torch.topk(
+                confidence, k=N - num_keep_masked, dim=-1
+            ).values[..., -1:]
+            reveal = mask_bool & (confidence >= threshold)
 
-        return new_tokens, new_mask
+        new_tokens = torch.where(reveal, sampled, tokens)
+        new_mask = mask_bool & ~reveal
+
+        return new_tokens, new_mask.to(mask.dtype)
 
 
 class DynamicsModel(nn.Module):
@@ -229,7 +266,6 @@ class DynamicsModel(nn.Module):
         current_actions = prompt_actions
 
         for step in range(T_remaining):
-            mask = torch.ones(B, N, device=prompt_tokens.device, dtype=torch.long)
 
             logits = self.forward(current_tokens, current_actions)
 
@@ -261,15 +297,18 @@ class DynamicsModel(nn.Module):
     def autoregressive_sample(
         self,
         prompt_tokens: torch.Tensor,
-        prompt_actions: torch.Tensor,
+        actions: torch.Tensor,
         num_frames: int,
         temperature: float = 1.0,
     ) -> torch.Tensor:
-        """Simple autoregressive sampling (token by token).
+        """Simple autoregressive sampling (frame by frame).
 
         Args:
             prompt_tokens: (B, T_prompt, N) - starting frame tokens
-            prompt_actions: (B, T_prompt) - actions for prompt frames
+            actions: (B, num_frames - 1) - latent actions for each transition.
+                The action driving frame ``t -> t+1`` is ``actions[:, t-1]``.
+                If fewer actions are supplied than transitions, the remainder
+                are sampled at random.
             num_frames: Total number of frames to generate
             temperature: Sampling temperature
 
@@ -279,11 +318,23 @@ class DynamicsModel(nn.Module):
         B, T_prompt, N = prompt_tokens.shape
 
         current_tokens = prompt_tokens
-        current_actions = prompt_actions
+        num_supplied = actions.shape[1]
 
-        T_remaining = num_frames - T_prompt
+        while current_tokens.shape[1] < num_frames:
+            t = current_tokens.shape[1]  # frames generated so far
 
-        for step in range(T_remaining):
+            if num_supplied >= t:
+                current_actions = actions[:, :t]
+            else:
+                # Not enough actions supplied for this transition; pad with random.
+                pad = torch.randint(
+                    0,
+                    self.action_vocab_size,
+                    (B, t - num_supplied),
+                    device=prompt_tokens.device,
+                )
+                current_actions = torch.cat([actions[:, :num_supplied], pad], dim=1)
+
             logits = self.forward(current_tokens, current_actions)
 
             next_frame_logits = logits[:, -1, :, :]
@@ -293,15 +344,8 @@ class DynamicsModel(nn.Module):
             next_tokens = torch.multinomial(probs.reshape(-1, probs.size(-1)), 1)
             next_tokens = next_tokens.reshape(B, N)
 
-            next_action = torch.randint(
-                0, self.action_vocab_size, (B,), device=prompt_tokens.device
-            )
-
             current_tokens = torch.cat(
                 [current_tokens, next_tokens.unsqueeze(1)], dim=1
-            )
-            current_actions = torch.cat(
-                [current_actions, next_action.unsqueeze(1)], dim=1
             )
 
         return current_tokens

@@ -141,7 +141,11 @@ class TestDiamondAtariWrapper:
         assert reward == 1.0
 
     def test_make_diamond_atari_env(self):
-        with patch("world_models.envs.diamond_atari.gym.make") as mock_make:
+        # `make_diamond_atari_env` imports `gym` locally via
+        # `from world_models.utils.gym_compat import gym`, so patch `gym.make`
+        # where it is actually looked up rather than on the env module (which
+        # has no module-level `gym` attribute).
+        with patch("world_models.utils.gym_compat.gym.make") as mock_make:
             mock_make.return_value = MagicMock()
             mock_make.return_value.__class__ = gym.Env
             env = make_diamond_atari_env("Breakout-v5", seed=42)

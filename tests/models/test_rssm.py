@@ -1,5 +1,4 @@
 import pytest
-import numpy as np
 import torch
 from world_models.models.rssm import RecurrentStateSpaceModel
 

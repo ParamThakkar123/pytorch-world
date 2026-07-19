@@ -11,15 +11,6 @@ from omegaconf import OmegaConf
 from types import ModuleType
 from typing import Optional as _Optional
 
-# Optional OpenCV import at module scope (avoid function-local imports)
-cv2: _Optional[ModuleType] = None
-try:
-    import cv2 as _cv2
-
-    cv2 = _cv2
-except Exception:
-    cv2 = None
-
 from world_models.configs.iris_config import IRISConfig
 from world_models.experiments import (
     dump_config,
@@ -29,6 +20,15 @@ from world_models.experiments import (
 from world_models.models.iris_agent import IRISAgent
 from world_models.memory.iris_memory import IRISReplayBuffer
 from world_models.envs.ale_atari_env import make_atari_env
+
+# Optional OpenCV import at module scope (avoid function-local imports)
+cv2: _Optional[ModuleType] = None
+try:
+    import cv2 as _cv2
+
+    cv2 = _cv2
+except Exception:
+    cv2 = None
 
 
 class IRISTrainer:

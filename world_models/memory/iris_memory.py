@@ -3,7 +3,7 @@ from typing import Tuple, Optional, List
 
 
 class IRISReplayBuffer:
-    """Replay buffer for IRIS (Imagined Rollouts with Implicit Successor) training.
+    """Replay buffer for IRIS (Imagination with auto-Regression over an Inner Speech) training.
 
     Stores (observation, action, reward, terminal) tuples in a ring buffer
     and supports sampling contiguous sequences for world model training.

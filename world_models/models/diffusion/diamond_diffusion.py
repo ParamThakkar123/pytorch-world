@@ -432,7 +432,14 @@ class EulerSampler:
             ) ** rho
         else:
             t_steps = torch.tensor([sigma_max])
-        self.t_steps = torch.flip(t_steps, dims=(0,))
+        # `t_steps` is already produced in descending order (sigma_max -> sigma_min),
+        # which is the correct EDM reverse-diffusion sampling direction: we start
+        # from a pure-noise sample at sigma_max and denoise down to sigma_min.
+        # `t_next` appends a trailing 0 so the final Euler step lands on the clean
+        # image. (A previous version flipped `t_steps`, which initialized the sample
+        # at sigma_min and ran the schedule backwards, adding noise instead of
+        # removing it.)
+        self.t_steps = t_steps
         self.t_next = torch.cat([self.t_steps[1:], torch.tensor([0.0])])
         # attach EDM preconditioner instance (use provided or default)
         self.edm_precond = (

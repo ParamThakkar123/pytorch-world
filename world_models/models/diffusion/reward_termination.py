@@ -1,34 +1,66 @@
 import torch
 import torch.nn as nn
-from typing import Tuple, Optional
+from typing import Tuple, Optional, cast
 
 
-class ConvBlock(nn.Module):
-    """Convolutional block with adaptive group normalization."""
+def _num_groups(channels: int, max_groups: int = 8) -> int:
+    """Pick a GroupNorm group count that divides ``channels`` (<= ``max_groups``)."""
+    for g in (max_groups, 4, 2, 1):
+        if channels % g == 0:
+            return g
+    return 1
+
+
+class ResidualBlock(nn.Module):
+    """Residual block following DIAMOND Appendix D.
+
+    The main path is GroupNorm -> SiLU -> 3x3 convolution (stride 1, padding 1),
+    added to a (optionally projected) skip connection. When ``cond_dim`` is
+    provided the group normalization is made *adaptive*, i.e. its scale/shift are
+    predicted from a conditioning vector (the action embedding) as used by the
+    reward/termination model. The actor-critic omits conditioning and uses a
+    plain group normalization.
+    """
 
     def __init__(
         self,
         in_channels: int,
         out_channels: int,
-        cond_dim: int,
-        stride: int = 2,
+        cond_dim: Optional[int] = None,
     ):
         super().__init__()
-        self.conv = nn.Conv2d(in_channels, out_channels, 4, stride, padding=1)
-        self.norm = nn.GroupNorm(8, out_channels)
+        groups = _num_groups(in_channels)
+        self.conditioned = cond_dim is not None
+        self.cond_embed: Optional[nn.Linear]
+        if cond_dim is not None:
+            # affine=False: the affine parameters are supplied by ``cond_embed``
+            self.norm = nn.GroupNorm(groups, in_channels, affine=False)
+            self.cond_embed = nn.Linear(cond_dim, in_channels * 2)
+        else:
+            self.norm = nn.GroupNorm(groups, in_channels)
+            self.cond_embed = None
+
         self.act = nn.SiLU()
+        self.conv = nn.Conv2d(in_channels, out_channels, 3, stride=1, padding=1)
 
-        self.cond_embed = nn.Linear(cond_dim, out_channels * 2)
+        self.skip: nn.Module
+        if in_channels != out_channels:
+            self.skip = nn.Conv2d(in_channels, out_channels, 1)
+        else:
+            self.skip = nn.Identity()
 
-    def forward(self, x: torch.Tensor, cond: torch.Tensor) -> torch.Tensor:
-        x = self.conv(x)
-        x = self.norm(x)
-
-        scale, bias = self.cond_embed(cond).chunk(2, dim=-1)
-        scale = scale.unsqueeze(-1).unsqueeze(-1)
-        bias = bias.unsqueeze(-1).unsqueeze(-1)
-
-        return self.act(x * (1 + scale) + bias)
+    def forward(
+        self, x: torch.Tensor, cond: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
+        h = self.norm(x)
+        if self.cond_embed is not None and cond is not None:
+            scale, bias = self.cond_embed(cond).chunk(2, dim=-1)
+            h = h * (1 + scale.unsqueeze(-1).unsqueeze(-1)) + bias.unsqueeze(
+                -1
+            ).unsqueeze(-1)
+        h = self.act(h)
+        h = self.conv(h)
+        return h + self.skip(x)
 
 
 class RewardTerminationModel(nn.Module):
@@ -51,6 +83,7 @@ class RewardTerminationModel(nn.Module):
         channels: Tuple[int, ...] = (32, 32, 32, 32),
         lstm_dim: int = 512,
         cond_dim: int = 128,
+        res_blocks: int = 2,
     ):
         super().__init__()
         self.obs_channels = obs_channels
@@ -59,11 +92,18 @@ class RewardTerminationModel(nn.Module):
 
         self.action_embed = nn.Embedding(action_dim, cond_dim)
 
-        self.conv_blocks = nn.ModuleList()
+        # Convolutional trunk of residual blocks with 2x2 max-pool downsampling
+        # (DIAMOND Appendix D). Each stage holds ``res_blocks`` action-conditioned
+        # residual blocks (adaptive group norm) followed by a 2x2 stride-2 pool.
+        self.stages = nn.ModuleList()
         in_ch = obs_channels
-        for i, out_ch in enumerate(channels):
-            self.conv_blocks.append(ConvBlock(in_ch, out_ch, cond_dim, stride=2))
-            in_ch = out_ch
+        for out_ch in channels:
+            blocks = nn.ModuleList()
+            for _ in range(res_blocks):
+                blocks.append(ResidualBlock(in_ch, out_ch, cond_dim=cond_dim))
+                in_ch = out_ch
+            self.stages.append(blocks)
+        self.downsample = nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.lstm = nn.LSTM(
             input_size=channels[-1],
@@ -102,8 +142,10 @@ class RewardTerminationModel(nn.Module):
         action_emb = self.action_embed(actions_flat)
 
         h = obs_flat
-        for conv_block in self.conv_blocks:
-            h = conv_block(h, action_emb)
+        for stage in self.stages:
+            for block in cast(nn.ModuleList, stage):
+                h = block(h, action_emb)
+            h = self.downsample(h)
 
         h = h.mean(dim=[2, 3])
         h = h.view(B, T, -1)
@@ -179,13 +221,18 @@ class RewardTerminationLoss(nn.Module):
         Args:
             reward_logits: [B, T, 3]
             termination_logits: [B, T, 2]
-            rewards: Rewards as class indices [B, T] (values -1, 0, 1 mapped to 0, 1, 2)
+            rewards: Rewards [B, T]. Mapped to class indices via sign(r) + 1,
+                i.e. {-1, 0, +1} reward signs -> classes {0, 1, 2}.
             terminated: Termination flags [B, T]
 
         Returns:
             total_loss, reward_loss, termination_loss
         """
-        reward_targets = (rewards + 1).long()
+        # Paper (Algorithm 1) trains the reward head with CE(r_hat, sign(r)).
+        # Using sign() here keeps the target correct even if a reward is not
+        # already clipped to {-1, 0, 1} (e.g. a fractional value would otherwise
+        # be truncated toward zero by the direct `rewards + 1` mapping).
+        reward_targets = (torch.sign(rewards) + 1).long()
 
         # use reshape to avoid issues when tensors are non-contiguous
         reward_loss = self.reward_criterion(

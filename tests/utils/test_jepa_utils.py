@@ -1,8 +1,4 @@
-import pytest
 import torch
-import math
-import os
-import tempfile
 from world_models.utils.jepa_utils import (
     trunc_normal_,
     repeat_interleave_batch,
@@ -124,7 +120,6 @@ class TestCosineWDSchedule:
             optimizer=optimizer, ref_wd=0.1, T_max=1000, final_wd=0.0
         )
 
-        wd_before = optimizer.param_groups[0]["weight_decay"]
         scheduler.step()
         wd_after = optimizer.param_groups[0]["weight_decay"]
 
@@ -180,7 +175,6 @@ class TestAverageMeter:
 class TestGradLogger:
     def test_grad_logger(self):
         model = torch.nn.Linear(10, 5)
-        optimizer = torch.optim.Adam(model.parameters())
 
         x = torch.randn(2, 10)
         y = model(x)

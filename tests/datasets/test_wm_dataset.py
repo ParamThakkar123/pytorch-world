@@ -3,7 +3,7 @@
 import numpy as np
 import torch
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 pytest.importorskip("albumentations")
 from world_models.datasets.wm_dataset import (
@@ -27,8 +27,6 @@ class TestRolloutDataset:
 
     @pytest.fixture
     def dataset(self, tmp_path, mock_npz):
-        import glob as glob_lib
-
         data_dir = tmp_path / "rollouts"
         data_dir.mkdir()
         npz_path = str(data_dir / "rollout_0.npz")

@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import torch
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from world_models.controller.rssm_policy import RSSMPolicy
 
 pytest.importorskip("cv2")
@@ -161,7 +161,7 @@ class TestRolloutGenerator:
         )
 
         with patch.object(gen, "episode_gen", return_value=Mock()):
-            episode = gen.rollout_once(random_policy=True)
+            gen.rollout_once(random_policy=True)
 
             mock_env.sample_random_action.assert_called()
             mock_env.reset.assert_called_once()
@@ -193,7 +193,7 @@ class TestRolloutGenerator:
 
         with patch.object(
             gen, "rollout_eval", return_value=(Mock(), np.zeros((5, 3, 64, 64)), {})
-        ) as mock_eval:
+        ):
             episodes, frames, metrics = gen.rollout_eval_n(n=2)
 
             assert len(episodes) == 2

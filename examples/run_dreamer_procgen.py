@@ -9,9 +9,9 @@ Usage examples:
 import logging
 from omegaconf import OmegaConf
 
-from world_models.configs.dreamer_config import DreamerConfig
-from world_models.envs.procgen_env import list_procgen_envs
-from world_models.models.dreamer import DreamerAgent
+from torchwm.configs.dreamer_config import DreamerConfig
+from torchwm.envs.procgen_env import list_procgen_envs
+from torchwm.models.dreamer import DreamerAgent
 
 
 def make_config(cli_cfg) -> DreamerConfig:

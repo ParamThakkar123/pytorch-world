@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple, Optional
+from typing import Tuple, Optional, cast
+
+from world_models.models.diffusion.reward_termination import ResidualBlock
 
 
 class ActorCriticNetwork(nn.Module):
@@ -16,22 +18,24 @@ class ActorCriticNetwork(nn.Module):
         action_dim: int = 18,
         channels: Tuple[int, ...] = (32, 32, 64, 64),
         lstm_dim: int = 512,
+        res_blocks: int = 1,
     ):
         super().__init__()
         self.obs_channels = obs_channels
         self.action_dim = action_dim
 
-        self.conv_blocks = nn.ModuleList()
+        # Convolutional trunk of residual blocks with 2x2 max-pool downsampling
+        # (DIAMOND Appendix D). The actor-critic takes a single frame (no action
+        # conditioning), so the residual blocks use plain group normalization.
+        self.stages = nn.ModuleList()
         in_ch = obs_channels
-        for i, out_ch in enumerate(channels):
-            self.conv_blocks.append(
-                nn.Sequential(
-                    nn.Conv2d(in_ch, out_ch, 3, stride=2, padding=1),
-                    nn.GroupNorm(8, out_ch),
-                    nn.SiLU(),
-                )
-            )
-            in_ch = out_ch
+        for out_ch in channels:
+            blocks = nn.ModuleList()
+            for _ in range(res_blocks):
+                blocks.append(ResidualBlock(in_ch, out_ch))
+                in_ch = out_ch
+            self.stages.append(blocks)
+        self.downsample = nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.lstm = nn.LSTM(
             input_size=channels[-1],
@@ -65,8 +69,10 @@ class ActorCriticNetwork(nn.Module):
         obs_flat = obs.reshape(B * T, C, H, W)
 
         h = obs_flat
-        for conv_block in self.conv_blocks:
-            h = conv_block(h)
+        for stage in self.stages:
+            for block in cast(nn.ModuleList, stage):
+                h = block(h)
+            h = self.downsample(h)
 
         h = h.mean(dim=[2, 3])
         h = h.reshape(B, T, -1)

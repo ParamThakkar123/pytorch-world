@@ -5,11 +5,16 @@ from typing import Tuple, Optional
 
 
 class IRISActor(nn.Module):
-    """Actor network for IRIS (Imagined Rollouts with Implicit Successor) policy.
+    """Actor network for the IRIS (Imagination with auto-Regression over an Inner
+    Speech) policy.
 
     Takes reconstructed frames as input and outputs action logits for policy control.
     Uses a CNN feature extractor followed by an LSTM for temporal processing.
     Supports a burn-in mechanism for initializing the hidden state with context frames.
+
+    This standalone actor owns its own CNN and LSTM. (When actor and critic share a
+    backbone, as in the paper, that sharing is done at the ``IRISAgent`` level, which
+    builds a single CNN + LSTM feeding separate actor/critic heads.)
 
     Architecture:
         - CNN: Extracts features from input frames (3x64x64 -> 512)
@@ -157,12 +162,14 @@ class IRISActor(nn.Module):
 class IRISCritic(nn.Module):
     """Critic network for IRIS value estimation.
 
-    Estimates the value function for given frame sequences. Shares the CNN
-    feature extractor and LSTM backbone with the actor for efficiency, but
-    has a separate value head for estimating expected cumulative rewards.
+    Estimates the value function for given frame sequences. It uses the same
+    architecture as the actor (CNN feature extractor + LSTM) and a value head that
+    predicts expected cumulative rewards. This standalone critic instantiates its
+    own CNN and LSTM; backbone sharing between actor and critic is handled at the
+    ``IRISAgent`` level, not here.
 
     Architecture:
-        - CNN: Shared feature extractor with actor (3x64x64 -> 512)
+        - CNN: Feature extractor with the same architecture as the actor (3x64x64 -> 512)
         - LSTM: Temporal processing with same architecture as actor
         - Linear: Maps hidden states to scalar values
 
@@ -324,7 +331,7 @@ class CNNFeatureExtractor(nn.Module):
 
 
 class IRISPolicy(nn.Module):
-    """Combined policy module for IRIS (Imagined Rollouts with Implicit Successor).
+    """Combined policy module for IRIS (Imagination with auto-Regression over an Inner Speech).
 
     Provides a unified interface for actor-only or actor-critic policies.
     Used in the IRIS algorithm where the actor generates actions from reconstructed

@@ -8,8 +8,6 @@ from world_models.inference.operators import (
     IrisOperator,
     PlaNetOperator,
 )
-from PIL import Image
-import numpy as np
 
 
 class _SpecOperator(OperatorABC):

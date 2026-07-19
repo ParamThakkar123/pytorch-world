@@ -8,8 +8,8 @@ Usage examples:
 import logging
 from omegaconf import OmegaConf
 
-from world_models.models.dreamer import DreamerAgent
-from world_models.configs.dreamer_config import DreamerConfig
+from torchwm.models.dreamer import DreamerAgent
+from torchwm.configs.dreamer_config import DreamerConfig
 
 
 def make_config(cli_cfg) -> DreamerConfig:

@@ -237,6 +237,7 @@ class DiamondAgent:
             channels=tuple(self.config.reward_channels),
             lstm_dim=self.config.reward_lstm_dim,
             cond_dim=self.config.reward_cond_dim,
+            res_blocks=self.config.reward_res_blocks,
         ).to(self.device)
 
         self.reward_loss_fn = RewardTerminationLoss()
@@ -246,6 +247,7 @@ class DiamondAgent:
             action_dim=self.action_dim,
             channels=tuple(self.config.actor_channels),
             lstm_dim=self.config.actor_lstm_dim,
+            res_blocks=self.config.actor_res_blocks,
         ).to(self.device)
 
         self.rl_loss_fn = RLLoss(
@@ -435,6 +437,17 @@ class DiamondAgent:
 
         if reward_hidden is None:
             reward_hidden = self.reward_model.init_hidden(B, self.device)
+
+        # Burn-in the reward/termination LSTM over the conditioning frames and
+        # actions so its hidden/cell state reflects the pre-imagination context
+        # before the rollout begins (paper Algorithm 1: "Burn-in buffer with
+        # R_psi, pi_phi and V_phi to initialize LSTM states"). Without this the
+        # reward model would start imagination from a zero (or stale) state.
+        with torch.no_grad():
+            _, _, reward_hidden = self.reward_model(
+                obs_history, action_history, reward_hidden
+            )
+            reward_hidden = cast(Tuple[torch.Tensor, torch.Tensor], reward_hidden)
 
         # prime the policy LSTM with the burn-in observations to obtain a
         # proper initial hidden state for imagined rollouts. If a saved

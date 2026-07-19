@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from pathlib import Path
-from typing import Any, Optional, Tuple, Dict, Literal
+from typing import Any, Optional, Dict, Literal
 
 from world_models.vision.video_tokenizer import VideoTokenizer
 from world_models.models.latent_action_model import LatentActionModel
@@ -347,18 +347,16 @@ class Genie(nn.Module):
         dynamics_loss = F.cross_entropy(logits_flat, target_flat)
 
         # ===== TOTAL LOSS =====
-        # According to paper: co-train LAM and dynamics
-        # LAM losses: recon_loss (from decoder) + vq_loss + variance_loss
-        # Dynamics loss: cross-entropy on token prediction
+        # According to paper: co-train LAM and dynamics.
+        # LAM losses: recon_loss (from decoder) + vq_loss (VQ-VAE objective).
+        # Dynamics loss: cross-entropy on token prediction.
 
         lam_recon_loss = lam_output["recon_loss"]
         lam_vq_loss = lam_output["vq_loss"]
-        lam_variance_loss = lam_output["variance_loss"]
 
         total_loss = (
             lam_recon_loss
             + lam_vq_loss
-            + lam_variance_loss
             + dynamics_loss
             + tokenizer_loss_dict["recon_loss"]
             + tokenizer_loss_dict["vq_loss"]
@@ -375,7 +373,6 @@ class Genie(nn.Module):
             "recon_loss": tokenizer_loss_dict["recon_loss"],
             "lam_recon_loss": lam_recon_loss,
             "lam_vq_loss": lam_vq_loss,
-            "lam_variance_loss": lam_variance_loss,
             "dynamics_loss": dynamics_loss,
             "z_q_for_dynamics": z_q_for_dynamics,
             "total_loss": total_loss,
@@ -398,7 +395,7 @@ class Genie(nn.Module):
             Dictionary containing all losses for backpropagation
         """
         if self.use_bfloat16:
-            with torch.cuda.amp.autocast(dtype=torch.bfloat16):
+            with torch.autocast("cuda", dtype=torch.bfloat16):
                 return self.forward(video, mask_prob, training_phase)
         return self.forward(video, mask_prob, training_phase)
 
@@ -475,7 +472,7 @@ class Genie(nn.Module):
         else:
             generated_tokens = self.dynamics_model.autoregressive_sample(
                 prompt_tokens[:, :1, :],
-                actions[:, :1],
+                actions,
                 num_frames,
                 temperature=2.0,
             )
@@ -492,37 +489,39 @@ class Genie(nn.Module):
         actions: torch.Tensor,
         num_frames: int,
     ) -> torch.Tensor:
-        """Generate tokens using MaskGIT sampling."""
-        B = prompt_tokens.shape[0]
-        num_patches = prompt_tokens.shape[2]
+        """Autoregressively generate frame tokens, honoring the given actions.
 
-        target_tokens = torch.zeros(
-            (B, num_frames, num_patches),
-            dtype=torch.long,
-            device=prompt_tokens.device,
-        )
-        target_tokens[:, 0, :] = prompt_tokens[:, 0, :]
+        The Genie dynamics model is a decoder-only ST-transformer that predicts
+        the *next* frame's tokens from past frame tokens ``z_{1:t}`` and latent
+        actions ``a_{1:t}`` (paper Section 2.2). We generate one frame per outer
+        step, feeding the user-provided action for each transition and sampling
+        the predicted frame with the sampler's temperature.
 
-        mask = torch.ones(
-            B, num_frames, num_patches, dtype=torch.bool, device=prompt_tokens.device
-        )
-        mask[:, :1, :] = False
+        Note: a faithful within-frame MaskGIT reveal (25 iterative steps per
+        frame) requires a dedicated ``[MASK]`` token in the tokenizer vocabulary
+        so the dynamics model can re-attend to a partially-filled current frame.
+        This module has no mask token and conditions only on completed past
+        frames, so iterative refinement of a single frame is a no-op here; we
+        therefore sample each frame in a single forward pass. Adding a mask
+        token is the remaining architectural gap for true MaskGIT sampling.
+        """
+        current_tokens = prompt_tokens  # (B, T_prompt, N)
 
-        max_steps = min(self.sampler.num_steps, 3)
-        for step in range(max_steps):
-            logits = self.dynamics_model(
-                target_tokens[:, :-1, :],
-                actions,
-                mask_prob=0.0,
+        while current_tokens.shape[1] < num_frames:
+            t = current_tokens.shape[1]  # number of frames generated so far
+            # Actions a_{1:t} aligned with the t input frames; the last one
+            # (a_t) drives the t -> t+1 transition being predicted.
+            acts = actions[:, :t]
+
+            logits = self.dynamics_model(current_tokens, acts, mask_prob=0.0)
+            next_frame_logits = logits[:, -1, :, :]  # (B, N, V) for frame t+1
+
+            next_tokens = self.sampler.sample_frame(next_frame_logits)  # (B, N)
+            current_tokens = torch.cat(
+                [current_tokens, next_tokens.unsqueeze(1)], dim=1
             )
 
-            target_tokens, mask = self.sampler.sample(
-                logits.reshape(B, num_frames, num_patches, -1),
-                mask,
-                step,
-            )
-
-        return target_tokens
+        return current_tokens
 
     def play(
         self,

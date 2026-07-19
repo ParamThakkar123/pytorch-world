@@ -1,8 +1,6 @@
 import pytest
-import torch
 import numpy as np
 import tempfile
-import os
 from pathlib import Path
 
 pytest.importorskip("cv2")
@@ -11,7 +9,6 @@ from world_models.datasets import (
     VideoFolderDataset,
     ImageFolderDataset,
     NumPyDataset,
-    RLEnvironmentDataset,
     create_video_dataloader,
     DatasetConfig,
     VideoDatasetConfig,

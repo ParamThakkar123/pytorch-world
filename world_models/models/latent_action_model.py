@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple, Optional, Dict, Literal
+from typing import Tuple, Dict, Literal
 
 from world_models.vision.vq_layer import VectorQuantizer
 from world_models.blocks.st_transformer import STTransformer
@@ -109,9 +109,6 @@ class LatentActionModel(nn.Module):
             commitment_weight=commitment_weight,
         )
 
-        # ===== ACTION EMBEDDING =====
-        self.action_embedding = nn.Embedding(vocab_size, encoder_dim)
-
         # ===== DECODER =====
         # Takes x1:t-1 and a1:t-1, predicts x_t
         # Uses masked frames (all but first) to force action usage
@@ -188,6 +185,25 @@ class LatentActionModel(nn.Module):
             latent_actions: Discrete latent action indices (B, T)
             z_q: Quantized embeddings (B, T, embedding_dim)
         """
+        latent_actions, z_q, _ = self._encode(x_prev, x_next)
+        return latent_actions, z_q
+
+    def _encode(
+        self, x_prev: torch.Tensor, x_next: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Encode frames to latent actions, also returning the VQ loss.
+
+        Same as :meth:`encode`, but additionally returns the mean VQ loss
+        (codebook + commitment) measured between the *encoder outputs* and the
+        codebook. This is the objective that trains the action codebook; it must
+        be taken from the quantization of the encoder output, not from a second
+        quantization of the already-quantized embeddings.
+
+        Returns:
+            latent_actions: Discrete latent action indices (B, T)
+            z_q: Quantized embeddings (B, T, embedding_dim)
+            vq_loss: Scalar mean VQ loss across timesteps
+        """
         B, C, T, H, W = x_prev.shape
 
         # Concatenate all frames (x1:t and x_{t+1}) as per paper
@@ -216,6 +232,7 @@ class LatentActionModel(nn.Module):
         # Quantize each timestep
         z_all = []
         indices_all = []
+        vq_loss_terms = []
         for t in range(T):
             x_t = x[:, t, :, :]  # (B, N, C)
 
@@ -232,16 +249,21 @@ class LatentActionModel(nn.Module):
                 # Pool across spatial dimension
                 x_t_pooled = x_t_embed.mean(dim=1)  # (B, embedding_dim)
 
-            z_q_t, indices_t, _ = self.vq(x_t_pooled)
+            z_q_t, indices_t, vq_info_t = self.vq(x_t_pooled)
             z_all.append(z_q_t)
             indices_all.append(indices_t)
+            vq_loss_terms.append(vq_info_t["vq_loss"])
 
         z_q = torch.stack(z_all, dim=1)  # (B, T, embedding_dim)
         indices = torch.stack(indices_all, dim=1)  # (B, T, 1)
 
         latent_actions = indices.squeeze(-1)  # (B, T)
 
-        return latent_actions, z_q
+        # Mean VQ loss over timesteps, measured on the encoder outputs (the term
+        # that actually trains the codebook + commitment).
+        vq_loss = torch.stack(vq_loss_terms).mean()
+
+        return latent_actions, z_q, vq_loss
 
     def decode(
         self,
@@ -325,8 +347,9 @@ class LatentActionModel(nn.Module):
         Returns:
             Dictionary with losses and outputs
         """
-        # Encode to get latent actions
-        latent_actions, z_q = self.encode(x_prev, x_next)
+        # Encode to get latent actions and the VQ (codebook + commitment) loss
+        # measured on the encoder outputs.
+        latent_actions, z_q, vq_loss = self._encode(x_prev, x_next)
 
         # Use actions from timestep 1 to T-1 (T-1 actions for T-1 to predict T)
         # latent_actions has shape (B, T) from encoding T frames
@@ -341,28 +364,12 @@ class LatentActionModel(nn.Module):
         # Compute reconstruction loss
         recon_loss = F.mse_loss(reconstructed, x_next)
 
-        # Get VQ loss from quantizer
-        B = x_prev.shape[0]
-        T = x_prev.shape[2]
-        z_q_reshaped = z_q.reshape(B * T, -1)  # (B*T, embedding_dim)
-        _, _, vq_info = self.vq(z_q_reshaped)
-        vq_loss = vq_info["vq_loss"]
-
-        # Variance loss: encourage batch-wise variance in action embeddings
-        # This prevents the encoder from collapsing to a single action
-        z_for_variance = z_q.detach()  # Detach to only optimize encoder
-        action_variance = z_for_variance.var(dim=0).mean()
-        variance_loss = (
-            -action_variance
-        )  # Negative because we want to maximize variance
-
         return {
             "latent_actions": latent_actions,
             "z_q": z_q,
             "reconstructed": reconstructed,
             "recon_loss": recon_loss,
             "vq_loss": vq_loss,
-            "variance_loss": variance_loss,
         }
 
 

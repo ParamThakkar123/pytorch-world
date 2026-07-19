@@ -7,8 +7,8 @@ of a world model-based reinforcement learning agent.
 
 import logging
 from omegaconf import OmegaConf
-from world_models.models.dreamer import DreamerAgent
-from world_models.configs.dreamer_config import DreamerConfig
+from torchwm.models.dreamer import DreamerAgent
+from torchwm.configs.dreamer_config import DreamerConfig
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -1,8 +1,7 @@
 import torch
 import torchvision.transforms as T
 from .base import OperatorABC
-from typing import Dict, Any, List
-import numpy as np
+from typing import Dict, Any
 
 
 class JEPAOperator(OperatorABC):
