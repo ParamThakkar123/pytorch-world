@@ -1470,9 +1470,14 @@ YAML saved with each run or checkpoint:</p>
 <td><p>Sequences per batch</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">free_nats</span></code></p></td>
-<td><p>3.0</p></td>
-<td><p>3.0</p></td>
-<td><p>KL free bits threshold</p></td>
+<td><p>1.0</p></td>
+<td><p>1.0</p></td>
+<td><p>KL free bits threshold. Below it the KL term has zero gradient, freezing the RSSM prior’s stochastic head</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reward_scale</span></code></p></td>
+<td><p>1.0</p></td>
+<td><p>1.0</p></td>
+<td><p>Multiplier on replayed rewards. Raise/lower for envs outside DMC’s <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> per-step range</p></td>
 </tr>
 </tbody>
 </table>

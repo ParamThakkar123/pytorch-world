@@ -630,7 +630,8 @@ See {doc}`configs_reference` for the full DreamerConfig field reference with def
 | `model_learning_rate` | 6e-4 | 3e-4 | World model learning rate |
 | `train_seq_len` | 50 | 50 | Sequence length per batch |
 | `batch_size` | 50 | 16 | Sequences per batch |
-| `free_nats` | 3.0 | 3.0 | KL free bits threshold |
+| `free_nats` | 1.0 | 1.0 | KL free bits threshold. Below it the KL term has zero gradient, freezing the RSSM prior's stochastic head |
+| `reward_scale` | 1.0 | 1.0 | Multiplier on replayed rewards. Raise/lower for envs outside DMC's `[0, 1]` per-step range |
 
 #### Actor-Critic
 
