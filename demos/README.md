@@ -1,8 +1,8 @@
 # TorchWM demo runbook
 
 Scripts for producing demo material: train a model, then record video of it
-acting and dreaming. Everything here wraps the existing entrypoints — nothing
-in `world_models/` or `scripts/` is modified.
+acting and dreaming, or visualise its representations. Everything here wraps
+the existing entrypoints — nothing in `world_models/` or `scripts/` is modified.
 
 ## 0. Environment
 
@@ -51,6 +51,12 @@ python demos/train_demo.py --algo diamond --env Breakout-v5 --preset small --bat
 # IRIS on Atari
 python demos/train_demo.py --algo iris --env ALE/Pong-v5 --steps 100
 
+# Genie on TinyWorlds (video prediction)
+python demos/train_demo.py --algo genie --steps 5000
+
+# I-JEPA on CIFAR-10 (self-supervised representation learning)
+python demos/train_demo.py --algo ijepa --steps 5 --batch-size 32
+
 # See the exact underlying command without running it
 python demos/train_demo.py --algo diamond --dry-run
 
@@ -61,10 +67,12 @@ python demos/train_demo.py --algo dreamer -- total_steps=1000000 seed=3 use_amp=
 Where checkpoints land:
 
 | Algorithm | Path |
-|---|---|
+|---|---|---|
 | Dreamer | `runs/<env>_<algo>_<name>_<timestamp>/ckpts/<step>_ckpt.pt` |
 | DIAMOND | `checkpoints/diamond/checkpoint_<epoch>.pt` |
 | IRIS | `checkpoints/iris/checkpoint_<epoch>.pt` |
+| Genie | `checkpoints/genie_<dataset>_final.pt` (set via `scripts/train_genie_tinyworlds.py`) |
+| I-JEPA | `results/jepa_demo/jepa_run-latest.pth.tar` |
 
 Dreamer also writes `metrics.jsonl` and `config.yaml` into its run directory,
 which is what you want for plotting learning curves in a slide.
@@ -133,6 +141,31 @@ python demos/record_iris.py -c checkpoints/iris/checkpoint_0.pt \
 
 It refuses to record if any policy component fails to load, rather than writing
 a video of a half-initialised network.
+
+**DiT** — `record_dit.py` samples images from a trained Diffusion Transformer,
+saving a static grid and a denoising trajectory video:
+
+```bash
+python demos/record_dit.py -c dit_demo/dit_model.pth --samples 64 --ddim-steps 100
+python demos/record_dit.py --random-init                              # pipeline check
+```
+
+**Genie** — `record_genie.py` generates video frames from a single prompt frame
+using a trained Genie checkpoint, saving a grid and a video:
+
+```bash
+python demos/record_genie.py -c checkpoints/genie_sonic_final.pt --num-frames 32
+python demos/record_genie.py --random-init --num-frames 8            # pipeline check
+```
+
+**I-JEPA** — `record_jepa.py` visualises mask-target prediction from a trained
+JEPA encoder+predictor checkpoint, saving a masked-input visualisation and a
+similarity heatmap:
+
+```bash
+python demos/record_jepa.py -c results/jepa_demo/jepa_run-latest.pth.tar
+python demos/record_jepa.py --random-init                            # pipeline check
+```
 
 Notes:
 - Diffusion sampling is slow. On CPU expect roughly 1 frame/sec, so keep
@@ -210,8 +243,8 @@ the repo.
 - **`torchwm play` requires a display.** Use `demos/record_diamond.py` or
   `demos/record_iris.py` on headless machines.
 - **Only DIAMOND has an `eval` entrypoint** (`EVAL_MODULES` in `torchwm/cli.py`
-  maps `diamond` only), and `play` covers only `diamond` and `dreamer`. There is
-  no `play`/`eval` path for Genie, so `checkpoints/genie_sonic_final.pt` cannot
-  be demoed without new code.
+  maps `diamond` only), and `play` covers only `diamond` and `dreamer`.
+  `demos/record_genie.py` adds a headless Genie demo path for pre-trained
+  checkpoints, and `demos/record_jepa.py` visualises I-JEPA mask prediction.
 - **`scripts/smoke_train.py` needs `omegaconf`**, which is not in the base
   dependencies. (`train_iris` no longer requires it.)

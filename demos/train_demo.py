@@ -30,16 +30,26 @@ TRAINING_MODULES = {
     "dreamer": "world_models.training.train_dreamer",
     "diamond": "world_models.training.train_diamond",
     "iris": "world_models.training.train_iris",
+    "genie": "world_models.training.train_genie",
+    "ijepa": "world_models.training.train_jepa",
 }
 
 # Demo defaults per algorithm. `steps` means total env steps for Dreamer and
 # epochs for the epoch-driven DIAMOND/IRIS trainers, which is why each profile
 # builds its own overrides instead of sharing one budget knob.
-DEFAULT_STEPS = {"dreamer": 100_000, "diamond": 500, "iris": 100}
+DEFAULT_STEPS = {
+    "dreamer": 100_000,
+    "diamond": 500,
+    "iris": 100,
+    "genie": 1000,
+    "ijepa": 5,
+}
 DEFAULT_ENVS = {
     "dreamer": "Pendulum-v1",
     "diamond": "Breakout-v5",
     "iris": "ALE/Pong-v5",
+    "genie": "SONIC",
+    "ijepa": "cifar10",
 }
 
 
@@ -53,6 +63,31 @@ def resolve_device(requested: str) -> str:
         return "cuda" if torch.cuda.is_available() else "cpu"
     except Exception:
         return "cpu"
+
+
+def genie_overrides(args: argparse.Namespace) -> list[str]:
+    """Build Genie overrides (argparse-style flags, not key=value)."""
+    steps = args.steps
+    overrides = [
+        f"--max-steps={steps}",
+        f"--device={resolve_device(args.device)}",
+    ]
+    return overrides
+
+
+def ijepa_overrides(args: argparse.Namespace) -> list[str]:
+    """Build I-JEPA overrides (key=value dot-list, fed via Hydra-like syntax)."""
+    overrides = [
+        f"data.batch_size={args.batch_size or 16}",
+        "data.num_workers=0",
+        f"data.dataset={args.env}",
+        "data.download=True",
+        f"optimization.epochs={args.steps}",
+        "optimization.warmup=0",
+        "meta.use_bfloat16=False",
+        "logging.folder=results/jepa_demo",
+    ]
+    return overrides
 
 
 def dreamer_overrides(args: argparse.Namespace) -> list[str]:
@@ -122,6 +157,8 @@ OVERRIDE_BUILDERS = {
     "dreamer": dreamer_overrides,
     "diamond": diamond_overrides,
     "iris": iris_overrides,
+    "genie": genie_overrides,
+    "ijepa": ijepa_overrides,
 }
 
 
@@ -143,7 +180,7 @@ def parse_args() -> tuple[argparse.Namespace, list[str]]:
         "-a",
         required=True,
         choices=sorted(TRAINING_MODULES),
-        help="Algorithm to train.",
+        help="Algorithm to train. DiT has no entrypoint; use record_dit.py instead.",
     )
     parser.add_argument(
         "--env",
@@ -204,10 +241,16 @@ def artifact_hint(algo: str) -> str:
         return "Checkpoints: runs/<env>_<algo>_<name>_<timestamp>/ckpts/<step>_ckpt.pt"
     if algo == "diamond":
         return "Checkpoints: checkpoints/diamond/checkpoint_<epoch>.pt"
-    return (
-        "Checkpoints: checkpoints/iris/checkpoint_<epoch>.pt\n"
-        "Note: train_iris hardcodes device=cuda and seed=42; --device/--seed are ignored."
-    )
+    if algo == "iris":
+        return (
+            "Checkpoints: checkpoints/iris/checkpoint_<epoch>.pt\n"
+            "Note: train_iris hardcodes device=cuda and seed=42; --device/--seed are ignored."
+        )
+    if algo == "genie":
+        return "Checkpoints: checkpoints/genie_<dataset>_final.pt"
+    if algo == "ijepa":
+        return "Checkpoints: results/jepa_demo/jepa_run-latest.pth.tar"
+    return ""
 
 
 def main() -> int:

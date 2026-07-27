@@ -117,22 +117,26 @@ class IRISTrainer:
     ) -> float:
         """Collect experience from environment.
 
+        Collects at least ``num_steps`` steps but continues until at least one
+        episode completes, so ``collection_return`` is always the mean of at
+        least one finished episode rather than 0.0 (the old behaviour when no
+        episode finished inside the fixed step budget).
+
         Args:
-            num_steps: Number of steps to collect
+            num_steps: Minimum number of steps to collect
             epsilon: Random action probability
 
         Returns:
             Mean episode return
         """
+        max_steps = max(num_steps * 10, 10000)
         obs, _ = self.env.reset()
         obs = self.preprocess_frame(obs)
 
         episode_returns = []
         current_return: float = 0.0
-        steps_in_episode = 0
 
-        for step in range(num_steps):
-            # Choose action
+        for step in range(max_steps):
             if np.random.random() < epsilon:
                 action = self.env.action_space.sample()
             else:
@@ -141,13 +145,11 @@ class IRISTrainer:
                 )
                 action = self.agent.act(frame_tensor, epsilon=0.0).item()
 
-            # Step environment
             next_obs, reward, terminated, truncated, info = self.env.step(action)
             done = terminated or truncated
 
             next_obs = self.preprocess_frame(next_obs)
 
-            # Store in replay buffer
             action_one_hot: np.ndarray = np.zeros(self.action_size, dtype=np.float32)
             action_one_hot[action] = 1.0
 
@@ -159,14 +161,15 @@ class IRISTrainer:
             )
 
             current_return += float(reward)
-            steps_in_episode += 1
 
             if done:
                 episode_returns.append(current_return)
                 current_return = 0.0
-                steps_in_episode = 0
                 obs, _ = self.env.reset()
                 obs = self.preprocess_frame(obs)
+                # Stop once we have both the minimum steps AND at least one episode.
+                if step + 1 >= num_steps:
+                    break
             else:
                 obs = next_obs
 
