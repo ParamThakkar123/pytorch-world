@@ -1,0 +1,699 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Using Operators for Inference" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/operators_guide.html" />
+<meta property="og:site_name" content="TorchWM Documentation" />
+<meta property="og:description" content="This guide explains how to use TorchWM’s inference operators for standardized input preprocessing. Overview: Operators provide a consistent interface for preprocessing inputs before feeding them to..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/_images/social_previews/summary_operators_guide_328dba1b.png" />
+<meta property="og:image:alt" content="This guide explains how to use TorchWM’s inference operators for standardized input preprocessing. Overview: Operators provide a consistent interface for preprocessing inputs before feeding them to..." />
+<meta name="description" content="This guide explains how to use TorchWM’s inference operators for standardized input preprocessing. Overview: Operators provide a consistent interface for preprocessing inputs before feeding them to..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Using Operators for Inference &#8212; TorchWM 0.5.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=549e9d87" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'operators_guide';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="_static/fix_navbar.js?v=92322e29"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/operators_guide.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Training Guide" href="training_guide.html" />
+    <link rel="prev" title="Public API Quick Reference" href="public_api.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/torchwm" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/torchwm" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Using Operators for Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory_guide.html">Memory &amp; Replay Buffers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments_guide.html">Environments Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments/index.html">Environment Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/nuplan.html">NuPlan Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">TorchWM CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_overview.html">Package Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controllers_guide.html">Controllers and Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_guide.html">World Models Study Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/world_model_env_rl_libraries.html">Tutorial: Plug TorchWM world models into RL libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modular_rssm_guide.html">Modular RSSM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vision_guide.html">Vision Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets_guide.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses_guide.html">Loss Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin_registry.html">Plugin Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_deep_dive.html">World Models Deep Dive (Ha &amp; Schmidhuber, 2018)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dit.html">DiT: Diffusion Transformer and Diffusion Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diamond.html">DIAMOND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genie.html">Genie: Generative Interactive Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Using Operators for Inference</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="using-operators-for-inference">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Using Operators for Inference</a><a class="headerlink" href="#using-operators-for-inference" title="Link to this heading">#</a></h1>
+<p>This guide explains how to use TorchWM’s inference operators for standardized input preprocessing.</p>
+<section id="overview">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>Operators provide a consistent interface for preprocessing inputs before feeding them to world models. Each model has a dedicated operator that handles:</p>
+<ul class="simple">
+<li><p>Image normalization and resizing</p></li>
+<li><p>Action encoding and formatting</p></li>
+<li><p>Sequence tokenization and padding</p></li>
+<li><p>Mask generation for self-supervised tasks</p></li>
+</ul>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#using-operators-for-inference" id="id1">Using Operators for Inference</a></p>
+<ul>
+<li><p><a class="reference internal" href="#overview" id="id2">Overview</a></p></li>
+<li><p><a class="reference internal" href="#base-operator-class" id="id3">Base Operator Class</a></p></li>
+<li><p><a class="reference internal" href="#dreamer-operator" id="id4">Dreamer Operator</a></p></li>
+<li><p><a class="reference internal" href="#jepa-operator" id="id5">JEPA Operator</a></p></li>
+<li><p><a class="reference internal" href="#iris-operator" id="id6">IRIS Operator</a></p></li>
+<li><p><a class="reference internal" href="#planet-operator" id="id7">PlaNet Operator</a></p></li>
+<li><p><a class="reference internal" href="#configuration-integration" id="id8">Configuration Integration</a></p></li>
+<li><p><a class="reference internal" href="#utilities" id="id9">Utilities</a></p></li>
+<li><p><a class="reference internal" href="#error-handling" id="id10">Error Handling</a></p></li>
+<li><p><a class="reference internal" href="#best-practices" id="id11">Best Practices</a></p></li>
+<li><p><a class="reference internal" href="#future-pipelines" id="id12">Future: Pipelines</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+</section>
+<section id="base-operator-class">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Base Operator Class</a><a class="headerlink" href="#base-operator-class" title="Link to this heading">#</a></h2>
+<p>All operators inherit from <code class="docutils literal notranslate"><span class="pre">OperatorABC</span></code>, which provides a <code class="docutils literal notranslate"><span class="pre">process()</span></code> pipeline composed of <code class="docutils literal notranslate"><span class="pre">preprocess()</span></code>, <code class="docutils literal notranslate"><span class="pre">forward()</span></code>, and <code class="docutils literal notranslate"><span class="pre">postprocess()</span></code>, plus <code class="docutils literal notranslate"><span class="pre">batch()</span></code>, <code class="docutils literal notranslate"><span class="pre">to(device)</span></code>, <code class="docutils literal notranslate"><span class="pre">train()</span></code>, <code class="docutils literal notranslate"><span class="pre">eval()</span></code>, and optional tensor shape/dtype validation via <code class="docutils literal notranslate"><span class="pre">TensorSpec</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">OperatorABC</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyOperator</span><span class="p">(</span><span class="n">OperatorABC</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="c1"># Your preprocessing logic</span>
+        <span class="k">return</span> <span class="n">processed_tensors</span>
+</pre></div>
+</div>
+</section>
+<section id="dreamer-operator">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Dreamer Operator</a><a class="headerlink" href="#dreamer-operator" title="Link to this heading">#</a></h2>
+<p>For Dreamer model’s image and action processing, use the top-level operator
+factory in application code:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+
+<span class="n">op</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">get_operator</span><span class="p">(</span><span class="s2">&quot;dreamer&quot;</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">action_dim</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+<span class="c1"># Process single image and action</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;obs.png&#39;</span><span class="p">)</span>
+<span class="n">action</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">({</span><span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s1">&#39;action&#39;</span><span class="p">:</span> <span class="n">action</span><span class="p">})</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;obs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>    <span class="c1"># torch.Size([1, 3, 64, 64])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="c1"># torch.Size([1, 6])</span>
+
+<span class="c1"># Process tensor inputs</span>
+<span class="n">obs_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">({</span><span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">obs_tensor</span><span class="p">,</span> <span class="s1">&#39;action&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">action</span><span class="p">)})</span>
+</pre></div>
+</div>
+</section>
+<section id="jepa-operator">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">JEPA Operator</a><a class="headerlink" href="#jepa-operator" title="Link to this heading">#</a></h2>
+<p>For JEPA’s self-supervised image processing with masking:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">JEPAOperator</span>
+
+<span class="n">op</span> <span class="o">=</span> <span class="n">JEPAOperator</span><span class="p">(</span><span class="n">image_size</span><span class="o">=</span><span class="mi">224</span><span class="p">,</span> <span class="n">patch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">mask_ratio</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+
+<span class="c1"># Process batch of images</span>
+<span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;img_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">.jpg&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">({</span><span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="n">images</span><span class="p">})</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># torch.Size([4, 3, 224, 224])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;mask&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>    <span class="c1"># torch.Size([196]) - flattened patch mask</span>
+
+<span class="c1"># Custom mask</span>
+<span class="n">custom_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">196</span><span class="p">)</span>  <span class="c1"># 14x14 patches = 196</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">({</span><span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="n">images</span><span class="p">,</span> <span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="n">custom_mask</span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
+<section id="iris-operator">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">IRIS Operator</a><a class="headerlink" href="#iris-operator" title="Link to this heading">#</a></h2>
+<p>For IRIS’s sequence processing:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">IrisOperator</span>
+
+<span class="n">op</span> <span class="o">=</span> <span class="n">IrisOperator</span><span class="p">(</span><span class="n">seq_length</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">vocab_size</span><span class="o">=</span><span class="mi">32000</span><span class="p">)</span>
+
+<span class="c1"># Process token sequence</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="mi">101</span><span class="p">,</span> <span class="mi">7592</span><span class="p">,</span> <span class="mi">1010</span><span class="p">,</span> <span class="mi">2088</span><span class="p">,</span> <span class="mi">102</span><span class="p">]</span>  <span class="c1"># Example tokens</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">({</span><span class="s1">&#39;tokens&#39;</span><span class="p">:</span> <span class="n">tokens</span><span class="p">})</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>      <span class="c1"># torch.Size([1, 512])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;attention_mask&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="c1"># torch.Size([1, 512])</span>
+
+<span class="c1"># Process with embeddings</span>
+<span class="n">embeddings</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">768</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">({</span><span class="s1">&#39;tokens&#39;</span><span class="p">:</span> <span class="n">tokens</span><span class="p">,</span> <span class="s1">&#39;embeddings&#39;</span><span class="p">:</span> <span class="n">embeddings</span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
+<section id="planet-operator">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">PlaNet Operator</a><a class="headerlink" href="#planet-operator" title="Link to this heading">#</a></h2>
+<p>For PlaNet’s environment state processing:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlaNetOperator</span>
+
+<span class="n">op</span> <span class="o">=</span> <span class="n">PlaNetOperator</span><span class="p">(</span><span class="n">state_dim</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">action_dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="c1"># Process transition data</span>
+<span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;obs&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>  <span class="c1"># State vector</span>
+    <span class="s1">&#39;action&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span>
+    <span class="s1">&#39;reward&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="s1">&#39;done&#39;</span><span class="p">:</span> <span class="kc">False</span>
+<span class="p">}</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;obs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>    <span class="c1"># torch.Size([1, 32])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="c1"># torch.Size([1, 4])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;reward&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="c1"># torch.Size([1])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;done&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>   <span class="c1"># torch.Size([1])</span>
+</pre></div>
+</div>
+</section>
+<section id="configuration-integration">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Configuration Integration</a><a class="headerlink" href="#configuration-integration" title="Link to this heading">#</a></h2>
+<p>Operators work seamlessly with config classes and the friendly <code class="docutils literal notranslate"><span class="pre">torchwm</span></code>
+factories:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
+
+<span class="c1"># Dreamer: reuse matching environment/image fields and pass the action size</span>
+<span class="c1"># for your environment explicitly.</span>
+<span class="n">dreamer_cfg</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_config</span><span class="p">(</span><span class="s2">&quot;dreamer&quot;</span><span class="p">)</span>
+<span class="n">dreamer_op</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">get_operator</span><span class="p">(</span>
+    <span class="s2">&quot;dreamer&quot;</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="n">dreamer_cfg</span><span class="o">.</span><span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">action_dim</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># JEPA: reuse crop and patch sizes from JEPAConfig; mask_ratio is an</span>
+<span class="c1"># operator preprocessing choice, so pass it explicitly.</span>
+<span class="n">jepa_cfg</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_config</span><span class="p">(</span><span class="s2">&quot;jepa&quot;</span><span class="p">)</span>
+<span class="n">jepa_op</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">get_operator</span><span class="p">(</span>
+    <span class="s2">&quot;jepa&quot;</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="n">jepa_cfg</span><span class="o">.</span><span class="n">crop_size</span><span class="p">,</span>
+    <span class="n">patch_size</span><span class="o">=</span><span class="n">jepa_cfg</span><span class="o">.</span><span class="n">patch_size</span><span class="p">,</span>
+    <span class="n">mask_ratio</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># IRIS: reuse vocabulary size from IRISConfig and choose the inference</span>
+<span class="c1"># sequence length required by your deployment.</span>
+<span class="n">iris_cfg</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_config</span><span class="p">(</span><span class="s2">&quot;iris&quot;</span><span class="p">)</span>
+<span class="n">iris_op</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">get_operator</span><span class="p">(</span>
+    <span class="s2">&quot;iris&quot;</span><span class="p">,</span>
+    <span class="n">seq_length</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+    <span class="n">vocab_size</span><span class="o">=</span><span class="n">iris_cfg</span><span class="o">.</span><span class="n">vocab_size</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="utilities">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Utilities</a><a class="headerlink" href="#utilities" title="Link to this heading">#</a></h2>
+<p>For most applications, prefer the operator factory instead of importing
+preprocessing utilities directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
+
+<span class="n">op</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">get_operator</span><span class="p">(</span><span class="s2">&quot;jepa&quot;</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="mi">224</span><span class="p">,</span> <span class="n">patch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">mask_ratio</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="n">processed</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">({</span><span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">pil_image</span><span class="p">]})</span>
+</pre></div>
+</div>
+</section>
+<section id="error-handling">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">Error Handling</a><a class="headerlink" href="#error-handling" title="Link to this heading">#</a></h2>
+<p>Operators validate inputs and provide helpful error messages:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">invalid_inputs</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Preprocessing error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">Best Practices</a><a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Use with configs</strong>: Always instantiate operators using config parameters for consistency.</p></li>
+<li><p><strong>Batch processing</strong>: Operators handle both single inputs and batches.</p></li>
+<li><p><strong>Device placement</strong>: Processed tensors are on CPU; move to GPU as needed.</p></li>
+<li><p><strong>Type checking</strong>: Operators accept various input types (PIL, tensors, lists) and standardize them.</p></li>
+<li><p><strong>Performance</strong>: Operators use optimized transforms for fast preprocessing.</p></li>
+</ol>
+</section>
+<section id="future-pipelines">
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">Future: Pipelines</a><a class="headerlink" href="#future-pipelines" title="Link to this heading">#</a></h2>
+<p>Operators are designed to integrate with future inference pipelines, providing the preprocessing layer in a standardized Pipeline + Operator + Task architecture.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="public_api.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Public API Quick Reference</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="training_guide.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Training Guide</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#base-operator-class">Base Operator Class</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dreamer-operator">Dreamer Operator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jepa-operator">JEPA Operator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#iris-operator">IRIS Operator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#planet-operator">PlaNet Operator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-integration">Configuration Integration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#utilities">Utilities</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#future-pipelines">Future: Pipelines</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/operators_guide.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
