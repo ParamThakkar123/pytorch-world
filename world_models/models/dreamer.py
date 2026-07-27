@@ -378,6 +378,17 @@ class Dreamer:
             getattr(args, "use_amp", True)
             and getattr(device, "type", str(device)) == "cuda"
         )
+        # `ConvDecoder` emits Independent(Normal(mean, 1), len(obs_shape)), whose
+        # negative log-likelihood carries a constant term of
+        # prod(obs_shape) * 0.5 * log(2*pi). For 3x64x64 that is ~11292 nats,
+        # which swamps the few nats of reconstruction signal and makes the
+        # summed `model_loss` look frozen. Subtract it when logging.
+        self._obs_nll_constant = float(
+            np.prod(self.obs_shape) * 0.5 * np.log(2.0 * np.pi)
+        )
+        # Latest per-component loss values, refreshed by `train_one_batch`.
+        self.metrics: dict[str, float] = {}
+        self._model_components: dict[str, float] = {}
         self._build_model(restore=self.restore)
 
     def _build_model(self, restore: bool = False) -> None:
@@ -671,6 +682,30 @@ class Dreamer:
         if self.args.use_disc_model and disc_dist is not None:
             disc_loss = -torch.mean(disc_dist.log_prob(nonterms[:-1]))
             model_loss = model_loss + self.args.disc_loss_coeff * disc_loss
+        else:
+            disc_loss = None
+
+        # The unclamped KL is the quantity that actually reveals whether the
+        # free-nats floor is active; `kl_loss` is pinned to `free_nats` (and
+        # carries no gradient) whenever the raw value sits below it.
+        with torch.no_grad():
+            kl_raw = torch.mean(distributions.kl.kl_divergence(post_dist, prior_dist))
+
+        components = {
+            "loss/obs_nll": obs_loss,
+            "loss/obs_recon": obs_loss - self._obs_nll_constant,
+            "loss/reward_nll": rew_loss,
+            "loss/kl_raw": kl_raw,
+            "loss/kl_used": kl_loss,
+        }
+        if disc_loss is not None:
+            components["loss/discount_nll"] = disc_loss
+        self._model_components = {
+            name: float(value.detach()) for name, value in components.items()
+        }
+        self._model_components["loss/kl_at_free_nats_floor"] = float(
+            kl_raw < self.args.free_nats
+        )
 
         return model_loss
 
@@ -729,6 +764,12 @@ class Dreamer:
 
         acs_t = torch.tensor(acs, dtype=torch.float32).to(self.device)
         rews_t = torch.tensor(rews, dtype=torch.float32).to(self.device).unsqueeze(-1)
+        reward_scale = float(getattr(self.args, "reward_scale", 1.0))
+        if reward_scale != 1.0:
+            # Scaling here keeps the reward head, imagined rewards, lambda
+            # returns, and value targets in one consistent space. Rewards
+            # logged from the environment stay in their native units.
+            rews_t = rews_t * reward_scale
         nonterms = (
             torch.tensor((1.0 - terms), dtype=torch.float32)
             .to(self.device)
@@ -743,7 +784,9 @@ class Dreamer:
         self.world_model_opt.zero_grad(set_to_none=True)
         self.world_model_scaler.scale(model_loss).backward()
         self.world_model_scaler.unscale_(self.world_model_opt)
-        nn.utils.clip_grad_norm_(self.world_model_params, self.args.grad_clip_norm)
+        model_grad_norm = nn.utils.clip_grad_norm_(
+            self.world_model_params, self.args.grad_clip_norm
+        )
         self.world_model_scaler.step(self.world_model_opt)
         self.world_model_scaler.update()
 
@@ -755,7 +798,9 @@ class Dreamer:
         self.actor_opt.zero_grad(set_to_none=True)
         self.actor_scaler.scale(actor_loss).backward()
         self.actor_scaler.unscale_(self.actor_opt)
-        nn.utils.clip_grad_norm_(self.actor.parameters(), self.args.grad_clip_norm)
+        actor_grad_norm = nn.utils.clip_grad_norm_(
+            self.actor.parameters(), self.args.grad_clip_norm
+        )
         self.actor_scaler.step(self.actor_opt)
         self.actor_scaler.update()
 
@@ -767,11 +812,30 @@ class Dreamer:
         self.value_opt.zero_grad(set_to_none=True)
         self.value_scaler.scale(value_loss).backward()
         self.value_scaler.unscale_(self.value_opt)
-        nn.utils.clip_grad_norm_(
+        value_grad_norm = nn.utils.clip_grad_norm_(
             self.value_model.parameters(), self.args.grad_clip_norm
         )
         self.value_scaler.step(self.value_opt)
         self.value_scaler.update()
+
+        clip = self.args.grad_clip_norm
+        self.metrics = dict(self._model_components)
+        for name, norm in (
+            ("model", model_grad_norm),
+            ("actor", actor_grad_norm),
+            ("value", value_grad_norm),
+        ):
+            norm_value = float(norm)
+            self.metrics[f"grad_norm/{name}"] = norm_value
+            # A norm that is non-finite means AMP overflowed and GradScaler
+            # silently skipped the update; a norm above `clip` means the step
+            # size was decided by the clip threshold rather than the loss.
+            self.metrics[f"grad_norm/{name}_nonfinite"] = float(
+                not np.isfinite(norm_value)
+            )
+            self.metrics[f"grad_norm/{name}_clipped"] = float(
+                np.isfinite(norm_value) and norm_value > clip
+            )
 
         return (
             torch.stack([model_loss.detach(), actor_loss.detach(), value_loss.detach()])
@@ -1210,9 +1274,20 @@ class DreamerAgent(ExportableAgentMixin):
             video_images = []
 
             update_start = time.perf_counter()
+            # The summed `model_loss` is dominated by the Gaussian NLL constant
+            # of the observation head, so accumulate the per-component metrics
+            # and average them over the whole update block instead of reporting
+            # whatever the final batch happened to produce.
+            metric_sums: dict[str, float] = {}
             for _ in range(self.args.update_steps):
                 model_loss, actor_loss, value_loss = self.dreamer.train_one_batch()
+                for name, value in self.dreamer.metrics.items():
+                    metric_sums[name] = metric_sums.get(name, 0.0) + value
             update_elapsed = max(time.perf_counter() - update_start, 1e-9)
+            update_steps = max(1, self.args.update_steps)
+            averaged_metrics = {
+                name: total / update_steps for name, total in metric_sums.items()
+            }
 
             collect_count = self.args.collect_steps // self.args.action_repeat
             collect_start = time.perf_counter()
@@ -1245,6 +1320,7 @@ class DreamerAgent(ExportableAgentMixin):
                     "replay/episodes": self.dreamer.data_buffer.episodes,
                 }
             )
+            logs.update(averaged_metrics)
 
             stats_freq = getattr(self.args, "log_system_stats_freq", 0)
             if stats_freq and global_step % stats_freq == 0:

@@ -113,7 +113,8 @@ class DreamerConfig:
     use_disc_model: bool = False
 
     # Loss
-    free_nats: float = 3.0
+    free_nats: float = 1.0
+    reward_scale: float = 1.0
     discount: float = 0.99
     td_lambda: float = 0.95
     kl_loss_coeff: float = 1.0
@@ -124,7 +125,8 @@ class DreamerConfig:
 
     # Optimization
     adam_epsilon: float = 1e-7
-    grad_clip_norm: float = 100.0
+    grad_clip_norm: float = 1000.0
+    use_amp: bool = False
 
     # Evaluation and checkpointing
     test: bool = False

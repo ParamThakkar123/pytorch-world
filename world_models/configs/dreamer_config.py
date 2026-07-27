@@ -97,8 +97,21 @@ class DreamerConfig(SerializableConfigMixin):
     train_seq_len: int = 50
     imagine_horizon: int = 15
     use_disc_model: bool = False
-    free_nats: float = 3.0
+    # KL free-nats floor. Once mean KL(posterior || prior) falls below this
+    # value the KL term contributes zero gradient, which freezes the RSSM's
+    # prior stochastic head -- the only module trained solely by the KL. Since
+    # imagination samples `stoch` from that head, a floor set too high leaves
+    # the actor optimizing inside an untrained transition model. 3.0 is the
+    # DMC-image default; low-entropy observations (e.g. Pendulum) never clear
+    # it, so the default here is lowered.
+    free_nats: float = 1.0
     discount: float = 0.99
+    # Multiplier applied to replayed rewards before they reach the reward head.
+    # Dreamer's defaults assume DMC-style per-step rewards in [0, 1]. Envs with
+    # much larger magnitudes (Pendulum-v1 spans [-16.3, 0]) inflate returns,
+    # value targets, and gradient norms enough that grad clipping fires on
+    # nearly every update. Set e.g. reward_scale=0.125 for Pendulum-v1.
+    reward_scale: float = 1.0
     td_lambda: float = 0.95
     kl_loss_coeff: float = 1.0
     kl_alpha: float = 0.8
@@ -109,8 +122,15 @@ class DreamerConfig(SerializableConfigMixin):
     actor_learning_rate: float = 8e-5
     value_learning_rate: float = 8e-5
     adam_epsilon: float = 1e-7
-    grad_clip_norm: float = 100.0
-    use_amp: bool = True
+    # World-model gradient norms routinely reach ~10^3 on image observations,
+    # so a threshold of 100 clipped ~97% of updates and made every step a
+    # fixed-size move in the gradient direction.
+    grad_clip_norm: float = 1000.0
+    # fp16 overflow makes GradScaler silently skip world-model and value
+    # updates, and Dreamer is env-bound rather than compute-bound at these
+    # model sizes, so AMP buys little. Opt in explicitly if profiling shows it
+    # helps.
+    use_amp: bool = False
     test: bool = False
     test_interval: int = 10000
     test_episodes: int = 10
