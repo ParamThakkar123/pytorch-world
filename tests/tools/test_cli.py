@@ -172,3 +172,34 @@ def test_dmlab_backend_specs_are_public_api():
     assert world_models.EnvBackendSpec is not None
     assert "dmlab" in world_models.ENV_BACKEND_SPECS
 
+
+
+def test_play_supports_dreamer_as_well_as_diamond():
+    assert set(cli.PLAY_MODULES) == {"diamond", "dreamer"}
+    assert cli.PLAY_MODULES["dreamer"] == "scripts.play_dreamer"
+    assert set(cli.PLAY_DEFAULT_GAMES) == set(cli.PLAY_MODULES)
+
+
+def test_play_defaults_game_per_model(monkeypatch):
+    # ``--game`` means an Atari ROM for DIAMOND and a control task for Dreamer,
+    # so omitting it must not hand Breakout-v5 to Dreamer.
+    calls = {}
+
+    class FakeModule:
+        @staticmethod
+        def run_play(**kwargs):
+            calls.update(kwargs)
+
+    monkeypatch.setattr(cli.importlib, "import_module", lambda path: FakeModule)
+
+    runner = _runner()
+    res = runner.invoke(cli.app, ["play", "-m", "dreamer", "-c", "ckpt.pt"])
+
+    assert res.exit_code == 0, res.output
+    assert calls["game"] == "walker-walk"
+
+    calls.clear()
+    res = runner.invoke(cli.app, ["play", "-m", "diamond", "-c", "ckpt.pt"])
+
+    assert res.exit_code == 0, res.output
+    assert calls["game"] == "Breakout-v5"

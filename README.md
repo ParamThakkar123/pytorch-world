@@ -26,7 +26,7 @@ pip install torchwm[dmc]       # DeepMind Control Suite (walker-walk, cheetah-ru
 pip install torchwm[procgen]   # Procgen benchmark environments
 pip install torchwm[ml-agents] # Unity ML-Agents
 pip install torchwm[ml]        # TensorBoard, W&B logging
-pip install torchwm[viz]       # FastAPI visualization
+pip install torchwm[viz]       # Latent-space visualization (plotly, UMAP)
 pip install torchwm[dev]       # Testing and linting
 
 # Or add it to a uv-managed project.
@@ -63,6 +63,26 @@ To train on DeepMind Control tasks such as `walker-walk`, install the DMC extra
 agent = torchwm.create_model("dreamer", env="walker-walk", total_steps=1_000_000)
 agent.train()
 ```
+
+### Swap the algorithm, keep the code
+
+Every algorithm in the table below is reachable through the same factory, so
+comparing them is a loop rather than a rewrite:
+
+```python
+import torchwm
+
+for algo in ["dreamer-v1", "dreamer-v2", "dreamer-v3"]:
+    agent = torchwm.create_model(
+        algo, env="Pendulum-v1", env_backend="gym", total_steps=20_000
+    )
+    agent.train()
+```
+
+`examples/algorithm_comparison.py` runs exactly this and writes a comparison
+plot. Note that construction is unified across all 13 registered models, while a
+shared step-budget `train()` currently covers the Dreamer family — the example
+reports which is which rather than assuming.
 
 ## Features
 
@@ -132,13 +152,24 @@ flowchart LR
 
 ## Supported Algorithms
 
-| Algorithm | Description | Key Features |
-|-----------|-------------|--------------|
-| **Dreamer** | Model-based RL with latent dynamics | Imagination, actor-critic |
-| **JEPA** | Self-supervised visual representations | Masked prediction, ViT |
-| **IRIS** | Sample-efficient RL with Transformers | Discrete VAEs, world models |
-| **DiT** | Diffusion Transformer workflows | Patch embeddings, diffusion backbones |
-| **DIAMOND** | Diffusion world model for pixel-control RL | EDM sampling, Atari imagination rollouts |
+Every row is a registry entry — pass the name straight to `torchwm.create_model(...)`
+or `torchwm.create_config(...)`. Run `torchwm.list_models()` for the live list.
+
+| Name | Algorithm | Description | Key Features |
+|------|-----------|-------------|--------------|
+| `dreamer` | **Dreamer** | Model-based RL with latent dynamics (alias for `dreamer-v1`) | Imagination, actor-critic |
+| `dreamer-v1` | **DreamerV1** | Latent imagination with Gaussian heads | Normal heads, standard KL |
+| `dreamer-v2` | **DreamerV2** | Discrete latents for pixel control | Symlog two-hot heads, balanced KL |
+| `dreamer-v3` | **DreamerV3** | General-purpose successor across domains | Symlog returns, robust defaults |
+| `planet` | **PlaNet** | Latent planning from pixels, no explicit policy | RSSM, CEM planner |
+| `modular-rssm` | **ModularRSSM** | Composable recurrent state-space model | Swappable priors/posteriors, custom heads |
+| `iris` | **IRIS** | Sample-efficient RL with Transformers | Discrete VAEs, world models |
+| `jepa` | **JEPA** | Self-supervised visual representations | Masked prediction, ViT |
+| `dit` | **DiT** | Diffusion Transformer workflows | Patch embeddings, diffusion backbones |
+| `diamond` | **DIAMOND** | Diffusion world model for pixel-control RL | EDM sampling, Atari imagination rollouts |
+| `genie` | **Genie** | Generative interactive environments from video | Latent actions, spatiotemporal transformer |
+| `genie-small` | **Genie (small)** | Development- and test-sized Genie | Same architecture, reduced width/depth |
+| `genie-large` | **Genie (large)** | Scaled-up Genie variant | Higher capacity dynamics + tokenizer |
 
 ## Documentation
 
@@ -152,5 +183,7 @@ flowchart LR
 - [Issue Tracker](https://github.com/paramthakkar123/torchwm/issues)
 - [Discussions](https://github.com/paramthakkar123/torchwm/discussions)
 - [PyPI](https://pypi.org/project/torchwm/)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 
 > TorchWM is under active development. APIs may change between versions.

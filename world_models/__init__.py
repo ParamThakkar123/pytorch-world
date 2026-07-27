@@ -72,7 +72,9 @@ _LAZY_EXPORTS: dict[str, str] = {
     # State-space models.
     "RSSM": "world_models.models",
     "RecurrentStateSpaceModel": "world_models.models",
-    "DreamerRSSM": "world_models.models.dreamer_rssm",
+    # ``dreamer_rssm`` defines the class as ``RSSM``; ``world_models.models``
+    # is what exposes it under the ``DreamerRSSM`` alias.
+    "DreamerRSSM": "world_models.models",
     # Vision components.
     "ConvEncoder": "world_models.vision",
     "CNNEncoder": "world_models.vision",
@@ -95,11 +97,15 @@ _LAZY_EXPORTS: dict[str, str] = {
     "IRISReplayBuffer": "world_models.memory",
     "IRISOnPolicyBuffer": "world_models.memory",
     # Diffusion models.
-    "DiT": "world_models.models.diffusion",
+    # ``DiT`` and ``DDPM`` name both a class and a sibling module. Importing the
+    # module binds it over the class on the package, so which one
+    # ``world_models.models.diffusion.DiT`` returns depends on import order -
+    # point at the defining modules to make it deterministic.
+    "DiT": "world_models.models.diffusion.DiT",
     "create_dit": "world_models.models.diffusion",
     "PatchEmbed": "world_models.models.diffusion",
     "PatchUnEmbed": "world_models.models.diffusion",
-    "DDPM": "world_models.models.diffusion",
+    "DDPM": "world_models.models.diffusion.DDPM",
     "ActorCriticNetwork": "world_models.models.diffusion",
     "RewardTerminationModel": "world_models.models.diffusion",
     "sinusoidal_time_embedding": "world_models.models.diffusion",

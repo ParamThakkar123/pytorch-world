@@ -147,7 +147,7 @@ This page lists every public class, function, and constant exported from the
 | `make_gym_env` | `torchwm.envs.gym_env` | Factory for GymImageEnv. |
 | `MuJoCoImageEnv` | `torchwm.envs.mujoco_env` | MuJoCo image adapter. |
 | `make_mujoco_env` | `torchwm.envs.mujoco_env` | Factory for MuJoCo environments. |
-| `MujocoEnv` | `torchwm.envs.mujoco_env` | Raw MuJoCo environment wrapper. |
+| `MujocoEnv` | `torchwm.envs.mujoco_env` | Alias of `MuJoCoImageEnv`. |
 | `BraxImageEnv` | `torchwm.envs.brax_env` | Brax image adapter. |
 | `make_brax_env` | `torchwm.envs.brax_env` | Factory for BraxImageEnv. |
 | `BSuiteImageEnv` | `torchwm.envs.bsuite_env` | BSuite image adapter. |

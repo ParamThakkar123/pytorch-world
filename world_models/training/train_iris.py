@@ -4,9 +4,9 @@ from collections import defaultdict
 import os
 from tqdm import tqdm
 import random
+from collections.abc import Sequence
 from typing import Optional, cast
 from gym.spaces import Discrete, Box
-from omegaconf import OmegaConf
 
 from types import ModuleType
 from typing import Optional as _Optional
@@ -444,30 +444,46 @@ class IRISTrainer:
         return self.metrics  # type: ignore[return-value]
 
 
+# Overrides that configure the training *run* rather than the model. They are
+# not IRISConfig fields, so they must be split out before the config is composed
+# -- `update_config_object` is strict and rejects any key it does not recognise.
+RUNTIME_OVERRIDE_KEYS = ("game", "device", "seed", "epochs", "save_dir")
+
+
+def _split_runtime_overrides(
+    overrides: Sequence[str],
+) -> tuple[dict[str, str], list[str]]:
+    """Partition ``key=value`` overrides into runtime options and config fields."""
+    runtime: dict[str, str] = {}
+    config_overrides: list[str] = []
+    for item in overrides:
+        key, sep, value = item.partition("=")
+        if sep and key.strip() in RUNTIME_OVERRIDE_KEYS:
+            runtime[key.strip()] = value.strip()
+        else:
+            config_overrides.append(item)
+    return runtime, config_overrides
+
+
 def main(argv: list[str] | None = None) -> IRISConfig:
     """Run IRIS training with YAML config files and Hydra dot-list overrides."""
     from world_models.experiments import parse_experiment_args
 
     args = parse_experiment_args(argv, description="Train IRIS on Atari")
 
+    # Split first: passing `game=`/`device=`/`seed=` through to the strict config
+    # loader previously raised ExperimentConfigError, making them unusable.
+    runtime, config_overrides = _split_runtime_overrides(args.overrides)
+
     config = IRISConfig()
-    values = load_experiment_config(config, args.config, args.overrides)
+    values = load_experiment_config(config, args.config, config_overrides)
     config = update_config_object(config, values)
 
-    game = config.env if hasattr(config, "env") else "ALE/Pong-v5"
-    device = "cuda"
-    seed = config.seed if hasattr(config, "seed") else 42
-    total_epochs = config.total_epochs if hasattr(config, "total_epochs") else None
-    save_dir = config.save_dir if hasattr(config, "save_dir") else "checkpoints/iris"
-
-    # Allow command-line overrides for training-specific options
-    if argv:
-        cli_overrides = OmegaConf.from_cli(argv)
-        game = cli_overrides.get("game", game)
-        device = cli_overrides.get("device", device)
-        seed = cli_overrides.get("seed", seed)
-        total_epochs = cli_overrides.get("epochs", total_epochs)
-        save_dir = cli_overrides.get("save_dir", save_dir)
+    game = runtime.get("game", config.env)
+    device = runtime.get("device") or ("cuda" if torch.cuda.is_available() else "cpu")
+    seed = int(runtime.get("seed", 42))
+    total_epochs = int(runtime.get("epochs", config.total_epochs))
+    save_dir = runtime.get("save_dir", "checkpoints/iris")
 
     if args.print_config:
         print(dump_config(values))
@@ -485,3 +501,7 @@ def main(argv: list[str] | None = None) -> IRISConfig:
         save_dir=save_dir,
     )
     return config
+
+
+if __name__ == "__main__":
+    main()

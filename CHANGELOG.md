@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-07-27
+
 ### Added
+- Real PEP 561 typing stub: `torchwm/__init__.pyi` now declares every public
+  export instead of falling back to `Any`, generated from the export map by
+  `python -m tools.gen_type_stub` and verified in CI. `world_models` ships a
+  `py.typed` marker so the re-exports stay typed
+- `torchwm play -m dreamer` — interactive REAL/DREAM playback for Dreamer
+  checkpoints alongside DIAMOND (`scripts/play_dreamer.py`)
+- `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1)
+- CI job running the full test suite with every optional backend installed —
+  the configuration a contributor gets from `CONTRIBUTING.md`, previously
+  untested
+- Tests asserting every `__all__` entry resolves, that the stub matches the
+  export map, and that the README algorithms table matches the model registry
 - Complete `torchwm` public import surface: every implementation submodule is now
   reachable through the friendly namespace (`from torchwm.models import Dreamer`,
   `import torchwm.envs`, ...), not just top-level factory helpers. The internal
@@ -18,6 +32,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   dependency and points to `torchwm[dmc]` or the gym backend
 
 ### Changed
+- README "Supported Algorithms" table now lists all 13 registered models
+  (previously 5), keyed by the name `create_model()` accepts
+- `viz` extra installs only what it uses (opencv, umap-learn, scikit-learn,
+  plotly); the unused FastAPI/uvicorn/starlette/python-multipart entries and the
+  duplicated docs dependencies are gone
+- CI runs the test matrix on `push` to `main` only, not on every push to a PR
+  branch, which ran the whole matrix twice per commit
 - Documentation, examples, and scripts now import through the `torchwm` public
   namespace instead of the internal `world_models` package
 - Quick-start examples (README, docs landing page, getting-started guide) now use
@@ -25,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `pip install torchwm[gym]` out of the box; DMC usage is documented separately
 
 ### Fixed
+- `torchwm.DreamerRSSM` and `torchwm.MujocoEnv` raised `AttributeError` on
+  access: the export map pointed `DreamerRSSM` at a module that names the class
+  `RSSM`, and `MujocoEnv` had no implementation behind it (it now resolves to
+  `MuJoCoImageEnv`)
+- README advertised a FastAPI visualization feature that does not exist
 - `create_model("dreamer", env="walker-walk")` no longer raises a bare
   `ModuleNotFoundError`; the DMC dependency is installable and the error is clear
 - Broken landing-page example that called `train(env_name=..., total_steps=...)`

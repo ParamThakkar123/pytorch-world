@@ -5,7 +5,10 @@ permissions:
 
 on:
   pull_request:
+  # Only the default branch on push - a PR branch would otherwise run the whole
+  # matrix twice for every commit.
   push:
+    branches: [main]
 
 jobs:
   test:
@@ -99,6 +102,56 @@ jobs:
     - name: Run real optional backend tests
       run: |
         pytest tests/test_optional_backends_real.py -q --tb=short --timeout=240
+
+  # The main `test` job installs only the base package, so the heavy optional
+  # backends skip; `optional-backends-real` installs them but runs a single
+  # file. Neither exercises what a contributor following CONTRIBUTING.md gets:
+  # the full suite with every extra installed, which is where torch + jax +
+  # brax + ml-agents accumulate until the process dies. Run that combination.
+  full-suite-all-extras:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      MUJOCO_GL: egl
+      PYOPENGL_PLATFORM: egl
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+        cache: 'pip'
+        cache-dependency-path: |
+          pyproject.toml
+
+    - name: Install MuJoCo rendering system libraries
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libegl1 libgles2
+
+    - name: Install every optional backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        pip install -e '.[gym,dmc,viz,ml,ml-agents,mujoco,robotics,brax,procgen,bsuite,dev]'
+
+    - name: Report memory before the run
+      run: free -m
+
+    # `--dist loadfile` keeps each file's tests on one worker, so a file that
+    # imports a heavy backend loads it once. Workers still persist for the whole
+    # session, so this bounds the growth rather than eliminating it - a run that
+    # dies here without a summary line is the OOM signature, not a flaky test.
+    - name: Run the full suite
+      run: |
+        pytest tests/ --ignore=tests/selenium -q --tb=short \
+          -p no:randomly -n 2 --dist loadfile --max-worker-restart 0 \
+          --timeout=300 --durations=25
+
+    - name: Report memory after the run
+      if: always()
+      run: free -m
 
   build-artifact-smoke:
     runs-on: ${{ matrix.os }}

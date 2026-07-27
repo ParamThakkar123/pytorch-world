@@ -111,6 +111,23 @@ class DiamondAtariWrapper:
     def seed(self, seed: int | None = None) -> None:
         self._rng = np.random.default_rng(seed)
 
+    def close(self) -> None:
+        """Release the underlying environment.
+
+        Callers reasonably expect the gym ``close()`` contract, and without this
+        the usual ``env.close()`` teardown raises ``AttributeError``.
+        """
+        closer = getattr(self.env, "close", None)
+        if callable(closer):
+            closer()
+
+    def render(self, *args: Any, **kwargs: Any) -> Any:
+        """Forward rendering to the wrapped environment."""
+        renderer = getattr(self.env, "render", None)
+        if callable(renderer):
+            return renderer(*args, **kwargs)
+        return None
+
     def step(self, action: int) -> Any:
         """Step the environment.
 
@@ -179,6 +196,28 @@ class DiamondAtariWrapper:
         return obs.astype(np.uint8)
 
 
+def _normalize_game_id(game: str) -> str:
+    """Return a game id ``gym.make`` accepts, adding the ``ALE/`` namespace."""
+    return game if "/" in game else f"ALE/{game}"
+
+
+def _register_ale_envs() -> None:
+    """Register the ALE environments with gymnasium.
+
+    ``world_models/envs/ale_atari_env.py`` does this at import time, but the
+    DIAMOND path never imports that module, so without this ``gym.make`` fails
+    with ``NamespaceNotFound: Namespace ALE not found``.
+    """
+    try:
+        import ale_py
+        import gymnasium
+
+        gymnasium.register_envs(ale_py)
+    except Exception:
+        # Atari is an optional extra; let gym.make raise the actionable error.
+        pass
+
+
 def make_diamond_atari_env(
     game: str,
     frameskip: int = 4,
@@ -192,7 +231,10 @@ def make_diamond_atari_env(
     Create a DIAMOND-compatible Atari environment.
 
     Args:
-        game: Atari game name (e.g., "Breakout-v5")
+        game: Atari game name. Accepts either the bare ``"Breakout-v5"`` or the
+            namespaced ``"ALE/Breakout-v5"``; the ``ALE/`` prefix is added when
+            missing. DIAMOND checkpoints store the bare form, so requiring the
+            namespaced one here would make them unloadable.
         frameskip: Number of frames to skip between actions
         max_noop: Maximum number of noop actions at reset
         terminate_on_life_loss: Whether to terminate on life loss
@@ -205,8 +247,9 @@ def make_diamond_atari_env(
     """
     from world_models.utils.gym_compat import gym
 
+    _register_ale_envs()
     env = gym.make(
-        game,
+        _normalize_game_id(game),
         obs_type="rgb",
         frameskip=1,
         repeat_action_probability=0.0,

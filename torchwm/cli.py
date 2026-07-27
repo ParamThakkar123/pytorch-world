@@ -38,6 +38,14 @@ EVAL_MODULES = {
 
 PLAY_MODULES = {
     "diamond": "scripts.play_diamond",
+    "dreamer": "scripts.play_dreamer",
+}
+
+# `--game` means an Atari ROM for DIAMOND and a control task for Dreamer, so
+# the default has to follow the model rather than the flag.
+PLAY_DEFAULT_GAMES = {
+    "diamond": "Breakout-v5",
+    "dreamer": "walker-walk",
 }
 
 BENCHMARK_AGENT_NAMES = ("diamond", "iris", "dreamerv1", "dreamerv2")
@@ -644,7 +652,12 @@ PLAY_MODEL_NAMES = tuple(sorted(PLAY_MODULES))
 @click.option(
     "--checkpoint", "-c", required=True, help="Path to model checkpoint (.pt file)"
 )
-@click.option("--game", "-g", default="Breakout-v5", help="Environment/game name")
+@click.option(
+    "--game",
+    "-g",
+    default=None,
+    help="Environment/game name (default: Breakout-v5 for diamond, walker-walk for dreamer)",
+)
 @click.option(
     "--device", default=None, help="Device to run on (default: cuda if available)"
 )
@@ -664,7 +677,7 @@ PLAY_MODEL_NAMES = tuple(sorted(PLAY_MODULES))
 def play_command(
     model: str,
     checkpoint: str,
-    game: str,
+    game: str | None,
     device: str | None,
     seed: int,
     deterministic: bool,
@@ -672,11 +685,12 @@ def play_command(
     record_fps: int,
 ) -> None:
     """Interactively play inside a trained world model (real env + dream mode)."""
-    module_path = PLAY_MODULES[model.lower()]
+    model_key = model.lower()
+    module_path = PLAY_MODULES[model_key]
     mod = importlib.import_module(module_path)
     mod.run_play(
         checkpoint=checkpoint,
-        game=game,
+        game=game or PLAY_DEFAULT_GAMES[model_key],
         device=device,
         seed=seed,
         deterministic=deterministic,

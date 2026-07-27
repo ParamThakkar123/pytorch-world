@@ -22,6 +22,7 @@ from __future__ import annotations
 import importlib
 import importlib.abc
 import importlib.machinery
+import pathlib as _pathlib
 import sys
 from typing import Any
 
@@ -33,20 +34,44 @@ _world_models = importlib.import_module(_INTERNAL)
 class _SubmoduleAliasFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
     """Resolve ``torchwm.<name>`` to the implementation in ``world_models.<name>``.
 
-    Installed at the *end* of ``sys.meta_path`` so genuine ``torchwm`` submodules
-    (for example ``torchwm.cli``) are found by the default finders first.  Only
-    names that have no real ``torchwm`` module fall through to this alias, at
-    which point the matching ``world_models`` submodule is imported lazily and
-    registered under the ``torchwm`` name as well.
+    Installed at the *front* of ``sys.meta_path``.  Genuine ``torchwm``
+    submodules (for example ``torchwm.cli``) are detected by
+    :meth:`_genuine_submodule` and declined, so the default finders still load
+    them; every other name is aliased to the matching ``world_models`` submodule
+    and registered under the ``torchwm`` name as well.
+
+    Being first matters.  Aliasing ``torchwm.configs`` returns the *shared*
+    ``world_models.configs`` module object, whose ``__path__`` points into
+    ``world_models/``.  If the default path-based finders ran first, they would
+    use that ``__path__`` to locate ``configs/diamond_config.py`` and execute it
+    a second time under the name ``torchwm.configs.diamond_config``.  That
+    yields two distinct classes from one file, so
+    ``isinstance(cfg, DiamondConfig)`` fails depending on which namespace the
+    caller imported from -- producing errors as self-contradictory as
+    ``config must be a DiamondConfig ...; got DiamondConfig``.
     """
 
     _prefix = f"{__name__}."
     _target = f"{_INTERNAL}."
+    # Directory of the real ``torchwm`` package, used to tell genuine submodules
+    # apart from names that should be aliased.
+    _root = _pathlib.Path(__file__).resolve().parent
+
+    @classmethod
+    def _genuine_submodule(cls, fullname: str) -> bool:
+        """Return True when ``fullname`` maps to a real file under ``torchwm/``."""
+        relative = fullname[len(cls._prefix) :].split(".")
+        candidate = cls._root.joinpath(*relative)
+        return candidate.with_suffix(".py").is_file() or (
+            candidate / "__init__.py"
+        ).is_file()
 
     def find_spec(
         self, fullname: str, path: Any = None, target: Any = None
     ) -> importlib.machinery.ModuleSpec | None:
         if not fullname.startswith(self._prefix):
+            return None
+        if self._genuine_submodule(fullname):
             return None
         return importlib.machinery.ModuleSpec(fullname, self)
 
@@ -72,7 +97,8 @@ class _SubmoduleAliasFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 
 
 if not any(isinstance(finder, _SubmoduleAliasFinder) for finder in sys.meta_path):
-    sys.meta_path.append(_SubmoduleAliasFinder())
+    # Must precede the default path-based finders; see the class docstring.
+    sys.meta_path.insert(0, _SubmoduleAliasFinder())
 
 api = importlib.import_module(f"{_INTERNAL}.api")
 sys.modules[f"{__name__}.api"] = api

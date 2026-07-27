@@ -36,6 +36,7 @@ def __getattr__(name: str) -> Any:
 
     if name in (
         "MuJoCoImageEnv",
+        "MujocoEnv",
         "make_mujoco_env",
         "make_mujoco_env_from_config",
     ):
@@ -45,7 +46,8 @@ def __getattr__(name: str) -> Any:
             make_mujoco_env_from_config,
         )
 
-        if name == "MuJoCoImageEnv":
+        # ``MujocoEnv`` is the historical spelling kept for the public surface.
+        if name in ("MuJoCoImageEnv", "MujocoEnv"):
             return MuJoCoImageEnv
         if name == "make_mujoco_env":
             return make_mujoco_env
@@ -250,6 +252,7 @@ __all__ = [
     "list_available_atari_envs",
     "make_atari_vector_env",
     "MuJoCoImageEnv",
+    "MujocoEnv",
     "make_mujoco_env",
     "make_mujoco_env_from_config",
     "list_gymnasium_robotics_envs",

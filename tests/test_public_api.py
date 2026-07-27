@@ -1,7 +1,48 @@
 import re
 
+import pytest
+
 import torchwm
 from torchwm import api
+
+
+def _unresolvable(module):
+    """Return ``(name, error)`` for every ``__all__`` entry that cannot be read."""
+
+    broken = []
+    for name in module.__all__:
+        try:
+            getattr(module, name)
+        except Exception as exc:  # noqa: BLE001 - the failure mode is the point
+            broken.append((name, f"{type(exc).__name__}: {exc}"))
+    return broken
+
+
+def test_every_public_export_resolves():
+    # The lazy ``__getattr__`` export map means a typo (wrong module, renamed
+    # symbol) stays invisible until a user touches that exact name.  Walk the
+    # whole surface so the export map can never drift from the implementation.
+    pytest.importorskip("torch")
+
+    broken = _unresolvable(torchwm)
+    assert not broken, f"unresolvable torchwm exports: {broken}"
+
+
+def test_every_internal_public_export_resolves():
+    # ``torchwm`` is a lazy alias over ``world_models``, and the export map
+    # lives here - check the source of truth directly too.
+    pytest.importorskip("torch")
+    import world_models
+
+    broken = _unresolvable(world_models)
+    assert not broken, f"unresolvable world_models exports: {broken}"
+
+
+def test_torchwm_all_covers_world_models_all():
+    import world_models
+
+    assert set(world_models.__all__) <= set(torchwm.__all__)
+    assert "api" in torchwm.__all__
 
 
 def test_top_level_torchwm_exports_user_facing_factories():

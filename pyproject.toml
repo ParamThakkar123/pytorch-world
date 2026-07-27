@@ -70,12 +70,6 @@ viz = [
     "umap-learn>=0.5.11",
     "scikit-learn>=1.8.0",
     "plotly>=6.5.0",
-    "fastapi[standard]>=0.116.0",
-    "uvicorn>=0.35.0",
-    "myst-parser>=2.0.0,<5.0.0",
-    "nbsphinx>=0.9.8",
-    "python-multipart>=0.0.27",
-    "starlette>=1.0.1",
 ]
 ml = [
     "torchaudio>=0.13.0",
@@ -118,6 +112,9 @@ include = ["world_models", "world_models.*", "torchwm", "torchwm.*", "tools", "t
 
 [tool.setuptools.package-data]
 torchwm = ["py.typed", "__init__.pyi"]
+# The torchwm stub re-exports from world_models, so that package has to be
+# PEP 561 typed too or checkers fall back to Any for every symbol.
+world_models = ["py.typed"]
 
 [tool.uv]
 index-url = "https://download.pytorch.org/whl/cu121"

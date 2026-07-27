@@ -35,7 +35,7 @@ def main():
     print(f"Seeds: {seeds}, Episodes per seed: {episodes}")
     print(f"Output directory: {out_dir}")
 
-    runner = MultiAgentBenchmarkRunner(adapters=all_adapters, out_dir=out_dir)
+    runner = MultiAgentBenchmarkRunner(adapter_classes=all_adapters, out_dir=out_dir)
 
     results = runner.run_all(
         env_spec={"game": game},
