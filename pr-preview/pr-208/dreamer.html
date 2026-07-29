@@ -1470,9 +1470,9 @@ YAML saved with each run or checkpoint:</p>
 <td><p>Sequences per batch</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">free_nats</span></code></p></td>
-<td><p>1.0</p></td>
-<td><p>1.0</p></td>
-<td><p>KL free bits threshold. Below it the KL term has zero gradient, freezing the RSSM prior’s stochastic head</p></td>
+<td><p>3.0</p></td>
+<td><p>3.0</p></td>
+<td><p>KL free-nats floor, per Dreamer v1 Appendix A. Raw KL below this contributes zero gradient, so the floor caps how hard the KL compresses the posterior. Single shared field: both variants read <code class="docutils literal notranslate"><span class="pre">DreamerConfig.free_nats</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reward_scale</span></code></p></td>
 <td><p>1.0</p></td>
@@ -1577,10 +1577,15 @@ YAML saved with each run or checkpoint:</p>
 deterministic RNN. Symptoms: good reconstruction but imagination diverges.</p>
 <p><strong>Fixes:</strong></p>
 <ul class="simple">
-<li><p>Increase <code class="docutils literal notranslate"><span class="pre">kl_loss_coeff</span></code> or adjust <code class="docutils literal notranslate"><span class="pre">kl_alpha</span></code> (V2)</p></li>
-<li><p>Decrease <code class="docutils literal notranslate"><span class="pre">free_nats</span></code></p></li>
+<li><p>Decrease <code class="docutils literal notranslate"><span class="pre">kl_loss_coeff</span></code> or adjust <code class="docutils literal notranslate"><span class="pre">kl_alpha</span></code> (V2)</p></li>
+<li><p>Increase <code class="docutils literal notranslate"><span class="pre">free_nats</span></code></p></li>
 <li><p>Reduce <code class="docutils literal notranslate"><span class="pre">stoch_size</span></code></p></li>
 </ul>
+<p>Both of the first two reduce the KL pressure that drives the posterior toward
+the prior. Free nats exist precisely to prevent collapse: raw KL below the
+floor is unpenalized, so raising <code class="docutils literal notranslate"><span class="pre">free_nats</span></code> lets the posterior carry more
+information. Lowering it (or raising <code class="docutils literal notranslate"><span class="pre">kl_loss_coeff</span></code>) tightens the squeeze and
+makes collapse worse.</p>
 </section>
 <section id="imagination-divergence">
 <h3><a class="toc-backref" href="#id38" role="doc-backlink">Imagination divergence</a><a class="headerlink" href="#imagination-divergence" title="Link to this heading">#</a></h3>
