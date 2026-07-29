@@ -97,14 +97,15 @@ class DreamerConfig(SerializableConfigMixin):
     train_seq_len: int = 50
     imagine_horizon: int = 15
     use_disc_model: bool = False
-    # KL free-nats floor. Once mean KL(posterior || prior) falls below this
-    # value the KL term contributes zero gradient, which freezes the RSSM's
-    # prior stochastic head -- the only module trained solely by the KL. Since
-    # imagination samples `stoch` from that head, a floor set too high leaves
-    # the actor optimizing inside an untrained transition model. 3.0 is the
-    # DMC-image default; low-entropy observations (e.g. Pendulum) never clear
-    # it, so the default here is lowered.
-    free_nats: float = 1.0
+    # KL free-nats floor. Dreamer v1 (ICLR 2020, Appendix A) does not scale the
+    # KL regularizer (beta = 1) but clips it below 3 free nats, as in PlaNet.
+    # The floor caps how hard the KL squeezes information out of the posterior:
+    # while raw KL sits below `free_nats` the term contributes zero gradient, so
+    # a floor set too low actively compresses the latent (on DMC walker-walk a
+    # floor of 1.0 pinned raw KL near 1.35 nats and starved the dynamics model).
+    # Low-entropy observations (e.g. Pendulum) never clear 3.0 -- lower it
+    # per-experiment for those envs rather than changing this default.
+    free_nats: float = 3.0
     discount: float = 0.99
     # Multiplier applied to replayed rewards before they reach the reward head.
     # Dreamer's defaults assume DMC-style per-step rewards in [0, 1]. Envs with
@@ -122,10 +123,14 @@ class DreamerConfig(SerializableConfigMixin):
     actor_learning_rate: float = 8e-5
     value_learning_rate: float = 8e-5
     adam_epsilon: float = 1e-7
-    # World-model gradient norms routinely reach ~10^3 on image observations,
-    # so a threshold of 100 clipped ~97% of updates and made every step a
-    # fixed-size move in the gradient direction.
-    grad_clip_norm: float = 1000.0
+    # Dreamer v1 (ICLR 2020, Appendix A) scales down gradient norms exceeding
+    # 100, applied to the world model, actor, and value optimizers alike.
+    # World-model norms routinely reach ~10^3 on image observations because the
+    # pixel NLL sums over 3x64x64 dims, so this threshold does clip the majority
+    # of world-model updates -- that is the reference behaviour, not a symptom.
+    # Raising it leaves the actor effectively unclipped (observed norms 70-370),
+    # which makes the policy take large, high-variance steps.
+    grad_clip_norm: float = 100.0
     # fp16 overflow makes GradScaler silently skip world-model and value
     # updates, and Dreamer is env-bound rather than compute-bound at these
     # model sizes, so AMP buys little. Opt in explicitly if profiling shows it
