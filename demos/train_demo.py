@@ -30,7 +30,7 @@ TRAINING_MODULES = {
     "dreamer": "world_models.training.train_dreamer",
     "diamond": "world_models.training.train_diamond",
     "iris": "world_models.training.train_iris",
-    "genie": "world_models.training.train_genie",
+    "genie": "scripts/train_genie_tinyworlds.py",
     "ijepa": "world_models.training.train_jepa",
 }
 
@@ -66,11 +66,14 @@ def resolve_device(requested: str) -> str:
 
 
 def genie_overrides(args: argparse.Namespace) -> list[str]:
-    """Build Genie overrides (argparse-style flags, not key=value)."""
+    """Build Genie overrides (OmegaConf key=value for scripts/train_genie_tinyworlds.py)."""
     steps = args.steps
     overrides = [
-        f"--max-steps={steps}",
-        f"--device={resolve_device(args.device)}",
+        f"dataset={args.env}",
+        f"max_steps={steps}",
+        f"device={resolve_device(args.device)}",
+        "batch_size=2",
+        "checkpoint_dir=checkpoints/genie_demo",
     ]
     return overrides
 
@@ -163,11 +166,15 @@ OVERRIDE_BUILDERS = {
 
 
 def build_command(args: argparse.Namespace, extra: list[str]) -> list[str]:
-    """Compose the full ``python -m <trainer> key=value ...`` command."""
-    module = TRAINING_MODULES[args.algo]
+    """Compose the full training command."""
+    entry = TRAINING_MODULES[args.algo]
     overrides = OVERRIDE_BUILDERS[args.algo](args)
+    if entry.endswith(".py"):
+        cmd = [sys.executable, entry]
+    else:
+        cmd = [sys.executable, "-m", entry]
     # User overrides go last so they win over the demo defaults.
-    return [sys.executable, "-m", module, *overrides, *extra]
+    return [*cmd, *overrides, *extra]
 
 
 def parse_args() -> tuple[argparse.Namespace, list[str]]:
@@ -247,7 +254,7 @@ def artifact_hint(algo: str) -> str:
             "Note: train_iris hardcodes device=cuda and seed=42; --device/--seed are ignored."
         )
     if algo == "genie":
-        return "Checkpoints: checkpoints/genie_<dataset>_final.pt"
+        return "Checkpoints: checkpoints/genie_demo/genie_<dataset>_final.pt"
     if algo == "ijepa":
         return "Checkpoints: results/jepa_demo/jepa_run-latest.pth.tar"
     return ""
