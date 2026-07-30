@@ -52,6 +52,7 @@ agents with a unified API.
    :caption: Algorithms
 
    dreamer
+   dreamer_v3
    planet
    jepa
    iris

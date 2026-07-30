@@ -11,6 +11,8 @@ from typing import Any
 
 _EXPORTS = {
     "DreamerConfig": "world_models.configs.dreamer_config",
+    "DreamerV3Config": "world_models.configs.dreamer_v3_config",
+    "MODEL_SIZES": "world_models.configs.dreamer_v3_config",
     "JEPAConfig": "world_models.configs.jepa_config",
     "DiTConfig": "world_models.configs.dit_config",
     "get_dit_config": "world_models.configs.dit_config",

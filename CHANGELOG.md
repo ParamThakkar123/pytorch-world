@@ -8,12 +8,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **DreamerV3** (`create_model("dreamer-v3")`), replacing the placeholder that
+  previously aliased `dreamer-v3` to the DreamerV1 agent. Implements the paper's
+  robustness techniques: categorical latents with 1% unimix and straight-through
+  gradients, separate dynamics/representation KL terms with free bits, symexp
+  two-hot reward and critic heads, percentile return normalization with a
+  denominator limit, a critic EMA regularizer and replay loss, zero-initialized
+  head outputs, and LaProp with adaptive gradient clipping
+- `DreamerV3Config` with the paper's Table 4 defaults and the 12M-400M model-size
+  presets from Table 3; widths resolve from `model_size` and `update_steps`
+  derives from `replay_ratio`
+- `CategoricalRSSM`, `DreamerV3Encoder`/`Decoder`/`Head`/`Actor`,
+  `DreamerV3ReplayBuffer`, `BlockGRUCell`/`BlockLinear`, and a new
+  `world_models.optim` package exporting `LaProp` and `adaptive_grad_clip_` --
+  all usable independently of the agent
+- Discrete action support in the shared Dreamer `make_env`: environments with a
+  discrete action space are now wrapped with `OneHotAction` instead of failing in
+  `NormalizeActions`
+- `examples/dreamer_v3_example.py` and the {doc}`dreamer_v3` documentation page
 - `dmc` optional-dependency extra (`pip install torchwm[dmc]`) that installs
   `dm-control` for the default DeepMind Control backend
 - Actionable error from the DMC backend that names the missing `dm_control`
   dependency and points to `torchwm[dmc]` or the gym backend
 
 ### Changed
+- `DreamerAgent` is now subclassable: `_config_cls` selects the configuration
+  class and `_build_core` selects the algorithm core, so the shared environment,
+  seeding, logging, and checkpoint loop is reused rather than duplicated
+- Passing a base `DreamerConfig` to a subclass agent carries over only the fields
+  that were actually changed, so the subclass's tuned defaults are not silently
+  overwritten by base-class defaults
+- The Dreamer training loop logs any extra metrics an algorithm core publishes via
+  `last_metrics` (DreamerV3 reports its individual loss terms, gradient norms, and
+  return scale)
 - Quick-start examples (README, docs landing page, getting-started guide) now use
   the base-installable `Pendulum-v1` gym backend so they run on
   `pip install torchwm[gym]` out of the box; DMC usage is documented separately

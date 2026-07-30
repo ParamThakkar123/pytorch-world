@@ -37,7 +37,9 @@ This page lists every public class, function, and constant exported from the
 | `Dreamer` | `world_models.models.dreamer` | Base Dreamer world model (RSSM-based, V1-style). |
 | `DreamerV1` | `world_models.models.dreamer_v1` | DreamerV1 (alias for base Dreamer). |
 | `DreamerV2` | `world_models.models.dreamer_v2` | DreamerV2 (symlog two-hot heads, balanced KL). |
-| `DreamerV3` | `world_models.models.dreamer` | DreamerV3-style agent (currently mapped to DreamerAgent). |
+| `DreamerV3` | `world_models.models.dreamer_v3` | DreamerV3 core model (categorical latents, free bits, return normalization). |
+| `DreamerV3Agent` | `world_models.models.dreamer_v3` | High-level DreamerV3 agent with train/evaluate helpers. |
+| `CategoricalRSSM` | `world_models.models.categorical_rssm` | DreamerV3 RSSM with straight-through categorical latents. |
 | `DreamerAgent` | `world_models.models.dreamer` | High-level Dreamer agent with train/evaluate helpers. |
 | `Planet` | `world_models.models.planet` | PlaNet: Deep Planning Network. |
 | `JEPAAgent` | `world_models.models.jepa_agent` | I-JEPA agent for self-supervised visual representation learning. |

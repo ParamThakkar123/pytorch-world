@@ -56,9 +56,13 @@ MODEL_SPECS: dict[str, ModelSpec] = {
     ),
     "dreamer-v3": ModelSpec(
         name="dreamer-v3",
-        import_path="world_models.models.dreamer:DreamerAgent",
-        config_path="world_models.configs.dreamer_config:DreamerConfig",
-        description="DreamerV3-style agent (currently mapped to DreamerAgent; update when dedicated V3 implementation lands).",
+        import_path="world_models.models.dreamer_v3:DreamerV3Agent",
+        config_path="world_models.configs.dreamer_v3_config:DreamerV3Config",
+        description=(
+            "DreamerV3 agent: categorical latents with free bits, symexp two-hot "
+            "reward and critic heads, percentile return normalization, and "
+            "LaProp with adaptive gradient clipping."
+        ),
         aliases=("dreamerv3",),
     ),
     "planet": ModelSpec(

@@ -29,7 +29,9 @@ __all__ = [
     "DreamerV1",
     "DreamerV2",
     "DreamerV3",
+    "DreamerV3Agent",
     "DreamerAgent",
+    "CategoricalRSSM",
     "Planet",
     "JEPAAgent",
     "IRISAgent",
@@ -71,9 +73,17 @@ def __getattr__(name: str) -> Any:
 
         return DreamerV2
     if name == "DreamerV3":
-        from .dreamer import DreamerAgent
+        from .dreamer_v3 import DreamerV3
 
-        return DreamerAgent
+        return DreamerV3
+    if name == "DreamerV3Agent":
+        from .dreamer_v3 import DreamerV3Agent
+
+        return DreamerV3Agent
+    if name == "CategoricalRSSM":
+        from .categorical_rssm import CategoricalRSSM
+
+        return CategoricalRSSM
     if name == "DreamerAgent":
         from .dreamer import DreamerAgent
 

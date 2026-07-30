@@ -53,6 +53,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "DreamerV1": "world_models.models",
     "DreamerV2": "world_models.models",
     "DreamerV3": "world_models.models",
+    "DreamerV3Agent": "world_models.models",
     "DreamerAgent": "world_models.models",
     "Planet": "world_models.models",
     "JEPAAgent": "world_models.models",
@@ -73,7 +74,12 @@ _LAZY_EXPORTS: dict[str, str] = {
     "RSSM": "world_models.models",
     "RecurrentStateSpaceModel": "world_models.models",
     "DreamerRSSM": "world_models.models.dreamer_rssm",
+    "CategoricalRSSM": "world_models.models",
     # Vision components.
+    "DreamerV3Encoder": "world_models.vision",
+    "DreamerV3Decoder": "world_models.vision",
+    "DreamerV3Head": "world_models.vision",
+    "DreamerV3Actor": "world_models.vision",
     "ConvEncoder": "world_models.vision",
     "CNNEncoder": "world_models.vision",
     "ConvDecoder": "world_models.vision",
@@ -90,6 +96,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "VectorQuantizerEMA": "world_models.vision",
     # Memory.
     "ReplayBuffer": "world_models.memory",
+    "DreamerV3ReplayBuffer": "world_models.memory",
     "Memory": "world_models.memory",
     "Episode": "world_models.memory",
     "IRISReplayBuffer": "world_models.memory",
@@ -118,6 +125,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "CNNFeatureExtractor": "world_models.controller",
     # Configs.
     "DreamerConfig": "world_models.configs",
+    "DreamerV3Config": "world_models.configs",
     "JEPAConfig": "world_models.configs",
     "DiTConfig": "world_models.configs",
     "get_dit_config": "world_models.configs",

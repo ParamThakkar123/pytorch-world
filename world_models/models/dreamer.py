@@ -92,6 +92,20 @@ def _resolve_image_size(args: Any) -> tuple:
     raise ValueError(f"Invalid image_size={size}. Expected int or (H, W).")
 
 
+def _has_discrete_actions(env: Any) -> bool:
+    """Whether an environment exposes a discrete action space.
+
+    Checked structurally rather than with ``isinstance`` so that this module
+    does not need to import Gym at call time.
+    """
+    action_space = getattr(env, "action_space", None)
+    return (
+        action_space is not None
+        and hasattr(action_space, "n")
+        and not hasattr(action_space, "low")
+    )
+
+
 def make_env(args: Any) -> Any:
     """Construct a Dreamer-compatible environment from `DreamerConfig` options.
 
@@ -216,7 +230,14 @@ def make_env(args: Any) -> Any:
         )
 
     env = env_wrapper.ActionRepeat(env, int(args.action_repeat))
-    env = env_wrapper.NormalizeActions(env)
+    if _has_discrete_actions(env):
+        # Discrete backends (Atari, Procgen, BSuite, DMLab) are exposed to the
+        # agent as one-hot vectors, which keeps a single continuous-looking
+        # action interface across every backend. Action normalization would
+        # remap the [0, 1] one-hot space and is skipped.
+        env = env_wrapper.OneHotAction(env)
+    else:
+        env = env_wrapper.NormalizeActions(env)
     frame_stack = max(1, int(getattr(args, "frame_stack", 1)))
     if frame_stack > 1:
         env = env_wrapper.FrameStack(env, frame_stack)
@@ -995,10 +1016,56 @@ class DreamerAgent(ExportableAgentMixin):
 
     It builds environments from config, initializes seeds and logging,
     instantiates `Dreamer`, and exposes simple `train()` / `evaluate()` methods.
+
+    Subclasses select a different algorithm by overriding `_config_cls` and
+    `_build_core`; everything else (environments, seeding, logging, checkpoint
+    cadence) is shared. See `world_models.models.dreamer_v3.DreamerV3Agent`.
     """
 
+    _config_cls: type[DreamerConfig] = DreamerConfig
+
+    @classmethod
+    def _coerce_config(cls, config: Any | None) -> Any:
+        """Normalize config inputs to this agent's configuration class."""
+
+        config_cls = cls._config_cls
+        if config is None:
+            return config_cls()
+        if isinstance(config, config_cls):
+            return config
+        if isinstance(config, dict):
+            return config_cls.from_dict(config)
+        if isinstance(config, (str, Path)):
+            return config_cls.from_yaml(config)
+        if isinstance(config, DreamerConfig):
+            # Upgrade a base config to the subclass. Only fields the caller
+            # actually changed are carried over: copying every shared field
+            # would silently overwrite the subclass's own tuned defaults with
+            # the base class's (for example dropping DreamerV3's discount of
+            # 0.997 back to 0.99), which is exactly what a versioned config is
+            # supposed to prevent.
+            base_defaults = type(config)().to_dict()
+            changed = {
+                key: value
+                for key, value in config.to_dict().items()
+                if key in config_cls.__dataclass_fields__
+                and base_defaults.get(key) != value
+            }
+            return config_cls.from_dict(changed)
+        raise TypeError(
+            f"config must be a {config_cls.__name__}, dict, YAML path/string, "
+            f"or None; got {type(config).__name__}."
+        )
+
+    def _build_core(
+        self, obs_shape: Any, action_size: int, device: torch.device
+    ) -> Any:
+        """Instantiate the algorithm core that this agent drives."""
+
+        return Dreamer(self.args, obs_shape, action_size, device, self.args.restore)
+
     def __init__(self, config: Any = None, **kwargs: Any) -> None:
-        self.args = _coerce_dreamer_config(config)
+        self.args = self._coerce_config(config)
 
         self.last_latents_ref = kwargs.get("last_latents_ref", None)
 
@@ -1081,9 +1148,7 @@ class DreamerAgent(ExportableAgentMixin):
 
         obs_shape = self.train_env.observation_space["image"].shape
         action_size = self.train_env.action_space.shape[0]
-        self.dreamer = Dreamer(
-            self.args, obs_shape, action_size, device, self.args.restore
-        )
+        self.dreamer = self._build_core(obs_shape, action_size, device)
 
         self.logger = Logger(
             self.logdir,
@@ -1106,7 +1171,7 @@ class DreamerAgent(ExportableAgentMixin):
     ) -> "DreamerAgent":
         """Build a high-level Dreamer agent from a config object, dict, or YAML file."""
 
-        return cls(_apply_config_overrides(_coerce_dreamer_config(config), overrides))
+        return cls(_apply_config_overrides(cls._coerce_config(config), overrides))
 
     @classmethod
     def from_pretrained(
@@ -1146,9 +1211,9 @@ class DreamerAgent(ExportableAgentMixin):
             checkpoint.get("config") if isinstance(checkpoint, dict) else None
         )
         if config is None and checkpoint_config is not None:
-            args = _coerce_dreamer_config(checkpoint_config)
+            args = cls._coerce_config(checkpoint_config)
         elif config is not None:
-            args = _coerce_dreamer_config(config)
+            args = cls._coerce_config(config)
         else:
             config_path = _resolve_pretrained_file(
                 pretrained_model_name_or_path,
@@ -1161,7 +1226,7 @@ class DreamerAgent(ExportableAgentMixin):
                     "No config was provided and no config YAML was found beside "
                     f"{pretrained_model_name_or_path!r}."
                 )
-            args = DreamerConfig.from_yaml(config_path)
+            args = cls._config_cls.from_yaml(config_path)
         args = _apply_config_overrides(args, overrides)
         args.restore = False
         agent = cls(args)
@@ -1245,6 +1310,9 @@ class DreamerAgent(ExportableAgentMixin):
                     "replay/episodes": self.dreamer.data_buffer.episodes,
                 }
             )
+            # Algorithm cores may publish extra diagnostics (DreamerV3 reports
+            # its individual loss terms, gradient norms, and return scale).
+            logs.update(getattr(self.dreamer, "last_metrics", {}) or {})
 
             stats_freq = getattr(self.args, "log_system_stats_freq", 0)
             if stats_freq and global_step % stats_freq == 0:

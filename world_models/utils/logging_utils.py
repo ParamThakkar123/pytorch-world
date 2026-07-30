@@ -262,9 +262,17 @@ def collect_system_stats(device: torch.device | str | None = None) -> dict[str, 
             }
         )
         if hasattr(torch.cuda, "utilization"):
-            stats["system/gpu_utilization_percent"] = float(
-                torch.cuda.utilization(cuda_index)
-            )
+            # torch.cuda.utilization() goes through NVML, which is a separate
+            # optional package. Metrics collection must never be able to abort
+            # a training run, so a missing or unusable NVML is simply skipped.
+            try:
+                stats["system/gpu_utilization_percent"] = float(
+                    torch.cuda.utilization(cuda_index)
+                )
+            except Exception:
+                logging.getLogger(__name__).debug(
+                    "GPU utilization unavailable", exc_info=True
+                )
 
     return stats
 

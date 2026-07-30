@@ -67,6 +67,7 @@ agent.train()
 ## Features
 
 - Unified interfaces across world-model algorithms
+- DreamerV3 with fixed hyperparameters across domains, and 12M-400M model-size presets
 - Modular encoders, decoders, dynamics models, and backbones
 - Training and inference utilities for model-based reinforcement learning
 - Environment integrations for Gym/Gymnasium, Unity ML-Agents, MuJoCo, Brax, and robotics extras
@@ -83,7 +84,7 @@ flowchart LR
     end
 
     subgraph CONFIGS["Configs"]
-        DC["DreamerConfig"]
+        DC["DreamerConfig / DreamerV3Config"]
         JC["JEPAConfig"]
         IC["IRISConfig"]
         GC["GenieConfig"]
@@ -91,7 +92,7 @@ flowchart LR
     end
 
     subgraph AGENTS["Agents / Models"]
-        DR["Dreamer / DreamerV1 / DreamerV2"]
+        DR["Dreamer / DreamerV1 / DreamerV2 / DreamerV3"]
         JP["JEPAAgent"]
         IR["IRISAgent"]
         GN["Genie"]
@@ -99,7 +100,7 @@ flowchart LR
     end
 
     subgraph BACKBONES["Backbones"]
-        RSSM["RSSM / ModularRSSM"]
+        RSSM["RSSM / CategoricalRSSM / ModularRSSM"]
         VIT["VisionTransformer"]
         VQ["VQ-VAE / VideoTokenizer"]
         ST["STTransformer"]
