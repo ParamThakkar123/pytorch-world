@@ -137,7 +137,7 @@ class RewardTerminationModel(nn.Module):
         B, T, C, H, W = obs.shape
 
         obs_flat = obs.reshape(B * T, C, H, W)
-        actions_flat = actions.view(B * T)
+        actions_flat = actions.reshape(B * T)
 
         action_emb = self.action_embed(actions_flat)
 
