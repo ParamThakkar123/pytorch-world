@@ -146,6 +146,44 @@ python -m world_models.benchmarks.atari_100k --benchmark
 This runs the Atari 100k evaluator from `world_models/benchmarks`, computes
 human-normalized scores, and reports aggregate metrics across games and seeds.
 
+## Vectorized environment speed and bottleneck profiling
+
+Use `scripts/benchmark_vector_env_speed.py` to compare TorchWM's multiprocessing
+`TorchVectorizedEnv` against a single-threaded loop with the same total number
+of environments. The script reports elapsed time, environment steps per second,
+and the vectorized speedup ratio.
+
+```bash
+python scripts/benchmark_vector_env_speed.py \
+  --num-workers 2 \
+  --envs-per-worker 4 \
+  --steps 500 \
+  --out results/bench/vector_env_speed.json
+```
+
+By default, the benchmark uses a deterministic synthetic image environment so it
+can run without optional Gym/Atari dependencies. To benchmark a real environment,
+pass an importable factory in `module:callable` form:
+
+```bash
+python scripts/benchmark_vector_env_speed.py \
+  --env-factory my_package.envs:make_env \
+  --num-workers 4 \
+  --envs-per-worker 2 \
+  --steps 1000
+```
+
+For bottleneck analysis, enable `cProfile` output. The binary `.prof` file can
+be inspected with tools such as `snakeviz`, while `--profile-text` writes the top
+cumulative call sites for quick terminal review.
+
+```bash
+python scripts/benchmark_vector_env_speed.py \
+  --steps 500 \
+  --profile results/bench/vector_env_speed.prof \
+  --profile-text results/bench/vector_env_profile.txt
+```
+
 ## Outputs
 
 The runner saves these files into the selected `out_dir` (default

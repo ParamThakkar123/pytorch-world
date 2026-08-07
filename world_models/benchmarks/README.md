@@ -50,3 +50,24 @@ License
 -------
 
 Same license as the project: see top-level `LICENSE`.
+
+Vectorized environment speedups
+-------------------------------
+
+Use the top-level script below to compare `TorchVectorizedEnv` throughput against
+a single-threaded environment loop and optionally collect `cProfile` bottleneck
+statistics:
+
+```bash
+python scripts/benchmark_vector_env_speed.py \
+  --num-workers 2 \
+  --envs-per-worker 4 \
+  --steps 500 \
+  --out results/bench/vector_env_speed.json \
+  --profile results/bench/vector_env_speed.prof \
+  --profile-text results/bench/vector_env_profile.txt
+```
+
+The default synthetic image environment keeps this benchmark dependency-light.
+Pass `--env-factory module:callable` to benchmark a project-specific environment
+factory with the same single-threaded versus vectorized methodology.
