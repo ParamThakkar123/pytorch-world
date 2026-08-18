@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Sample images from a trained DiT checkpoint, headlessly.
 
-``DiT.train`` already writes a ``generated_samples.png`` when it finishes, but
+``DiT.fit`` already writes a ``generated_samples.png`` when it finishes, but
 that is the only way to see anything out of the model — there is no sampling
 entrypoint, so a saved checkpoint cannot be turned back into images without
 writing this loop by hand. This script is that entrypoint.
@@ -31,18 +31,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 import torch
-import torch.nn as nn
 
-from world_models.configs.dit_config import DiTConfig
-from world_models.models.diffusion.DDPM import DDPM
-from world_models.models.diffusion.DiT import DiT
-from world_models.utils.utils import StreamingVideoWriter
+from torchwm.configs.dit_config import DiTConfig
+from torchwm.models.diffusion.DDPM import DDPM
+from torchwm.models.diffusion.DiT import DiT
+from torchwm.utils.utils import StreamingVideoWriter
 
 
 def infer_architecture(state_dict: dict[str, Any]) -> dict[str, int]:
     """Recover DiT hyperparameters from tensor shapes.
 
-    ``DiT.train`` saves a bare ``state_dict`` and writes the config to a
+    ``DiT.fit`` saves a bare ``state_dict`` and writes the config to a
     separate ``config.yaml``. When that YAML is missing (or the checkpoint was
     moved away from it) the architecture is still fully determined by the
     weights, so read it off them rather than guessing from current defaults.
@@ -72,12 +71,10 @@ def infer_architecture(state_dict: dict[str, Any]) -> dict[str, int]:
 def set_eval(model: DiT) -> DiT:
     """Put a DiT in eval mode.
 
-    ``DiT.train`` is a training-loop classmethod that shadows
-    ``nn.Module.train``, so the usual ``model.eval()`` resolves to it and raises
-    ``TypeError: DiT.train() missing 1 required positional argument: 'dataset'``.
-    Call the base implementation directly, exactly as ``DiT.train`` itself does.
+    ``model.eval()`` works normally now that the training loop lives in
+    ``DiT.fit`` instead of shadowing ``nn.Module.train``.
     """
-    nn.Module.train(model, False)
+    model.eval()
     return model
 
 

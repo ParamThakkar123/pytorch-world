@@ -6,16 +6,37 @@ import torchwm
 from torchwm import api
 
 
-def _unresolvable(module):
-    """Return ``(name, error)`` for every ``__all__`` entry that cannot be read."""
+def _missing_optional_dependency(exc):
+    """True when ``exc`` is an extra that simply is not installed here.
 
-    broken = []
+    A base ``pip install torchwm`` has no gymnasium, ale_py, cv2 and so on, so
+    the env-adapter exports legitimately fail to import. Those are not export
+    map bugs. A ``ModuleNotFoundError`` naming a ``torchwm`` module *is* a bug -
+    it means the map points somewhere that does not exist.
+    """
+
+    if not isinstance(exc, ModuleNotFoundError):
+        return False
+    # torchwm/utils/gym_compat.py re-raises with an explanatory message and no
+    # ``name``, so a nameless miss is an optional backend rather than our code.
+    if exc.name is None:
+        return True
+    return not exc.name.startswith("torchwm")
+
+
+def _partition_exports(module):
+    """Split ``__all__`` into (broken, skipped) by why each name failed."""
+
+    broken, skipped = [], []
     for name in module.__all__:
         try:
             getattr(module, name)
         except Exception as exc:  # noqa: BLE001 - the failure mode is the point
-            broken.append((name, f"{type(exc).__name__}: {exc}"))
-    return broken
+            if _missing_optional_dependency(exc):
+                skipped.append((name, exc.name))
+            else:
+                broken.append((name, f"{type(exc).__name__}: {exc}"))
+    return broken, skipped
 
 
 def test_every_public_export_resolves():
@@ -24,25 +45,33 @@ def test_every_public_export_resolves():
     # whole surface so the export map can never drift from the implementation.
     pytest.importorskip("torch")
 
-    broken = _unresolvable(torchwm)
+    broken, _ = _partition_exports(torchwm)
     assert not broken, f"unresolvable torchwm exports: {broken}"
 
 
-def test_every_internal_public_export_resolves():
-    # ``torchwm`` is a lazy alias over ``world_models``, and the export map
-    # lives here - check the source of truth directly too.
+def test_export_check_is_not_vacuous():
+    # If a future refactor made every export raise ModuleNotFoundError, the test
+    # above would pass by skipping everything. Pin the torch-only core so the
+    # sweep always has something real to check.
     pytest.importorskip("torch")
-    import world_models
 
-    broken = _unresolvable(world_models)
-    assert not broken, f"unresolvable world_models exports: {broken}"
+    core = [
+        "create_config",
+        "create_model",
+        "make_env",
+        "DreamerAgent",
+        "ReplayBuffer",
+        "ConvEncoder",
+    ]
+    for name in core:
+        assert name in torchwm.__all__, f"{name} dropped out of the public API"
+        getattr(torchwm, name)
 
 
-def test_torchwm_all_covers_world_models_all():
-    import world_models
-
-    assert set(world_models.__all__) <= set(torchwm.__all__)
+def test_all_is_free_of_duplicates_and_exports_the_api_module():
     assert "api" in torchwm.__all__
+    duplicates = {n for n in torchwm.__all__ if torchwm.__all__.count(n) > 1}
+    assert not duplicates, f"duplicate names in torchwm.__all__: {sorted(duplicates)}"
 
 
 def test_top_level_torchwm_exports_user_facing_factories():
@@ -78,7 +107,7 @@ def test_make_env_dispatches_to_selected_backend(monkeypatch):
     monkeypatch.setattr(api, "_load_object", fake_loader)
     env = api.make_env("CartPole-v1", backend="gym", render_mode="rgb_array")
 
-    assert calls["import_path"] == "world_models.envs:make_gym_env"
+    assert calls["import_path"] == "torchwm.envs:make_gym_env"
     assert env == {
         "env_id": "CartPole-v1",
         "kwargs": {"render_mode": "rgb_array"},
@@ -124,7 +153,7 @@ def test_make_env_dispatches_world_model_backend(monkeypatch):
     monkeypatch.setattr(api, "_load_object", fake_loader)
     env = api.make_env(model, backend="wm", observation_space="obs", action_space="act")
 
-    assert calls["import_path"] == "world_models.envs:make_world_model_env"
+    assert calls["import_path"] == "torchwm.envs:make_world_model_env"
     assert env == {
         "world_model": model,
         "kwargs": {"observation_space": "obs", "action_space": "act"},
@@ -135,7 +164,7 @@ def test_export_model_torchscript_writes_file(tmp_path):
     import pytest
 
     torch = pytest.importorskip("torch")
-    import world_models.export  # noqa: F401 - installs torch.nn.Module.export
+    import torchwm.export  # noqa: F401 - installs torch.nn.Module.export
 
     class TinyAgent(torch.nn.Module):
         def __init__(self):
@@ -162,7 +191,7 @@ def test_top_level_exports_export_helpers():
     import torchwm
 
     pytest.importorskip("torch")
-    from world_models.export import ExportableAgentMixin, export_any, export_model
+    from torchwm.export import ExportableAgentMixin, export_any, export_model
 
     assert torchwm.export_any is export_any
     assert torchwm.export_model is export_model
@@ -170,30 +199,30 @@ def test_top_level_exports_export_helpers():
 
 
 def test_layer_and_helper_packages_are_importable():
-    import world_models.helpers as helpers
-    from world_models.layers import AdaLNNormalization, RMSNorm
+    import torchwm.helpers as helpers
+    from torchwm.layers import AdaLNNormalization, RMSNorm
 
     assert "load_checkpoint" in dir(helpers)
     assert RMSNorm.__name__ == "RMSNorm"
     assert AdaLNNormalization.__name__ == "AdaLNNormalization"
 
 
-def test_torchwm_submodules_alias_world_models():
-    import world_models.envs
-    import world_models.models
-    import world_models.utils.deprecation
+def test_torchwm_submodules_alias_torchwm():
+    import torchwm.envs
+    import torchwm.models
+    import torchwm.utils.deprecation
 
     import torchwm.envs
     import torchwm.models
     import torchwm.utils.deprecation
 
     # The friendly ``torchwm.<name>`` surface resolves to the same module object
-    # as the internal ``world_models.<name>`` implementation.
-    assert torchwm.models is world_models.models
-    assert torchwm.envs is world_models.envs
-    assert torchwm.utils.deprecation is world_models.utils.deprecation
+    # as the internal ``torchwm.<name>`` implementation.
+    assert torchwm.models is torchwm.models
+    assert torchwm.envs is torchwm.envs
+    assert torchwm.utils.deprecation is torchwm.utils.deprecation
     # Canonical module identity stays on the internal package.
-    assert torchwm.models.__name__ == "world_models.models"
+    assert torchwm.models.__name__ == "torchwm.models"
 
 
 def test_torchwm_submodule_from_imports_resolve():
@@ -208,7 +237,7 @@ def test_torchwm_submodule_from_imports_resolve():
 
 def test_torchwm_cli_is_the_real_submodule_not_an_alias():
     # ``torchwm.cli`` is a genuine module shipped in the ``torchwm`` package and
-    # must not be shadowed by the ``world_models`` alias finder.
+    # must not be shadowed by the ``torchwm`` alias finder.
     import torchwm.cli
 
     assert torchwm.cli.__name__ == "torchwm.cli"
@@ -256,7 +285,7 @@ def test_create_model_dispatches_diamond_agent_with_config(monkeypatch):
     original_loader = api._load_object
 
     def fake_loader(import_path):
-        if import_path == "world_models.training.train_diamond:DiamondAgent":
+        if import_path == "torchwm.training.train_diamond:DiamondAgent":
             return FakeDiamondAgent
         return original_loader(import_path)
 

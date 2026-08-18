@@ -22,10 +22,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml setup.py README.md ./
-COPY torchwm.pyi ./
 COPY torchwm ./torchwm
 COPY tools ./tools
-COPY world_models ./world_models
 
 RUN python -m pip install --upgrade pip setuptools wheel && \
     python -m pip install --index-url "${PYTORCH_INDEX_URL}" torch torchvision torchaudio && \

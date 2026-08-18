@@ -8,6 +8,8 @@ Reference:
     Perceptual Metric", CVPR 2018.
 """
 
+from functools import lru_cache
+
 import torch
 import torch.nn as nn
 from torchvision import models
@@ -57,6 +59,20 @@ class VGGFeatureExtractor(nn.Module):
         return features
 
 
+
+@lru_cache(maxsize=None)
+def _cached_extractor(device_str: str) -> "VGGFeatureExtractor":
+    """Return a shared, frozen VGGFeatureExtractor for ``device_str``.
+
+    The backbone is a frozen ImageNet network in eval mode: it has no state that
+    a caller can perturb, so every metric instance on a device can share one.
+    Rebuilding it per instance re-ran the torchvision weight load (and the
+    download, on a cold cache) and held a second copy of the network in memory.
+    """
+    extractor = VGGFeatureExtractor(torch.device(device_str))
+    extractor.requires_grad_(False)
+    return extractor
+
 class LPIPS:
     """Learned Perceptual Image Patch Similarity.
 
@@ -74,7 +90,7 @@ class LPIPS:
     ):
         self.device = device
         self.batch_size = batch_size
-        self.extractor = VGGFeatureExtractor(device)
+        self.extractor = _cached_extractor(str(device))
         # Per-channel normalization weights (from the LPIPS paper)
         # These are learned weights; we use uniform weights as an approximation.
         self.weights = [1.0 / len(self.extractor.names)] * len(self.extractor.names)

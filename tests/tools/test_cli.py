@@ -151,12 +151,12 @@ def test_console_entrypoint_run_is_exported():
 
 
 def test_train_lists_diamond_entrypoint():
-    assert cli.TRAINING_MODULES["diamond"] == "world_models.training.train_diamond"
+    assert cli.TRAINING_MODULES["diamond"] == "torchwm.training.train_diamond"
 
 
 def test_dmlab_registered_in_backend_specs():
-    from world_models.api import ENV_BACKEND_SPECS, EnvBackendSpec
-    from world_models.catalog import ENV_BACKENDS
+    from torchwm.api import ENV_BACKEND_SPECS, EnvBackendSpec
+    from torchwm.catalog import ENV_BACKENDS
 
     dmlab_spec = ENV_BACKEND_SPECS["dmlab"]
 
@@ -167,10 +167,10 @@ def test_dmlab_registered_in_backend_specs():
 
 
 def test_dmlab_backend_specs_are_public_api():
-    import world_models
+    import torchwm
 
-    assert world_models.EnvBackendSpec is not None
-    assert "dmlab" in world_models.ENV_BACKEND_SPECS
+    assert torchwm.EnvBackendSpec is not None
+    assert "dmlab" in torchwm.ENV_BACKEND_SPECS
 
 
 

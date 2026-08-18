@@ -35,13 +35,13 @@ graph LR
 
 | If you want to study or build... | Start with | Core files |
 |---|---|---|
-| Latent-dynamics model-based RL from pixels | Dreamer | `world_models.models.dreamer`, `world_models.models.dreamer_rssm` |
-| Classical latent planning with CEM-style imagination | PlaNet / RSSM | `world_models.models.planet`, `world_models.models.rssm` |
-| Swappable encoders, decoders, and recurrent backbones | Modular RSSM | `world_models.models.modular_rssm` |
-| Self-supervised visual representations | JEPA + ViT | `world_models.models.jepa_agent`, `world_models.models.vit` |
-| Sample-efficient Atari with discrete token imagination | IRIS | `world_models.models.iris_agent`, `world_models.models.iris_transformer` |
-| Unsupervised controllable video-world modeling | Genie | `world_models.models.genie`, `world_models.models.latent_action_model`, `world_models.models.dynamics_model` |
-| Diffusion world models and image/video generation | DDPM, DiT, DIAMOND | `world_models.models.diffusion.*` |
+| Latent-dynamics model-based RL from pixels | Dreamer | `torchwm.models.dreamer`, `torchwm.models.dreamer_rssm` |
+| Classical latent planning with CEM-style imagination | PlaNet / RSSM | `torchwm.models.planet`, `torchwm.models.rssm` |
+| Swappable encoders, decoders, and recurrent backbones | Modular RSSM | `torchwm.models.modular_rssm` |
+| Self-supervised visual representations | JEPA + ViT | `torchwm.models.jepa_agent`, `torchwm.models.vit` |
+| Sample-efficient Atari with discrete token imagination | IRIS | `torchwm.models.iris_agent`, `torchwm.models.iris_transformer` |
+| Unsupervised controllable video-world modeling | Genie | `torchwm.models.genie`, `torchwm.models.latent_action_model`, `torchwm.models.dynamics_model` |
+| Diffusion world models and image/video generation | DDPM, DiT, DIAMOND | `torchwm.models.diffusion.*` |
 
 ## Shared concepts
 
@@ -144,7 +144,7 @@ Here, `sg` denotes stop-gradient, `f` is an encoder, `g` is a predictor, and `m`
 
 - `JEPAAgent` coordinates representation learning.
 - `VisionTransformer` and ViT helper constructors provide patch-based encoders.
-- `world_models.masks.*` contains masking/collation strategies for context-target prediction.
+- `torchwm.masks.*` contains masking/collation strategies for context-target prediction.
 
 ### When to use it
 
@@ -247,9 +247,9 @@ graph LR
 
 | Stage | Component | Training | File |
 |---|---|---|---|
-| 1 | **V — Vision (ConvVAE)** | Unsupervised reconstruction on random rollouts. Encodes 64×64 RGB frames → latent `z` (typically 32-d). | `world_models.vision.VAE.ConvVAE` |
-| 2 | **M — Memory (MDN-RNN)** | Predicts next latent `z_{t+1}` as a Gaussian mixture conditioned on `(a_t, z_t, h_t)`. Also predicts rewards and terminal flags. | `world_models.models.mdrnn` |
-| 3 | **C — Controller (Linear)** | Maps `(z_t, h_t)` → `a_t`. Trained with CMA-ES (not backprop) to maximize cumulative reward. | `world_models.models.controller` |
+| 1 | **V — Vision (ConvVAE)** | Unsupervised reconstruction on random rollouts. Encodes 64×64 RGB frames → latent `z` (typically 32-d). | `torchwm.vision.VAE.ConvVAE` |
+| 2 | **M — Memory (MDN-RNN)** | Predicts next latent `z_{t+1}` as a Gaussian mixture conditioned on `(a_t, z_t, h_t)`. Also predicts rewards and terminal flags. | `torchwm.models.mdrnn` |
+| 3 | **C — Controller (Linear)** | Maps `(z_t, h_t)` → `a_t`. Trained with CMA-ES (not backprop) to maximize cumulative reward. | `torchwm.models.controller` |
 
 ### Key ideas
 
@@ -269,17 +269,17 @@ Use the Ha & Schmidhuber world model when you want:
 
 | Component | Module | Key classes |
 |---|---|---|
-| VAE | `world_models.vision.VAE.ConvVAE` | `ConvVAE`, `ConvVAEEncoder`, `ConvVAEDecoder` |
-| Dynamics | `world_models.models.mdrnn` | `MDRNN`, `MDRNNCell` |
-| Policy | `world_models.models.controller` | `Controller` |
-| Configs | `world_models.configs.wm_config` | `WMVAEConfig`, `WMMDNRNNConfig`, `WMControllerConfig` |
-| Datasets | `world_models.datasets.wm_dataset` | `RolloutDataset`, `ObservationDataset`, `SequenceDataset`, `LatentSequenceDataset` |
-| Losses | `world_models.losses.convae_loss` | `conv_vae_loss_fn` |
-| | `world_models.losses.gmm_loss` | `gmm_loss` |
-| Training | `world_models.training.train_world_model` | `run_training_pipeline`, `generate_rollouts`, `test_trained_model` |
-| | `world_models.training.train_convvae` | `train_convae` |
-| | `world_models.training.train_mdn_rnn` | `train_mdn_rnn` |
-| | `world_models.training.train_controller` | `train_controller` |
+| VAE | `torchwm.vision.VAE.ConvVAE` | `ConvVAE`, `ConvVAEEncoder`, `ConvVAEDecoder` |
+| Dynamics | `torchwm.models.mdrnn` | `MDRNN`, `MDRNNCell` |
+| Policy | `torchwm.models.controller` | `Controller` |
+| Configs | `torchwm.configs.wm_config` | `WMVAEConfig`, `WMMDNRNNConfig`, `WMControllerConfig` |
+| Datasets | `torchwm.datasets.wm_dataset` | `RolloutDataset`, `ObservationDataset`, `SequenceDataset`, `LatentSequenceDataset` |
+| Losses | `torchwm.losses.convae_loss` | `conv_vae_loss_fn` |
+| | `torchwm.losses.gmm_loss` | `gmm_loss` |
+| Training | `torchwm.training.train_world_model` | `run_training_pipeline`, `generate_rollouts`, `test_trained_model` |
+| | `torchwm.training.train_convvae` | `train_convae` |
+| | `torchwm.training.train_mdn_rnn` | `train_mdn_rnn` |
+| | `torchwm.training.train_controller` | `train_controller` |
 
 ### Quick-start example
 

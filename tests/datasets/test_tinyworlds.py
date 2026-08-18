@@ -19,7 +19,7 @@ class TestTinyWorldsDataset:
 
     def test_output_shape_is_CTHW(self, tmp_path):
         """Test that dataset output is (C, T, H, W) per Genie convention."""
-        from world_models.datasets.tinyworlds import TinyWorldsDataset
+        from torchwm.datasets.tinyworlds import TinyWorldsDataset
 
         h5_path = self._create_mock_h5(tmp_path, "NTHWC", (10, 16, 64, 64, 3))
 
@@ -52,7 +52,7 @@ class TestTinyWorldsDataset:
 
     def test_grayscale_to_rgb(self, tmp_path):
         """Test that grayscale (1 channel) is converted to RGB (3 channels)."""
-        from world_models.datasets.tinyworlds import TinyWorldsDataset
+        from torchwm.datasets.tinyworlds import TinyWorldsDataset
 
         h5_path = self._create_mock_h5(tmp_path, "NTHW", (5, 16, 64, 64))
 
@@ -85,7 +85,7 @@ class TestTinyWorldsDataset:
 
     def test_nthw_layout_handling(self, tmp_path):
         """Test that NTHW layout (no channel dim) is handled correctly."""
-        from world_models.datasets.tinyworlds import TinyWorldsDataset
+        from torchwm.datasets.tinyworlds import TinyWorldsDataset
 
         h5_path = self._create_mock_h5(tmp_path, "NTHW", (5, 16, 64, 64))
 
@@ -119,7 +119,7 @@ class TestTinyWorldsDataset:
 
     def test_nthwc_layout_handling(self, tmp_path):
         """Test that NTHWC layout is handled correctly."""
-        from world_models.datasets.tinyworlds import TinyWorldsDataset
+        from torchwm.datasets.tinyworlds import TinyWorldsDataset
 
         h5_path = self._create_mock_h5(tmp_path, "NTHWC", (5, 16, 64, 64, 3))
 
@@ -153,7 +153,7 @@ class TestTinyWorldsDataset:
 
     def test_batch_dimensions_with_dataloader(self, tmp_path):
         """Test that DataLoader produces correct batch dimensions."""
-        from world_models.datasets.tinyworlds import TinyWorldsDataset
+        from torchwm.datasets.tinyworlds import TinyWorldsDataset
         from torch.utils.data import DataLoader
 
         h5_path = self._create_mock_h5(tmp_path, "NTHWC", (20, 16, 64, 64, 3))

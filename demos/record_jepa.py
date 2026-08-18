@@ -32,10 +32,10 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from world_models.helpers.jepa_helper import init_model
-from world_models.masks.multiblock import MaskCollator as MBMaskCollator
-from world_models.utils.utils import apply_masks
-from world_models.utils.jepa_utils import repeat_interleave_batch
+from torchwm.helpers.jepa_helper import init_model
+from torchwm.masks.multiblock import MaskCollator as MBMaskCollator
+from torchwm.utils.utils import apply_masks
+from torchwm.utils.jepa_utils import repeat_interleave_batch
 
 
 def load_image(path: str | None, crop_size: int) -> torch.Tensor:
@@ -85,7 +85,9 @@ def main() -> int:
         default="vit_base",
         choices=["vit_tiny", "vit_small", "vit_base", "vit_large"],
     )
-    parser.add_argument("--pred-depth", type=int, default=6)
+    # None -> the paper's predictor depth for the chosen backbone, which is
+    # what a checkpoint trained with the defaults will contain.
+    parser.add_argument("--pred-depth", type=int, default=None)
     parser.add_argument("--pred-emb-dim", type=int, default=384)
     parser.add_argument("--out-dir", default="demos/out")
     parser.add_argument("--seed", type=int, default=0)

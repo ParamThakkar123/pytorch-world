@@ -29,8 +29,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import numpy as np
 import torch
 
-from world_models.models.genie import create_genie_small
-from world_models.utils.utils import StreamingVideoWriter
+from torchwm.models.genie import create_genie_small
+from torchwm.utils.utils import StreamingVideoWriter
 
 
 def tensor_to_uint8_img(t: torch.Tensor) -> np.ndarray:

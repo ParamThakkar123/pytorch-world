@@ -35,7 +35,7 @@ import numpy as np
 import torch
 
 from scripts.play_diamond import make_agent
-from world_models.utils.utils import StreamingVideoWriter
+from torchwm.utils.utils import StreamingVideoWriter
 
 
 def upscale(frame: np.ndarray, scale: int) -> np.ndarray:

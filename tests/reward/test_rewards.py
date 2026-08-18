@@ -1,6 +1,6 @@
 import torch
-from world_models.reward.dreamer_v1_reward import RewardModel
-from world_models.reward.dreamer_v1_value import ValueModel
+from torchwm.reward.dreamer_v1_reward import RewardModel
+from torchwm.reward.dreamer_v1_value import ValueModel
 
 
 class TestRewardModel:

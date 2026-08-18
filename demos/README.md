@@ -2,7 +2,7 @@
 
 Scripts for producing demo material: train a model, then record video of it
 acting and dreaming, or visualise its representations. Everything here wraps
-the existing entrypoints — nothing in `world_models/` or `scripts/` is modified.
+the existing entrypoints — nothing in `torchwm/` or `scripts/` is modified.
 
 ## 0. Environment
 
@@ -215,7 +215,7 @@ the repo.
    `TypeError: config must be a DiamondConfig ...; got DiamondConfig`.**
    `torchwm/__init__.py` *appended* `_SubmoduleAliasFinder` to `sys.meta_path`.
    Aliasing `torchwm.configs` returns the same module object as
-   `world_models.configs`, whose `__path__` points into `world_models/`, so the
+   `torchwm.configs`, whose `__path__` points into `torchwm/`, so the
    default `FileFinder` won for the submodule and executed `diamond_config.py` a
    second time under the name `torchwm.configs.diamond_config` — two distinct
    classes from one file. Fixed by inserting the finder at the *front* of

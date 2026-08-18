@@ -47,7 +47,7 @@ def main():
         return
 
     logging.basicConfig(level=logging.INFO)
-    logging.getLogger("world_models").setLevel(logging.INFO)
+    logging.getLogger("torchwm").setLevel(logging.INFO)
 
     cfg = make_config(cli_cfg)
     logging.info(

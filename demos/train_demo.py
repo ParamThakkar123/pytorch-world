@@ -27,11 +27,11 @@ import subprocess
 import sys
 
 TRAINING_MODULES = {
-    "dreamer": "world_models.training.train_dreamer",
-    "diamond": "world_models.training.train_diamond",
-    "iris": "world_models.training.train_iris",
+    "dreamer": "torchwm.training.train_dreamer",
+    "diamond": "torchwm.training.train_diamond",
+    "iris": "torchwm.training.train_iris",
     "genie": "scripts/train_genie_tinyworlds.py",
-    "ijepa": "world_models.training.train_jepa",
+    "ijepa": "torchwm.training.train_jepa",
 }
 
 # Demo defaults per algorithm. `steps` means total env steps for Dreamer and

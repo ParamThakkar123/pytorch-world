@@ -8,6 +8,8 @@ Reference:
     to a Local Nash Equilibrium", NeurIPS 2017.
 """
 
+from functools import lru_cache
+
 import torch
 import torch.nn as nn
 from torchvision import models
@@ -112,6 +114,20 @@ def _frechet_distance(
     return float(diff @ diff + np.trace(sigma1 + sigma2 - 2.0 * covmean))
 
 
+
+@lru_cache(maxsize=None)
+def _cached_extractor(device_str: str) -> "InceptionFeatureExtractor":
+    """Return a shared, frozen InceptionFeatureExtractor for ``device_str``.
+
+    The backbone is a frozen ImageNet network in eval mode: it has no state that
+    a caller can perturb, so every metric instance on a device can share one.
+    Rebuilding it per instance re-ran the torchvision weight load (and the
+    download, on a cold cache) and held a second copy of the network in memory.
+    """
+    extractor = InceptionFeatureExtractor(torch.device(device_str))
+    extractor.requires_grad_(False)
+    return extractor
+
 class FID:
     """Fréchet Inception Distance.
 
@@ -127,7 +143,7 @@ class FID:
     ):
         self.device = device
         self.batch_size = batch_size
-        self.extractor = InceptionFeatureExtractor(device)
+        self.extractor = _cached_extractor(str(device))
 
     @torch.no_grad()
     def _extract_features(self, images: torch.Tensor, desc: str = "") -> torch.Tensor:

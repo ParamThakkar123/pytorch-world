@@ -8,7 +8,7 @@ import torch
 import numpy as np
 from typing import Callable, Optional, Dict, List
 
-from world_models.models.diffusion.diamond_diffusion import (
+from torchwm.models.diffusion.diamond_diffusion import (
     DiffusionUNet,
     EulerSampler,
 )

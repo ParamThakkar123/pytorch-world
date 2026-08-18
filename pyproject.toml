@@ -65,6 +65,12 @@ procgen = [
 bsuite = [
     "bsuite>=0.3.5",
 ]
+# No `minerl` / `minedojo` extras: neither is installable on the Python versions
+# TorchWM supports. MineRL 1.x has no release compatible with Python >= 3.11,
+# and MineDojo pins `gym==0.21.0`, whose sdist no longer builds under modern
+# setuptools. Declaring them made `uv lock` unresolvable for the whole project.
+# `torchwm.envs.minecraft_env` still works - see docs/source/iris.md for the
+# manual, Python <= 3.10 install path.
 viz = [
     "opencv-python>=4.12.0.88",
     "umap-learn>=0.5.11",
@@ -85,11 +91,8 @@ dev = [
     "mypy>=1.19.1",
     "gitpython>=3.1.49",
 ]
-selenium = [
-    "selenium>=4.30.0",
-]
 all = [
-    "torchwm[gym,dmc,viz,ml,ml-agents,mujoco,robotics,brax,procgen,bsuite,selenium,dev,docs]",
+    "torchwm[gym,dmc,viz,ml,ml-agents,mujoco,robotics,brax,procgen,bsuite,dev,docs]",
 ]
 docs = [
     "sphinx>=8.0.0,<9.0.0",
@@ -108,29 +111,28 @@ docs = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["world_models", "world_models.*", "torchwm", "torchwm.*", "tools", "tools.*"]
+include = ["torchwm", "torchwm.*", "tools", "tools.*"]
 
 [tool.setuptools.package-data]
+# PEP 561: ship the marker and the explicit stub for the lazy public surface.
 torchwm = ["py.typed", "__init__.pyi"]
-# The torchwm stub re-exports from world_models, so that package has to be
-# PEP 561 typed too or checkers fall back to Any for every symbol.
-world_models = ["py.typed"]
 
-[tool.uv]
-index-url = "https://download.pytorch.org/whl/cu121"
-extra-index-url = ["https://pypi.org/simple"]
-index-strategy = "unsafe-best-match"
-
-[[tool.uv.index]]
-url = "https://download.pytorch.org/whl/cu121"
-default = true
+# TorchWM resolves from PyPI, whose torch wheels work on every supported
+# platform. Making a CUDA-specific PyTorch index the default (as this used to)
+# routed *every* package through it and pinned contributors to one CUDA
+# version regardless of their hardware.
+#
+# To build against a specific CUDA/ROCm/CPU wheel set, add the index for your
+# platform from https://pytorch.org/get-started/locally/ , for example:
+#
+#     uv add torch torchvision torchaudio --index https://download.pytorch.org/whl/cu121
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel", "build"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.dynamic]
-version = {attr = "world_models._version.__version__"}
+version = {attr = "torchwm._version.__version__"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -138,6 +140,5 @@ markers = [
     "slow: tests that are expensive enough to skip in the default fast subset",
     "gpu: tests that require a CUDA-capable GPU",
     "integration: tests that exercise external services, optional backends, or cross-package workflows",
-    "selenium: tests that require Selenium WebDriver and a running web stack",
 ]
 

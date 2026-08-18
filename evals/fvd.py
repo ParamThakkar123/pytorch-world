@@ -8,6 +8,8 @@ Reference:
     A New Metric & Challenges", arXiv 2018.
 """
 
+from functools import lru_cache
+
 import torch
 import torch.nn as nn
 from torchvision.models.video import r3d_18, R3D_18_Weights
@@ -112,6 +114,20 @@ def _frechet_distance(
     return float(diff @ diff + np.trace(sigma1 + sigma2 - 2.0 * covmean))
 
 
+
+@lru_cache(maxsize=None)
+def _cached_extractor(device_str: str) -> "VideoFeatureExtractor":
+    """Return a shared, frozen VideoFeatureExtractor for ``device_str``.
+
+    The backbone is a frozen ImageNet network in eval mode: it has no state that
+    a caller can perturb, so every metric instance on a device can share one.
+    Rebuilding it per instance re-ran the torchvision weight load (and the
+    download, on a cold cache) and held a second copy of the network in memory.
+    """
+    extractor = VideoFeatureExtractor(torch.device(device_str))
+    extractor.requires_grad_(False)
+    return extractor
+
 class FVD:
     """Fréchet Video Distance.
 
@@ -129,7 +145,7 @@ class FVD:
         self.device = device
         self.batch_size = batch_size
         self.clip_length = clip_length
-        self.extractor = VideoFeatureExtractor(device)
+        self.extractor = _cached_extractor(str(device))
 
     @torch.no_grad()
     def _extract_features(self, videos: torch.Tensor, desc: str = "") -> torch.Tensor:

@@ -8,159 +8,166 @@ to be spelled out here for type checkers and autocomplete to see it.
 
 from typing import Any
 
-from world_models import api as api
+from torchwm import api as api
 
-from world_models.api import ENV_BACKEND_SPECS as ENV_BACKEND_SPECS
-from world_models.api import EnvBackendSpec as EnvBackendSpec
-from world_models.api import MODEL_SPECS as MODEL_SPECS
-from world_models.api import ModelSpec as ModelSpec
-from world_models.api import create_config as create_config
-from world_models.api import create_model as create_model
-from world_models.api import get_env_backend_spec as get_env_backend_spec
-from world_models.api import get_model_spec as get_model_spec
-from world_models.api import list_env_backends as list_env_backends
-from world_models.api import list_envs as list_envs
-from world_models.api import list_models as list_models
-from world_models.api import make_env as make_env
-from world_models.blocks.mhsa import MultiHeadSelfAttention as MultiHeadAttention
-from world_models.blocks.mhsa import MultiHeadSelfAttention as MultiHeadSelfAttention
-from world_models.blocks.st_transformer import STTransformer as STTransformer
-from world_models.configs.diamond_config import ATARI_100K_GAMES as ATARI_100K_GAMES
-from world_models.configs.diamond_config import DiamondConfig as DiamondConfig
-from world_models.configs.diamond_config import HUMAN_SCORES as HUMAN_SCORES
-from world_models.configs.diamond_config import RANDOM_SCORES as RANDOM_SCORES
-from world_models.configs.dit_config import DiTConfig as DiTConfig
-from world_models.configs.dit_config import get_dit_config as get_dit_config
-from world_models.configs.dreamer_config import DreamerConfig as DreamerConfig
-from world_models.configs.genie_config import DynamicsModelConfig as DynamicsModelConfig
-from world_models.configs.genie_config import GenieConfig as GenieConfig
-from world_models.configs.genie_config import GenieSmallConfig as GenieSmallConfig
-from world_models.configs.genie_config import LatentActionModelConfig as LatentActionModelConfig
-from world_models.configs.genie_config import STTransformerConfig as STTransformerConfig
-from world_models.configs.genie_config import VideoTokenizerConfig as VideoTokenizerConfig
-from world_models.configs.iris_config import IRISConfig as IRISConfig
-from world_models.configs.jepa_config import JEPAConfig as JEPAConfig
-from world_models.controller.iris_policy import CNNFeatureExtractor as CNNFeatureExtractor
-from world_models.controller.iris_policy import IRISActor as IRISActor
-from world_models.controller.iris_policy import IRISCritic as IRISCritic
-from world_models.controller.iris_policy import IRISPolicy as IRISPolicy
-from world_models.controller.rollout_generator import RolloutGenerator as RolloutGenerator
-from world_models.controller.rssm_policy import RSSMPolicy as RSSMPolicy
-from world_models.envs.ale_atari_env import list_available_atari_envs as list_available_atari_envs
-from world_models.envs.ale_atari_env import make_atari_env as make_atari_env
-from world_models.envs.ale_atari_vector_env import make_atari_vector_env as make_atari_vector_env
-from world_models.envs.brax_env import BraxImageEnv as BraxImageEnv
-from world_models.envs.brax_env import make_brax_env as make_brax_env
-from world_models.envs.bsuite_env import BSuiteImageEnv as BSuiteImageEnv
-from world_models.envs.bsuite_env import list_available_bsuite_ids as list_available_bsuite_ids
-from world_models.envs.bsuite_env import make_bsuite_env as make_bsuite_env
-from world_models.envs.diamond_atari import make_diamond_atari_env as make_diamond_atari_env
-from world_models.envs.dmc import DeepMindControlEnv as DeepMindControlEnv
-from world_models.envs.dmlab import DMLAB_LEVELS as DMLAB_LEVELS
-from world_models.envs.dmlab import DMLabEnv as DMLabEnv
-from world_models.envs.dmlab import make_dmlab_env as make_dmlab_env
-from world_models.envs.gym_env import GymImageEnv as GymImageEnv
-from world_models.envs.gym_env import make_gym_env as make_gym_env
-from world_models.envs.mujoco_env import MuJoCoImageEnv as MuJoCoImageEnv
-from world_models.envs.mujoco_env import MuJoCoImageEnv as MujocoEnv
-from world_models.envs.mujoco_env import make_mujoco_env as make_mujoco_env
-from world_models.envs.mujoco_env import make_mujoco_env_from_config as make_mujoco_env_from_config
-from world_models.envs.robotics_env import list_gymnasium_robotics_envs as list_gymnasium_robotics_envs
-from world_models.envs.robotics_env import make_robotics_env as make_robotics_env
-from world_models.envs.robotics_env import register_gymnasium_robotics_envs as register_gymnasium_robotics_envs
-from world_models.envs.unity_env import UnityMLAgentsEnv as UnityMLAgentsEnv
-from world_models.envs.unity_env import make_unity_mlagents_env as make_unity_mlagents_env
-from world_models.envs.world_model_env import WorldModelEnv as WorldModelEnv
-from world_models.envs.world_model_env import make_world_model_env as make_world_model_env
-from world_models.envs.wrappers import ActionRepeat as ActionRepeat
-from world_models.envs.wrappers import NormalizeActions as NormalizeActions
-from world_models.envs.wrappers import ObsDict as ObsDict
-from world_models.envs.wrappers import OneHotAction as OneHotAction
-from world_models.envs.wrappers import RenderImage as RenderImage
-from world_models.envs.wrappers import ResizeImage as ResizeImage
-from world_models.envs.wrappers import RewardObs as RewardObs
-from world_models.envs.wrappers import SelectAction as SelectAction
-from world_models.envs.wrappers import TimeLimit as TimeLimit
-from world_models.export import ExportableAgentMixin as ExportableAgentMixin
-from world_models.export import export_any as export_any
-from world_models.export import export_model as export_model
-from world_models.inference.operators import get_operator as get_operator
-from world_models.inference.operators.base import OperatorABC as OperatorABC
-from world_models.inference.operators.base import TensorSpec as TensorSpec
-from world_models.inference.operators.dreamer_operator import DreamerOperator as DreamerOperator
-from world_models.inference.operators.iris_operator import IrisOperator as IrisOperator
-from world_models.inference.operators.jepa_operator import JEPAOperator as JEPAOperator
-from world_models.inference.operators.planet_operator import PlaNetOperator as PlaNetOperator
-from world_models.layers.ada_ln_norm import AdaLNNormalization as AdaLNNormalization
-from world_models.layers.rms_norm import RMSNorm as RMSNorm
-from world_models.memory.dreamer_memory import ReplayBuffer as ReplayBuffer
-from world_models.memory.iris_memory import IRISOnPolicyBuffer as IRISOnPolicyBuffer
-from world_models.memory.iris_memory import IRISReplayBuffer as IRISReplayBuffer
-from world_models.memory.planet_memory import Episode as Episode
-from world_models.memory.planet_memory import Memory as Memory
-from world_models.models.diffusion.DDPM import DDPM as DDPM
-from world_models.models.diffusion.DiT import DiT as DiT
-from world_models.models.diffusion.DiT import PatchEmbed as PatchEmbed
-from world_models.models.diffusion.DiT import PatchUnEmbed as PatchUnEmbed
-from world_models.models.diffusion.DiT import create_dit as create_dit
-from world_models.models.diffusion.DiT import sinusoidal_time_embedding as sinusoidal_time_embedding
-from world_models.models.diffusion.actor_critic import ActorCriticNetwork as ActorCriticNetwork
-from world_models.models.diffusion.reward_termination import RewardTerminationModel as RewardTerminationModel
-from world_models.models.dreamer import Dreamer as Dreamer
-from world_models.models.dreamer import DreamerAgent as DreamerAgent
-from world_models.models.dreamer import DreamerAgent as DreamerV3
-from world_models.models.dreamer import preprocess_obs as preprocess_obs
-from world_models.models.dreamer_rssm import RSSM as DreamerRSSM
-from world_models.models.dreamer_rssm import RSSM as RSSM
-from world_models.models.dreamer_v1 import DreamerV1 as DreamerV1
-from world_models.models.dreamer_v2 import DreamerV2 as DreamerV2
-from world_models.models.dynamics_model import DynamicsModel as DynamicsModel
-from world_models.models.dynamics_model import create_dynamics_model as create_dynamics_model
-from world_models.models.genie import Genie as Genie
-from world_models.models.genie import create_genie as create_genie
-from world_models.models.genie import create_genie_large as create_genie_large
-from world_models.models.genie import create_genie_small as create_genie_small
-from world_models.models.iris_agent import IRISAgent as IRISAgent
-from world_models.models.iris_agent import compute_lambda_return as compute_lambda_return
-from world_models.models.jepa_agent import JEPAAgent as JEPAAgent
-from world_models.models.latent_action_model import LatentActionModel as LatentActionModel
-from world_models.models.latent_action_model import create_latent_action_model as create_latent_action_model
-from world_models.models.modular_rssm import ModularRSSM as ModularRSSM
-from world_models.models.modular_rssm import create_modular_rssm as create_modular_rssm
-from world_models.models.planet import Planet as Planet
-from world_models.models.rssm import RecurrentStateSpaceModel as RecurrentStateSpaceModel
-from world_models.models.vit import VisionTransformer as VisionTransformer
-from world_models.registry import deregister_env_backend as deregister_env_backend
-from world_models.registry import deregister_world_model as deregister_world_model
-from world_models.registry import get_registered_model_spec as get_registered_model_spec
-from world_models.registry import list_registered_env_backends as list_registered_env_backends
-from world_models.registry import list_registered_models as list_registered_models
-from world_models.registry import register_env_backend as register_env_backend
-from world_models.registry import register_world_model as register_world_model
-from world_models.reward.dreamer_v1_reward import RewardModel as DreamerRewardModel
-from world_models.reward.dreamer_v1_reward import RewardModel as RewardModel
-from world_models.reward.dreamer_v1_value import ValueModel as DreamerValueModel
-from world_models.reward.dreamer_v1_value import ValueModel as ValueModel
-from world_models.utils.deprecation import deprecated as deprecated
-from world_models.utils.deprecation import deprecated_class as deprecated_class
-from world_models.utils.deprecation import deprecated_function as deprecated_function
-from world_models.utils.dreamer_utils import FreezeParameters as FreezeParameters
-from world_models.utils.dreamer_utils import Logger as Logger
-from world_models.utils.dreamer_utils import compute_return as compute_return
-from world_models.vision.dreamer_decoder import ActionDecoder as ActionDecoder
-from world_models.vision.dreamer_decoder import ConvDecoder as ConvDecoder
-from world_models.vision.dreamer_decoder import DenseDecoder as DenseDecoder
-from world_models.vision.dreamer_decoder import SampleDist as SampleDist
-from world_models.vision.dreamer_decoder import TanhBijector as TanhBijector
-from world_models.vision.dreamer_encoder import ConvEncoder as ConvEncoder
-from world_models.vision.iris_decoder import IRISDecoder as IRISDecoder
-from world_models.vision.iris_encoder import IRISEncoder as IRISEncoder
-from world_models.vision.planet_decoder import CNNDecoder as CNNDecoder
-from world_models.vision.planet_encoder import CNNEncoder as CNNEncoder
-from world_models.vision.video_tokenizer import VideoTokenizer as VideoTokenizer
-from world_models.vision.video_tokenizer import create_video_tokenizer as create_video_tokenizer
-from world_models.vision.vq_layer import VectorQuantizer as VectorQuantizer
-from world_models.vision.vq_layer import VectorQuantizerEMA as VectorQuantizerEMA
+from torchwm.api import ENV_BACKEND_SPECS as ENV_BACKEND_SPECS
+from torchwm.api import EnvBackendSpec as EnvBackendSpec
+from torchwm.api import MODEL_SPECS as MODEL_SPECS
+from torchwm.api import ModelSpec as ModelSpec
+from torchwm.api import create_config as create_config
+from torchwm.api import create_model as create_model
+from torchwm.api import get_env_backend_spec as get_env_backend_spec
+from torchwm.api import get_model_spec as get_model_spec
+from torchwm.api import list_env_backends as list_env_backends
+from torchwm.api import list_envs as list_envs
+from torchwm.api import list_models as list_models
+from torchwm.api import make_env as make_env
+from torchwm.blocks.mhsa import MultiHeadSelfAttention as MultiHeadAttention
+from torchwm.blocks.mhsa import MultiHeadSelfAttention as MultiHeadSelfAttention
+from torchwm.blocks.st_transformer import STTransformer as STTransformer
+from torchwm.configs.diamond_config import ATARI_100K_GAMES as ATARI_100K_GAMES
+from torchwm.configs.diamond_config import DiamondConfig as DiamondConfig
+from torchwm.configs.diamond_config import HUMAN_SCORES as HUMAN_SCORES
+from torchwm.configs.diamond_config import RANDOM_SCORES as RANDOM_SCORES
+from torchwm.configs.dit_config import DiTConfig as DiTConfig
+from torchwm.configs.dit_config import dit_preset_config as dit_preset_config
+from torchwm.configs.dit_config import get_dit_config as get_dit_config
+from torchwm.configs.dit_config import list_dit_presets as list_dit_presets
+from torchwm.configs.dreamer_config import DreamerConfig as DreamerConfig
+from torchwm.configs.genie_config import DynamicsModelConfig as DynamicsModelConfig
+from torchwm.configs.genie_config import GenieConfig as GenieConfig
+from torchwm.configs.genie_config import GenieSmallConfig as GenieSmallConfig
+from torchwm.configs.genie_config import LatentActionModelConfig as LatentActionModelConfig
+from torchwm.configs.genie_config import STTransformerConfig as STTransformerConfig
+from torchwm.configs.genie_config import VideoTokenizerConfig as VideoTokenizerConfig
+from torchwm.configs.iris_config import IRISConfig as IRISConfig
+from torchwm.configs.jepa_config import JEPAConfig as JEPAConfig
+from torchwm.controller.iris_policy import CNNFeatureExtractor as CNNFeatureExtractor
+from torchwm.controller.iris_policy import IRISActor as IRISActor
+from torchwm.controller.iris_policy import IRISCritic as IRISCritic
+from torchwm.controller.iris_policy import IRISPolicy as IRISPolicy
+from torchwm.controller.rollout_generator import RolloutGenerator as RolloutGenerator
+from torchwm.controller.rssm_policy import RSSMPolicy as RSSMPolicy
+from torchwm.envs.ale_atari_env import list_available_atari_envs as list_available_atari_envs
+from torchwm.envs.ale_atari_env import make_atari_env as make_atari_env
+from torchwm.envs.ale_atari_vector_env import make_atari_vector_env as make_atari_vector_env
+from torchwm.envs.brax_env import BraxImageEnv as BraxImageEnv
+from torchwm.envs.brax_env import make_brax_env as make_brax_env
+from torchwm.envs.bsuite_env import BSuiteImageEnv as BSuiteImageEnv
+from torchwm.envs.bsuite_env import list_available_bsuite_ids as list_available_bsuite_ids
+from torchwm.envs.bsuite_env import make_bsuite_env as make_bsuite_env
+from torchwm.envs.diamond_atari import make_diamond_atari_env as make_diamond_atari_env
+from torchwm.envs.dmc import DeepMindControlEnv as DeepMindControlEnv
+from torchwm.envs.dmlab import DMLAB_LEVELS as DMLAB_LEVELS
+from torchwm.envs.dmlab import DMLabEnv as DMLabEnv
+from torchwm.envs.dmlab import make_dmlab_env as make_dmlab_env
+from torchwm.envs.gym_env import GymImageEnv as GymImageEnv
+from torchwm.envs.gym_env import make_gym_env as make_gym_env
+from torchwm.envs.mujoco_env import MuJoCoImageEnv as MuJoCoImageEnv
+from torchwm.envs.mujoco_env import MuJoCoImageEnv as MujocoEnv
+from torchwm.envs.mujoco_env import make_mujoco_env as make_mujoco_env
+from torchwm.envs.mujoco_env import make_mujoco_env_from_config as make_mujoco_env_from_config
+from torchwm.envs.robotics_env import list_gymnasium_robotics_envs as list_gymnasium_robotics_envs
+from torchwm.envs.robotics_env import make_robotics_env as make_robotics_env
+from torchwm.envs.robotics_env import register_gymnasium_robotics_envs as register_gymnasium_robotics_envs
+from torchwm.envs.unity_env import UnityMLAgentsEnv as UnityMLAgentsEnv
+from torchwm.envs.unity_env import make_unity_mlagents_env as make_unity_mlagents_env
+from torchwm.envs.world_model_env import WorldModelEnv as WorldModelEnv
+from torchwm.envs.world_model_env import make_world_model_env as make_world_model_env
+from torchwm.envs.wrappers import ActionRepeat as ActionRepeat
+from torchwm.envs.wrappers import NormalizeActions as NormalizeActions
+from torchwm.envs.wrappers import ObsDict as ObsDict
+from torchwm.envs.wrappers import OneHotAction as OneHotAction
+from torchwm.envs.wrappers import RenderImage as RenderImage
+from torchwm.envs.wrappers import ResizeImage as ResizeImage
+from torchwm.envs.wrappers import RewardObs as RewardObs
+from torchwm.envs.wrappers import SelectAction as SelectAction
+from torchwm.envs.wrappers import TimeLimit as TimeLimit
+from torchwm.export import ExportableAgentMixin as ExportableAgentMixin
+from torchwm.export import export_any as export_any
+from torchwm.export import export_model as export_model
+from torchwm.layers.ada_ln_norm import AdaLNNormalization as AdaLNNormalization
+from torchwm.layers.rms_norm import RMSNorm as RMSNorm
+from torchwm.memory.dreamer_memory import ReplayBuffer as ReplayBuffer
+from torchwm.memory.iris_memory import IRISOnPolicyBuffer as IRISOnPolicyBuffer
+from torchwm.memory.iris_memory import IRISReplayBuffer as IRISReplayBuffer
+from torchwm.memory.planet_memory import Episode as Episode
+from torchwm.memory.planet_memory import Memory as Memory
+from torchwm.models.diffusion.DDPM import DDPM as DDPM
+from torchwm.models.diffusion.DiT import DiT as DiT
+from torchwm.models.diffusion.DiT import PatchEmbed as PatchEmbed
+from torchwm.models.diffusion.DiT import PatchUnEmbed as PatchUnEmbed
+from torchwm.models.diffusion.DiT import create_dit as create_dit
+from torchwm.models.diffusion.DiT import sinusoidal_time_embedding as sinusoidal_time_embedding
+from torchwm.models.diffusion.actor_critic import ActorCriticNetwork as ActorCriticNetwork
+from torchwm.models.diffusion.reward_termination import RewardTerminationModel as RewardTerminationModel
+from torchwm.models.dreamer import Dreamer as Dreamer
+from torchwm.models.dreamer import DreamerAgent as DreamerAgent
+from torchwm.models.dreamer import DreamerAgent as DreamerV3
+from torchwm.models.dreamer import preprocess_obs as preprocess_obs
+from torchwm.models.dreamer_rssm import RSSM as DreamerRSSM
+from torchwm.models.dreamer_rssm import RSSM as RSSM
+from torchwm.models.dreamer_v1 import DreamerV1 as DreamerV1
+from torchwm.models.dreamer_v2 import DreamerV2 as DreamerV2
+from torchwm.models.dynamics_model import DynamicsModel as DynamicsModel
+from torchwm.models.dynamics_model import create_dynamics_model as create_dynamics_model
+from torchwm.models.genie import Genie as Genie
+from torchwm.models.genie import create_genie as create_genie
+from torchwm.models.genie import create_genie_large as create_genie_large
+from torchwm.models.genie import create_genie_small as create_genie_small
+from torchwm.models.iris_agent import IRISAgent as IRISAgent
+from torchwm.models.iris_agent import compute_lambda_return as compute_lambda_return
+from torchwm.models.iris_transformer import IRISTransformer as IRISTransformer
+from torchwm.models.iris_transformer import IRISWorldModel as IRISWorldModel
+from torchwm.models.jepa_agent import JEPAAgent as JEPAAgent
+from torchwm.models.latent_action_model import LatentActionModel as LatentActionModel
+from torchwm.models.latent_action_model import create_latent_action_model as create_latent_action_model
+from torchwm.models.modular_rssm import ModularRSSM as ModularRSSM
+from torchwm.models.modular_rssm import create_modular_rssm as create_modular_rssm
+from torchwm.models.planet import Planet as Planet
+from torchwm.models.rssm import RecurrentStateSpaceModel as RecurrentStateSpaceModel
+from torchwm.models.vit import VisionTransformer as VisionTransformer
+from torchwm.registry import deregister_env_backend as deregister_env_backend
+from torchwm.registry import deregister_world_model as deregister_world_model
+from torchwm.registry import get_registered_model_spec as get_registered_model_spec
+from torchwm.registry import list_registered_env_backends as list_registered_env_backends
+from torchwm.registry import list_registered_models as list_registered_models
+from torchwm.registry import register_env_backend as register_env_backend
+from torchwm.registry import register_world_model as register_world_model
+from torchwm.reward.dreamer_v1_reward import RewardModel as DreamerRewardModel
+from torchwm.reward.dreamer_v1_reward import RewardModel as RewardModel
+from torchwm.reward.dreamer_v1_value import ValueModel as DreamerValueModel
+from torchwm.reward.dreamer_v1_value import ValueModel as ValueModel
+from torchwm.training.eval_jepa import jepa_linear_probe as jepa_linear_probe
+from torchwm.training.eval_jepa import load_jepa_encoder as load_jepa_encoder
+from torchwm.utils.deprecation import deprecated as deprecated
+from torchwm.utils.deprecation import deprecated_class as deprecated_class
+from torchwm.utils.deprecation import deprecated_function as deprecated_function
+from torchwm.utils.dreamer_utils import FreezeParameters as FreezeParameters
+from torchwm.utils.dreamer_utils import Logger as Logger
+from torchwm.utils.dreamer_utils import compute_return as compute_return
+from torchwm.utils.memory_utils import enable_performance_defaults as enable_performance_defaults
+from torchwm.utils.memory_utils import maybe_compile as maybe_compile
+from torchwm.utils.memory_utils import to_channels_last as to_channels_last
+from torchwm.utils.throughput import ThroughputMeter as ThroughputMeter
+from torchwm.utils.throughput import measure_steps as measure_steps
+from torchwm.utils.throughput import tensor_nbytes as tensor_nbytes
+from torchwm.vision.dreamer_decoder import ActionDecoder as ActionDecoder
+from torchwm.vision.dreamer_decoder import ConvDecoder as ConvDecoder
+from torchwm.vision.dreamer_decoder import DenseDecoder as DenseDecoder
+from torchwm.vision.dreamer_decoder import SampleDist as SampleDist
+from torchwm.vision.dreamer_decoder import TanhBijector as TanhBijector
+from torchwm.vision.dreamer_encoder import ConvEncoder as ConvEncoder
+from torchwm.vision.iris_decoder import IRISDecoder as IRISDecoder
+from torchwm.vision.iris_encoder import IRISEncoder as IRISEncoder
+from torchwm.vision.perceptual_loss import LPIPSPerceptualLoss as LPIPSPerceptualLoss
+from torchwm.vision.perceptual_loss import build_perceptual_loss as build_perceptual_loss
+from torchwm.vision.planet_decoder import CNNDecoder as CNNDecoder
+from torchwm.vision.planet_encoder import CNNEncoder as CNNEncoder
+from torchwm.vision.video_tokenizer import VideoTokenizer as VideoTokenizer
+from torchwm.vision.video_tokenizer import create_video_tokenizer as create_video_tokenizer
+from torchwm.vision.vq_layer import VectorQuantizer as VectorQuantizer
+from torchwm.vision.vq_layer import VectorQuantizerEMA as VectorQuantizerEMA
 
 __version__: str
 
@@ -191,7 +198,6 @@ __all__ = [
     "Dreamer",
     "DreamerAgent",
     "DreamerConfig",
-    "DreamerOperator",
     "DreamerRSSM",
     "DreamerRewardModel",
     "DreamerV1",
@@ -219,10 +225,11 @@ __all__ = [
     "IRISOnPolicyBuffer",
     "IRISPolicy",
     "IRISReplayBuffer",
-    "IrisOperator",
+    "IRISTransformer",
+    "IRISWorldModel",
     "JEPAAgent",
     "JEPAConfig",
-    "JEPAOperator",
+    "LPIPSPerceptualLoss",
     "LatentActionModel",
     "LatentActionModelConfig",
     "Logger",
@@ -237,10 +244,8 @@ __all__ = [
     "NormalizeActions",
     "ObsDict",
     "OneHotAction",
-    "OperatorABC",
     "PatchEmbed",
     "PatchUnEmbed",
-    "PlaNetOperator",
     "Planet",
     "RANDOM_SCORES",
     "RMSNorm",
@@ -259,7 +264,7 @@ __all__ = [
     "SampleDist",
     "SelectAction",
     "TanhBijector",
-    "TensorSpec",
+    "ThroughputMeter",
     "TimeLimit",
     "UnityMLAgentsEnv",
     "ValueModel",
@@ -271,6 +276,7 @@ __all__ = [
     "WorldModelEnv",
     "__version__",
     "api",
+    "build_perceptual_loss",
     "compute_lambda_return",
     "compute_return",
     "create_config",
@@ -288,21 +294,25 @@ __all__ = [
     "deprecated_function",
     "deregister_env_backend",
     "deregister_world_model",
+    "dit_preset_config",
+    "enable_performance_defaults",
     "export_any",
     "export_model",
     "get_dit_config",
     "get_env_backend_spec",
     "get_model_spec",
-    "get_operator",
     "get_registered_model_spec",
+    "jepa_linear_probe",
     "list_available_atari_envs",
     "list_available_bsuite_ids",
+    "list_dit_presets",
     "list_env_backends",
     "list_envs",
     "list_gymnasium_robotics_envs",
     "list_models",
     "list_registered_env_backends",
     "list_registered_models",
+    "load_jepa_encoder",
     "make_atari_env",
     "make_atari_vector_env",
     "make_brax_env",
@@ -316,9 +326,13 @@ __all__ = [
     "make_robotics_env",
     "make_unity_mlagents_env",
     "make_world_model_env",
+    "maybe_compile",
+    "measure_steps",
     "preprocess_obs",
     "register_env_backend",
     "register_gymnasium_robotics_envs",
     "register_world_model",
     "sinusoidal_time_embedding",
+    "tensor_nbytes",
+    "to_channels_last",
 ]

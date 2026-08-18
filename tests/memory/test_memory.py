@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
 import torch
-from world_models.memory.planet_memory import Episode, Memory
-from world_models.memory.iris_memory import IRISReplayBuffer, IRISOnPolicyBuffer
+from torchwm.memory.planet_memory import Episode, Memory
+from torchwm.memory.iris_memory import IRISReplayBuffer, IRISOnPolicyBuffer
 
 
 class TestEpisode:
@@ -297,7 +297,7 @@ class TestIRISOnPolicyBuffer:
 
 class TestDreamerReplayBuffer:
     def test_init(self):
-        from world_models.memory.dreamer_memory import ReplayBuffer
+        from torchwm.memory.dreamer_memory import ReplayBuffer
 
         buffer = ReplayBuffer(
             size=1000, obs_shape=(3, 64, 64), action_size=2, seq_len=10, batch_size=32
@@ -307,7 +307,7 @@ class TestDreamerReplayBuffer:
         assert buffer.obs_shape == (3, 64, 64)
 
     def test_add(self):
-        from world_models.memory.dreamer_memory import ReplayBuffer
+        from torchwm.memory.dreamer_memory import ReplayBuffer
 
         buffer = ReplayBuffer(
             size=100, obs_shape=(3, 64, 64), action_size=2, seq_len=10, batch_size=32
@@ -322,7 +322,7 @@ class TestDreamerReplayBuffer:
         assert buffer.episodes == 0
 
     def test_add_terminal(self):
-        from world_models.memory.dreamer_memory import ReplayBuffer
+        from torchwm.memory.dreamer_memory import ReplayBuffer
 
         buffer = ReplayBuffer(
             size=100, obs_shape=(3, 64, 64), action_size=2, seq_len=10, batch_size=32
@@ -337,7 +337,7 @@ class TestDreamerReplayBuffer:
         assert buffer.episodes == 1
 
     def test_sample(self):
-        from world_models.memory.dreamer_memory import ReplayBuffer
+        from torchwm.memory.dreamer_memory import ReplayBuffer
 
         buffer = ReplayBuffer(
             size=100, obs_shape=(3, 64, 64), action_size=2, seq_len=5, batch_size=4

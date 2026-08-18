@@ -19,7 +19,7 @@ def _assert_image_observation(
 
 def test_real_brax_image_env_smoke():
     pytest.importorskip("brax")
-    from world_models.envs.brax_env import BraxImageEnv
+    from torchwm.envs.brax_env import BraxImageEnv
 
     env = BraxImageEnv(
         "inverted_pendulum",
@@ -52,7 +52,7 @@ def test_real_brax_image_env_smoke():
 
 def test_real_robotics_env_smoke():
     pytest.importorskip("gymnasium_robotics")
-    from world_models.envs.robotics_env import (
+    from torchwm.envs.robotics_env import (
         list_gymnasium_robotics_envs,
         make_robotics_env,
     )
@@ -107,7 +107,7 @@ def test_real_mlagents_sdk_importable():
 )
 def test_real_procgen_backend_if_supported_python():
     pytest.importorskip("procgen")
-    from world_models.envs.procgen_env import ProcgenImageEnv
+    from torchwm.envs.procgen_env import ProcgenImageEnv
 
     env = ProcgenImageEnv("coinrun", seed=0, size=(16, 16), num_levels=1)
     try:
@@ -127,7 +127,7 @@ def test_real_procgen_backend_if_supported_python():
     reason="Set TORCHWM_UNITY_BINARY and TORCHWM_UNITY_BEHAVIOR to run against a real Unity build.",
 )
 def test_real_unity_backend_if_binary_provided():
-    from world_models.envs.unity_env import UnityMLAgentsEnv
+    from torchwm.envs.unity_env import UnityMLAgentsEnv
 
     env = UnityMLAgentsEnv(
         file_name=os.environ["TORCHWM_UNITY_BINARY"],

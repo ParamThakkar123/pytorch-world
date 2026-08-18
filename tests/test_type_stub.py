@@ -41,9 +41,15 @@ def test_stub_declares_every_public_export():
 
 def test_stub_is_regenerated_from_the_current_export_map():
     pytest.importorskip("torch")
-    from tools.gen_type_stub import main
+    from tools.gen_type_stub import MissingOptionalBackends, main
 
-    assert main(["--check"]) == 0
+    try:
+        assert main(["--check"]) == 0
+    except MissingOptionalBackends as exc:
+        # A base install cannot resolve the env-backend exports, so the
+        # regenerated stub would not be comparable. The full-extras CI job
+        # installs everything and does check this for real.
+        pytest.skip(f"optional backends missing: {exc}")
 
 
 def test_stub_re_exports_resolve_to_the_runtime_objects():
@@ -55,6 +61,7 @@ def test_stub_re_exports_resolve_to_the_runtime_objects():
     import torchwm
 
     mismatched = []
+    checked = 0
     for node in _stub_tree().body:
         if not isinstance(node, ast.ImportFrom) or node.module is None:
             continue
@@ -62,15 +69,22 @@ def test_stub_re_exports_resolve_to_the_runtime_objects():
             exported = alias.asname or alias.name
             if exported not in torchwm.__all__:
                 continue
-            source = importlib.import_module(node.module)
-            if getattr(source, alias.name, None) is not getattr(torchwm, exported):
+            try:
+                source = importlib.import_module(node.module)
+                runtime = getattr(torchwm, exported)
+            except ModuleNotFoundError:
+                # Backend for an extra that is not installed here - the stub
+                # entry cannot be wrong about an object nothing can import.
+                continue
+            checked += 1
+            if getattr(source, alias.name, None) is not runtime:
                 mismatched.append(f"{node.module}:{alias.name} as {exported}")
 
     assert not mismatched, f"stub re-exports point at the wrong object: {mismatched}"
+    assert checked, "no stub re-export could be checked - the sweep did nothing"
 
 
-def test_both_packages_ship_py_typed():
-    # ``torchwm``'s stub re-exports from ``world_models``; without a marker on
-    # the implementation package, checkers treat those imports as untyped.
+def test_package_ships_py_typed():
+    # ``torchwm`` ships ``py.typed`` so checkers trust ``__init__.pyi``; without
+    # the marker they treat every import from the package as untyped.
     assert (REPO_ROOT / "torchwm" / "py.typed").exists()
-    assert (REPO_ROOT / "world_models" / "py.typed").exists()

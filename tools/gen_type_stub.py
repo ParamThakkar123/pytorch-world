@@ -1,13 +1,13 @@
 """Generate ``torchwm/__init__.pyi`` from the public export map.
 
-``torchwm`` and ``world_models`` both resolve their public surface through a
-lazy module-level ``__getattr__``.  Type checkers read source, not runtime, so
-none of those names are visible to them - which is why the shipped stub has to
-spell every export out explicitly.
+``torchwm`` resolves its public surface through a lazy module-level
+``__getattr__``.  Type checkers read source, not runtime, so none of those
+names are visible to them - which is why the shipped stub has to spell every
+export out explicitly.
 
 Each ``__all__`` entry is re-exported from the module that *statically defines*
 it, so a checker can follow the import.  That is not always the module named in
-the export map: ``world_models.models`` and ``world_models.envs`` are lazy too,
+the export map: ``torchwm.models`` and ``torchwm.envs`` are lazy too,
 so the stub reaches through to the concrete implementation module instead.
 
 Run ``python -m tools.gen_type_stub`` to rewrite the stub, or
@@ -39,7 +39,7 @@ to be spelled out here for type checkers and autocomplete to see it.
 
 from typing import Any
 
-from world_models import api as api
+from torchwm import api as api
 '''
 
 
@@ -90,7 +90,7 @@ def _origin(name: str, obj: Any, mapped_module: str) -> tuple[str, str] | None:
     """Return ``(module, original_name)`` a checker can import ``obj`` from."""
 
     # The name the object is defined under may differ from the exported alias
-    # (``DreamerRSSM`` is ``RSSM`` in ``world_models.models.dreamer_rssm``).
+    # (``DreamerRSSM`` is ``RSSM`` in ``torchwm.models.dreamer_rssm``).
     qualname = getattr(obj, "__qualname__", "")
     defined_as = qualname.split(".")[0] if qualname else name
 
@@ -114,8 +114,17 @@ def _origin(name: str, obj: Any, mapped_module: str) -> tuple[str, str] | None:
 
 
 def _export_map() -> dict[str, str]:
-    world_models = importlib.import_module("world_models")
-    return dict(world_models._EXPORTS)  # noqa: SLF001 - this is the source of truth
+    torchwm = importlib.import_module("torchwm")
+    return dict(torchwm._EXPORTS)  # noqa: SLF001 - this is the source of truth
+
+
+class MissingOptionalBackends(RuntimeError):
+    """The export map cannot be fully resolved in this environment.
+
+    Generating from a partial environment would quietly drop every export whose
+    backend is not installed, and ``py.typed`` makes type checkers trust the
+    result completely - so refuse instead of shipping a truncated stub.
+    """
 
 
 def render_stub() -> str:
@@ -124,15 +133,29 @@ def render_stub() -> str:
     export_map = _export_map()
     imports: dict[str, list[tuple[str, str]]] = defaultdict(list)
     untypeable: list[str] = []
+    unresolved: list[str] = []
 
     for name in sorted(export_map):
-        obj = getattr(torchwm, name)
+        try:
+            obj = getattr(torchwm, name)
+        except Exception as exc:  # noqa: BLE001 - reported together below
+            unresolved.append(f"{name} ({type(exc).__name__}: {exc})")
+            continue
         origin = _origin(name, obj, export_map[name])
         if origin is None:
             untypeable.append(name)
             continue
         module_name, symbol = origin
         imports[module_name].append((symbol, name))
+
+    if unresolved:
+        raise MissingOptionalBackends(
+            "cannot resolve "
+            f"{len(unresolved)} export(s) in this environment, so the stub would "
+            "be incomplete. Install every backend first:\n"
+            '    pip install -e ".[all]"\n'
+            "Unresolved: " + ", ".join(unresolved)
+        )
 
     lines = [HEADER]
     for module_name in sorted(imports):

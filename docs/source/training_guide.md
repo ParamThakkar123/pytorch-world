@@ -152,13 +152,13 @@ All training is controlled via config objects:
 ### Starter YAML configs
 
 DIAMOND, IRIS, and JEPA include starter experiment YAML files in
-`world_models/configs/experiments/`. Use them with the unified CLI and optional
+`torchwm/configs/experiments/`. Use them with the unified CLI and optional
 OmegaConf/Hydra-style dot-list overrides:
 
 ```bash
-torchwm train diamond --config world_models/configs/experiments/diamond.yaml preset=small seed=1
-torchwm train iris --config world_models/configs/experiments/iris.yaml total_epochs=100 env=ALE/Breakout-v5
-torchwm train jepa --config world_models/configs/experiments/jepa.yaml optimization.epochs=50 data.batch_size=128
+torchwm train diamond --config torchwm/configs/experiments/diamond.yaml preset=small seed=1
+torchwm train iris --config torchwm/configs/experiments/iris.yaml total_epochs=100 env=ALE/Breakout-v5
+torchwm train jepa --config torchwm/configs/experiments/jepa.yaml optimization.epochs=50 data.batch_size=128
 ```
 
 Add `--print-config` to inspect the composed configuration without launching a run.

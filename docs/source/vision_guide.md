@@ -10,7 +10,7 @@ building blocks for world models and representation learning.
 
 ## Overview
 
-All components live under `world_models.vision` and are accessible from the
+All components live under `torchwm.vision` and are accessible from the
 top-level package:
 
 ```python

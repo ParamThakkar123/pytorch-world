@@ -48,6 +48,11 @@ autodoc_default_options = {
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
+# Render "Attributes:" docstring sections as :ivar: fields inside the class
+# description rather than as standalone py:attribute directives. Without this,
+# every attribute a class both annotates and documents (each dataclass config,
+# for one) is registered twice and Sphinx warns about a duplicate description.
+napoleon_use_ivar = True
 
 myst_enable_extensions = [
     "colon_fence",

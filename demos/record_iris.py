@@ -32,10 +32,10 @@ import cv2
 import numpy as np
 import torch
 
-from world_models.configs.iris_config import IRISConfig
-from world_models.envs.ale_atari_env import make_atari_env
-from world_models.models.iris_agent import IRISAgent
-from world_models.utils.utils import StreamingVideoWriter
+from torchwm.configs.iris_config import IRISConfig
+from torchwm.envs.ale_atari_env import make_atari_env
+from torchwm.models.iris_agent import IRISAgent
+from torchwm.utils.utils import StreamingVideoWriter
 
 # Components the actor-critic path actually reads. Everything else in the
 # checkpoint (encoder/decoder/transformer, optimizers) is deliberately skipped.

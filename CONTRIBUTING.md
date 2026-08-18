@@ -63,7 +63,7 @@ between files instead of accumulating for the whole session:
 
 ```bash
 # POSIX: a fresh process per test, memory reclaimed each time
-uv run pytest tests/ --ignore=tests/selenium --forked
+uv run pytest tests/ --forked
 
 # Any platform: one process per test file
 for f in tests/**/test_*.py; do uv run pytest "$f" -q || break; done

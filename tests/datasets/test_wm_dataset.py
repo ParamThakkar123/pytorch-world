@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import patch
 
 pytest.importorskip("albumentations")
-from world_models.datasets.wm_dataset import (
+from torchwm.datasets.wm_dataset import (
     RolloutDataset,
     ObservationDataset,
     SequenceDataset,

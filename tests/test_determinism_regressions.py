@@ -16,14 +16,14 @@ if (
 ):
     pytest.skip("gym/gymnasium is not installed", allow_module_level=True)
 
-from world_models.utils.gym_compat import gym
+from torchwm.utils.gym_compat import gym
 import numpy as np
 import torch
 from torch.distributions import Categorical
 
-from world_models.envs.gym_env import GymImageEnv
-from world_models.models.dreamer_rssm import RSSM
-from world_models.training.rl_harness import PPOTrainer
+from torchwm.envs.gym_env import GymImageEnv
+from torchwm.models.dreamer_rssm import RSSM
+from torchwm.training.rl_harness import PPOTrainer
 
 
 _DATA_DIR = Path(__file__).resolve().parent / "data"

@@ -86,7 +86,7 @@ For configuration files or dictionaries, use `from_config`:
 
 ```python
 agent = DiamondAgent.from_config(
-    "world_models/configs/experiments/diamond.yaml",
+    "torchwm/configs/experiments/diamond.yaml",
     preset="small",
     game="Pong-v5",
 )
@@ -97,19 +97,19 @@ agent = DiamondAgent.from_config(
 Use the unified TorchWM CLI with the starter experiment config:
 
 ```bash
-torchwm train diamond --config world_models/configs/experiments/diamond.yaml preset=small seed=1
+torchwm train diamond --config torchwm/configs/experiments/diamond.yaml preset=small seed=1
 ```
 
 You can also run the training module directly:
 
 ```bash
-python -m world_models.training.train_diamond --game Breakout-v5 --preset small
+python -m torchwm.training.train_diamond --game Breakout-v5 --preset small
 ```
 
 Add `--print-config` to inspect the composed config before starting a long run:
 
 ```bash
-torchwm train diamond --config world_models/configs/experiments/diamond.yaml preset=small --print-config
+torchwm train diamond --config torchwm/configs/experiments/diamond.yaml preset=small --print-config
 ```
 
 ## Training loop

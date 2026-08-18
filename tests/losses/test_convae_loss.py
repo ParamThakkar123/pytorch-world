@@ -1,7 +1,7 @@
 """Tests for the ConvVAE loss function."""
 
 import torch
-from world_models.losses.convae_loss import conv_vae_loss_fn
+from torchwm.losses.convae_loss import conv_vae_loss_fn
 
 
 class TestConvVAELoss:

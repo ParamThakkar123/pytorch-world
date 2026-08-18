@@ -50,7 +50,7 @@ def main() -> None:
     cli_cfg = OmegaConf.from_cli()
 
     logging.basicConfig(level=logging.INFO)
-    logging.getLogger("world_models").setLevel(logging.INFO)
+    logging.getLogger("torchwm").setLevel(logging.INFO)
 
     if cli_cfg.get("list_envs", False):
         from torchwm.envs.robotics_env import list_gymnasium_robotics_envs

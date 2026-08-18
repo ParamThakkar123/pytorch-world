@@ -186,4 +186,8 @@ or `torchwm.create_config(...)`. Run `torchwm.list_models()` for the live list.
 - [Contributing Guide](CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 
-> TorchWM is under active development. APIs may change between versions.
+> TorchWM follows [semantic versioning](https://semver.org/) as of 1.0.0. The
+> public API — everything listed in the [Public API reference](https://paramthakkar123.github.io/torchwm/public_api.html)
+> and re-exported from the top-level `torchwm` namespace — will not break within
+> the 1.x line; anything removed gets a deprecation warning for at least one
+> minor release first. Submodule internals not listed there may still change.

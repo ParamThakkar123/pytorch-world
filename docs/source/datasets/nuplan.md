@@ -63,7 +63,7 @@ dataset, loader = make_nuplan_dataloader(
 ## Sample structure
 
 ```{eval-rst}
-.. autoclass:: world_models.datasets.nuplan.NuPlanSample
+.. autoclass:: torchwm.datasets.nuplan.NuPlanSample
    :members:
    :noindex:
 ```
@@ -71,7 +71,7 @@ dataset, loader = make_nuplan_dataloader(
 ## Dataset class
 
 ```{eval-rst}
-.. autoclass:: world_models.datasets.nuplan.NuPlanDataset
+.. autoclass:: torchwm.datasets.nuplan.NuPlanDataset
    :members:
    :noindex:
 ```
@@ -79,7 +79,7 @@ dataset, loader = make_nuplan_dataloader(
 ## DataLoader factory
 
 ```{eval-rst}
-.. autofunction:: world_models.datasets.nuplan.make_nuplan_dataloader
+.. autofunction:: torchwm.datasets.nuplan.make_nuplan_dataloader
    :noindex:
 ```
 

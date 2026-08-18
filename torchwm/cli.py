@@ -8,6 +8,7 @@ packages inside the commands that need them.
 from __future__ import annotations
 
 import importlib
+import json
 import logging
 import os
 import subprocess
@@ -22,18 +23,40 @@ logger = logging.getLogger("torchwm.cli")
 # Keep this mapping cheap to import so ``torchwm models list`` and validation do
 # not pull PyTorch or environment packages into every CLI process.
 TRAINING_MODULES = {
-    "diamond": "world_models.training.train_diamond",
-    "dreamer": "world_models.training.train_dreamer",
-    "genie": "world_models.training.train_genie",
-    "iris": "world_models.training.train_iris",
-    "jepa": "world_models.training.train_jepa",
-    "planet": "world_models.training.train_planet",
-    "rssm": "world_models.training.train_rssm",
-    "world-model": "world_models.training.train_world_model",
+    "diamond": "torchwm.training.train_diamond",
+    "dreamer": "torchwm.training.train_dreamer",
+    "genie": "torchwm.training.train_genie",
+    "iris": "torchwm.training.train_iris",
+    "jepa": "torchwm.training.train_jepa",
+    "planet": "torchwm.training.train_planet",
+    "rssm": "torchwm.training.train_rssm",
+    "world-model": "torchwm.training.train_world_model",
 }
 
 EVAL_MODULES = {
     "diamond": "scripts.eval_diamond",
+    "jepa": "torchwm.training.eval_jepa",
+}
+
+# ``eval`` covers two different evaluations, so most of its options apply to
+# only one model. Anything a model does not read is rejected rather than
+# silently ignored.
+EVAL_MODEL_OPTIONS = {
+    "diamond": {"game", "num_videos", "trajectory_length", "metrics", "record", "seed"},
+    "jepa": {
+        "root_path",
+        "dataset",
+        "model_name",
+        "patch_size",
+        "crop_size",
+        "weights",
+        "train_folder",
+        "val_folder",
+        "epochs",
+        "head_batch_size",
+        "num_workers",
+        "download",
+    },
 }
 
 PLAY_MODULES = {
@@ -59,6 +82,24 @@ BENCHMARK_ENV_BACKENDS = (
     "brax",
     "unity_mlagents",
 )
+
+
+def _option_given(name: str) -> bool:
+    """True when the user typed this option, rather than taking its default."""
+
+    source = click.get_current_context().get_parameter_source(name)
+    return source is not None and source.name == "COMMANDLINE"
+
+
+def _reject_foreign_options(model: str) -> None:
+    """Fail on options that belong to a different ``eval`` model."""
+
+    mine = EVAL_MODEL_OPTIONS.get(model, set())
+    foreign = set().union(*EVAL_MODEL_OPTIONS.values()) - mine
+    passed = sorted(name for name in foreign if _option_given(name))
+    if passed:
+        flags = ", ".join(f"--{name.replace('_', '-')}" for name in passed)
+        raise click.UsageError(f"{flags} cannot be used with --model {model}")
 
 
 def _echo_error(message: str) -> None:
@@ -121,17 +162,17 @@ def _ensure_numpy() -> Any | None:
 def _load_catalog() -> dict[str, Any]:
     """Lazy-load the environment catalog used by ``torchwm envs list``."""
     try:
-        from world_models.catalog import ENV_BACKENDS
+        from torchwm.catalog import ENV_BACKENDS
     except Exception:
-        logger.debug("Could not import world_models.catalog", exc_info=True)
+        logger.debug("Could not import torchwm.catalog", exc_info=True)
         return {}
     return ENV_BACKENDS
 
 
 def _load_benchmark_runtime() -> tuple[Any, Any, Any, Any]:
     """Lazy-load benchmark classes after lightweight CLI validation passes."""
-    from world_models.benchmarks.cli import AGENTS
-    from world_models.benchmarks.runner import (
+    from torchwm.benchmarks.cli import AGENTS
+    from torchwm.benchmarks.runner import (
         BenchmarkRunner,
         MultiAgentBenchmarkRunner,
     )
@@ -174,7 +215,7 @@ def envs_list() -> None:
     catalog = _load_catalog()
     if not catalog:
         click.echo(
-            "No environment catalog available (world_models.catalog failed to import)."
+            "No environment catalog available (torchwm.catalog failed to import)."
         )
         return
 
@@ -243,8 +284,8 @@ def datasets_convert(src: Path, dest_format: str, out_dir: Path | None) -> None:
         )
         raise click.exceptions.Exit(1)
 
-    from world_models.datasets.video_datasets import HDF5Dataset, NumPyDataset
-    from world_models.utils.utils import save_video
+    from torchwm.datasets.video_datasets import HDF5Dataset, NumPyDataset
+    from torchwm.utils.utils import save_video
 
     out = out_dir or (Path.cwd() / "converted_datasets")
     out.mkdir(parents=True, exist_ok=True)
@@ -291,7 +332,7 @@ def models_list() -> None:
         click.echo(f"- {name}: {module}")
 
     try:
-        import world_models.models as wm_models
+        import torchwm.models as wm_models
     except Exception:
         return
 
@@ -513,7 +554,7 @@ def collect(env: str, steps: int, out: Path, random_policy: bool) -> None:
     click.echo(f"Creating environment: {env}")
     try:
         try:
-            from world_models.envs import make_env
+            from torchwm.envs import make_env
 
             env_obj = make_env(env)
         except Exception:
@@ -606,6 +647,33 @@ def collect(env: str, steps: int, out: Path, random_policy: bool) -> None:
     type=click.Path(path_type=Path),
     help="Save real + generated videos (e.g. eval.mp4)",
 )
+@click.option(
+    "--root-path",
+    default=None,
+    help="[jepa] Dataset root holding the probe's train/ and val/ splits",
+)
+@click.option(
+    "--dataset", default="imagenet", help="[jepa] imagenet | cifar10 | imagefolder"
+)
+@click.option(
+    "--model-name", default="vit_base", help="[jepa] Backbone the checkpoint was trained with"
+)
+@click.option("--patch-size", default=16, type=int, help="[jepa] ViT patch size")
+@click.option("--crop-size", default=224, type=int, help="[jepa] Probe input resolution")
+@click.option(
+    "--weights",
+    default="target_encoder",
+    type=click.Choice(["target_encoder", "encoder"]),
+    help="[jepa] Which encoder to freeze; the paper evaluates the EMA target-encoder",
+)
+@click.option("--train-folder", default="train", help="[jepa] Train split folder name")
+@click.option("--val-folder", default="val", help="[jepa] Val split folder name")
+@click.option("--epochs", default=50, type=int, help="[jepa] Linear-head epochs")
+@click.option(
+    "--head-batch-size", default=16384, type=int, help="[jepa] Linear-head batch size"
+)
+@click.option("--num-workers", default=8, type=int, help="[jepa] Dataloader workers")
+@click.option("--download", is_flag=True, help="[jepa] Download the dataset if missing")
 def eval_command(
     model: str,
     checkpoint: str,
@@ -618,10 +686,63 @@ def eval_command(
     seed: int,
     metrics: str,
     record: Path | None,
+    root_path: str | None,
+    dataset: str,
+    model_name: str,
+    patch_size: int,
+    crop_size: int,
+    weights: str,
+    train_folder: str,
+    val_folder: str,
+    epochs: int,
+    head_batch_size: int,
+    num_workers: int,
+    download: bool,
 ) -> None:
-    """Evaluate a trained world model with FID/FVD/LPIPS metrics."""
+    """Evaluate a trained world model.
+
+    Generative world models (DIAMOND) are scored with FID/FVD/LPIPS against
+    real trajectories. JEPA has no rollout to score, so it is evaluated with
+    the paper's frozen-encoder linear probe instead; that path needs
+    ``--root-path`` rather than ``--game``.
+    """
     module_path = EVAL_MODULES[model.lower()]
     mod = importlib.import_module(module_path)
+
+    # Each model uses a disjoint slice of the options above; refuse the ones
+    # that would otherwise be silently dropped.
+    _reject_foreign_options(model.lower())
+
+    if model.lower() == "jepa":
+        if not root_path:
+            raise click.UsageError("--root-path is required when evaluating jepa")
+        # --batch-size defaults to a DIAMOND generation batch; feature
+        # extraction through a frozen encoder can take a much larger one.
+        if not _option_given("batch_size"):
+            batch_size = 256
+        results = mod.jepa_linear_probe(
+            checkpoint=checkpoint,
+            root_path=root_path,
+            dataset=dataset,
+            model_name=model_name,
+            patch_size=patch_size,
+            crop_size=crop_size,
+            weights=weights,
+            train_folder=train_folder,
+            val_folder=val_folder,
+            download=download,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            epochs=epochs,
+            head_batch_size=head_batch_size,
+            device=device,
+        )
+        click.echo(f"Best linear-probe top-1: {results['top1']:.2f}%")
+        if output:
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(json.dumps(results, indent=2), encoding="utf-8")
+            click.echo(f"Wrote {output}")
+        return
 
     metrics_list = [m.strip() for m in metrics.split(",") if m.strip()]
     mod.run_eval(
@@ -714,7 +835,7 @@ def train(model: str, extra_args: tuple[str, ...], inproc: bool) -> None:
     """Launch a training entrypoint with optional YAML/OmegaConf overrides.
 
     Examples:
-        torchwm train iris --config world_models/configs/experiments/iris.yaml total_epochs=100
+        torchwm train iris --config torchwm/configs/experiments/iris.yaml total_epochs=100
         torchwm train jepa optimization.epochs=50 data.batch_size=128
     """
     key = model.strip().lower()
