@@ -4,7 +4,7 @@ Every TorchWM environment adapter and wrapper guarantees a minimum set of keys i
 
 ## Universally guaranteed keys
 
-The function `finalize_step_info()` in `world_models.envs._contract` normalises every `step()` return. These three keys are **always** present:
+The function `finalize_step_info()` in `torchwm.envs._contract` normalises every `step()` return. These three keys are **always** present:
 
 | Key | Type | Description |
 |---|---|---|

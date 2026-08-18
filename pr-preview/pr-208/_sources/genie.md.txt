@@ -42,7 +42,7 @@ Genie consists of three main components trained end-to-end on video-only data:
 Converts raw video frames into discrete tokens using a VQ-VAE approach with
 spatio-temporal downsampling:
 
-```python
+```text
 Input:  (3, 16, 64, 64) video clip
   └─ 3D convolutions (spatio-temporal downsampling)
   └─ VQ layer (codebook size: 1024)
@@ -56,7 +56,7 @@ Total tokens per frame: `(64/4) × (64/4) = 16 × 16 = 256` tokens.
 Learns to infer discrete latent actions from frame-to-frame transitions
 without any supervision:
 
-```python
+```text
 Input:  frame_t, frame_t+1
   └─ Encoder: process both frames
   └─ VQ layer: quantize to action token
@@ -80,7 +80,7 @@ that minimizes the reconstruction error of the next frame.
 Transformer-based model that predicts future video tokens conditioned on past
 tokens and latent actions:
 
-```python
+```text
 Input:  past video tokens + latent action
   └─ Transformer (causal masking)
   └─ Token prediction head
@@ -218,9 +218,9 @@ See {doc}`configs_reference` for the full GenieConfig field reference with defau
 
 Genie is built from several core components in this library:
 
-- [`VideoTokenizer`](operators_guide.md#videotokenizer): Encodes video into discrete tokens
-- [`LatentActionModel`](operators_guide.md#latent-action-model): Learns latent actions from frame pairs
-- [`DynamicsModel`](operators_guide.md#dynamics-model): Transformer for future token prediction
+- `VideoTokenizer`: Encodes video into discrete tokens
+- `LatentActionModel`: Learns latent actions from frame pairs
+- `DynamicsModel`: Transformer for future token prediction
 
 ## Advantages
 

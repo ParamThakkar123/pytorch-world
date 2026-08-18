@@ -19,7 +19,7 @@
 <meta name="description" content="We welcome contributions to TorchWM! This guide covers how to get started. Development Setup: Clone the repository, Install in development mode If you are not using uv, use the equivalent editable ..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Contributing &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Contributing &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -300,6 +299,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -307,6 +307,7 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -381,7 +382,7 @@
 </pre></div>
 </div>
 <p>If you are not using <code class="docutils literal notranslate"><span class="pre">uv</span></code>, use the equivalent editable install:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[dev]"</span>
 </pre></div>
 </div>
 </li>
@@ -423,13 +424,13 @@ uv<span class="w"> </span>run<span class="w"> </span>pre-commit<span class="w"> 
 pytest
 
 <span class="c1"># Fast subset (skip slow, GPU, and integration tests)</span>
-pytest<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not gpu and not integration&quot;</span>
+pytest<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not slow and not gpu and not integration"</span>
 
 <span class="c1"># Specific package-mirrored test area</span>
-pytest<span class="w"> </span>tests/inference/test_operators.py
+pytest<span class="w"> </span>tests/masks/test_masks.py
 
 <span class="c1"># With coverage</span>
-pytest<span class="w"> </span>--cov<span class="o">=</span>world_models<span class="w"> </span>--cov-report<span class="o">=</span>html
+pytest<span class="w"> </span>--cov<span class="o">=</span>torchwm<span class="w"> </span>--cov-report<span class="o">=</span>html
 </pre></div>
 </div>
 </section>
@@ -444,32 +445,20 @@ sphinx-build<span class="w"> </span>-b<span class="w"> </span>html<span class="w
 </section>
 <section id="adding-new-features">
 <h2>Adding New Features<a class="headerlink" href="#adding-new-features" title="Link to this heading">#</a></h2>
-<section id="new-operators">
-<h3>1. New Operators<a class="headerlink" href="#new-operators" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">OperatorABC</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">NewOperator</span><span class="p">(</span><span class="n">OperatorABC</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
-        <span class="c1"># Your preprocessing logic</span>
-        <span class="k">return</span> <span class="n">processed_tensors</span>
-</pre></div>
-</div>
-<p>Add to <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> and create tests.</p>
-</section>
 <section id="new-models">
-<h3>2. New Models<a class="headerlink" href="#new-models" title="Link to this heading">#</a></h3>
+<h3>1. New Models<a class="headerlink" href="#new-models" title="Link to this heading">#</a></h3>
 <ol class="arabic simple">
-<li><p>Create model class in <code class="docutils literal notranslate"><span class="pre">world_models/models/</span></code></p></li>
-<li><p>Add config class in <code class="docutils literal notranslate"><span class="pre">world_models/configs/</span></code></p></li>
-<li><p>Add operator in <code class="docutils literal notranslate"><span class="pre">world_models/inference/operators/</span></code></p></li>
+<li><p>Create model class in <code class="docutils literal notranslate"><span class="pre">torchwm/models/</span></code></p></li>
+<li><p>Add config class in <code class="docutils literal notranslate"><span class="pre">torchwm/configs/</span></code></p></li>
+<li><p>Export both from <code class="docutils literal notranslate"><span class="pre">torchwm/__init__.py</span></code></p></li>
 <li><p>Update training scripts</p></li>
 <li><p>Add documentation and tests</p></li>
 </ol>
 </section>
 <section id="new-environments">
-<h3>3. New Environments<a class="headerlink" href="#new-environments" title="Link to this heading">#</a></h3>
+<h3>2. New Environments<a class="headerlink" href="#new-environments" title="Link to this heading">#</a></h3>
 <ol class="arabic simple">
-<li><p>Implement environment wrapper in <code class="docutils literal notranslate"><span class="pre">world_models/envs/</span></code></p></li>
+<li><p>Implement environment wrapper in <code class="docutils literal notranslate"><span class="pre">torchwm/envs/</span></code></p></li>
 <li><p>Add to environment registry</p></li>
 <li><p>Update documentation</p></li>
 </ol>
@@ -493,7 +482,7 @@ uv<span class="w"> </span>run<span class="w"> </span>pytest
 </li>
 <li><p><strong>Update documentation</strong> if needed</p></li>
 <li><p><strong>Commit your changes</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Add feature: my feature&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Add feature: my feature"</span>
 </pre></div>
 </div>
 </li>
@@ -518,9 +507,9 @@ uv<span class="w"> </span>run<span class="w"> </span>pytest
 </ul>
 <p>Examples:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">feat:</span> <span class="pre">add</span> <span class="pre">VLA</span> <span class="pre">operator</span> <span class="pre">support</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">feat:</span> <span class="pre">add</span> <span class="pre">I-JEPA</span> <span class="pre">linear</span> <span class="pre">evaluation</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fix:</span> <span class="pre">resolve</span> <span class="pre">memory</span> <span class="pre">leak</span> <span class="pre">in</span> <span class="pre">dreamer</span> <span class="pre">training</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">docs:</span> <span class="pre">update</span> <span class="pre">operators</span> <span class="pre">guide</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs:</span> <span class="pre">update</span> <span class="pre">inference</span> <span class="pre">guide</span></code></p></li>
 </ul>
 </section>
 <section id="issue-reporting">
@@ -593,9 +582,8 @@ uv<span class="w"> </span>run<span class="w"> </span>pytest
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing">Testing</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-new-features">Adding New Features</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-operators">1. New Operators</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-models">2. New Models</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-environments">3. New Environments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-models">1. New Models</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-environments">2. New Environments</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pull-request-process">Pull Request Process</a></li>

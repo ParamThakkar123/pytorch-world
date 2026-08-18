@@ -19,7 +19,7 @@
 <meta name="description" content="The Procgen backend adapts the procgen.ProcgenEnv vector API to TorchWM’s single-environment image interface for procedurally generated benchmark games such as CoinRun, Maze, Heist, and StarPilot. ..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Procgen &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Procgen &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation_guide.html">Evaluation Guide</a></li>
@@ -316,6 +315,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -323,6 +323,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -394,15 +395,15 @@
 <h2>Main APIs<a class="headerlink" href="#main-apis" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.envs.procgen_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_procgen_env</span><span class="p">,</span> <span class="n">list_procgen_envs</span>
 
-<span class="n">env</span> <span class="o">=</span> <span class="n">make_procgen_env</span><span class="p">(</span><span class="s2">&quot;coinrun&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">make_procgen_env</span><span class="p">(</span><span class="s2">"coinrun"</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
 <span class="n">obs</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (3, 64, 64)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (3, 64, 64)</span>
 </pre></div>
 </div>
 <p>The factory accepts Procgen shorthand names and Gym-style ids:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">make_procgen_env</span><span class="p">(</span><span class="s2">&quot;coinrun&quot;</span><span class="p">)</span>
-<span class="n">make_procgen_env</span><span class="p">(</span><span class="s2">&quot;procgen-coinrun-v0&quot;</span><span class="p">)</span>
-<span class="n">make_procgen_env</span><span class="p">(</span><span class="s2">&quot;procgen:procgen-coinrun-v0&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">make_procgen_env</span><span class="p">(</span><span class="s2">"coinrun"</span><span class="p">)</span>
+<span class="n">make_procgen_env</span><span class="p">(</span><span class="s2">"procgen-coinrun-v0"</span><span class="p">)</span>
+<span class="n">make_procgen_env</span><span class="p">(</span><span class="s2">"procgen:procgen-coinrun-v0"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Use <code class="docutils literal notranslate"><span class="pre">list_procgen_envs()</span></code> to inspect the supported game names.</p>
@@ -411,7 +412,7 @@
 <section id="observations-and-actions">
 <h2>Observations and actions<a class="headerlink" href="#observations-and-actions" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ProcgenImageEnv</span></code> unwraps the leading vector dimension from <code class="docutils literal notranslate"><span class="pre">ProcgenEnv(num_envs=1)</span></code> and returns:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">uint8</span> <span class="n">array</span> <span class="k">with</span> <span class="n">shape</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">)}</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">"image"</span><span class="p">:</span> <span class="n">uint8</span> <span class="n">array</span> <span class="k">with</span> <span class="n">shape</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">)}</span>
 </pre></div>
 </div>
 <p>Procgen actions are discrete. For consistency with TorchWM’s other discrete image adapters, the wrapper exposes a continuous one-hot-like action space with shape <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> and values in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>. The selected action is the index of the largest value in the model action vector.</p>

@@ -4,9 +4,9 @@ This guide covers how to use trained TorchWM models for inference and deployment
 
 ## Overview
 
-TorchWM provides standardized inference through operators and future pipelines.
-For application code, prefer the top-level `torchwm.get_operator()` factory; it
-keeps examples short and avoids deep imports.
+TorchWM agents load from a checkpoint, run in `eval()` mode, and take the same
+tensors they were trained on. Each model's page documents the observation
+layout it expects; this guide covers the mechanics around it.
 
 ```{contents} Contents
 ```
@@ -21,48 +21,49 @@ agent = DreamerAgent.from_pretrained("path/to/checkpoint")
 agent.eval()
 ```
 
-## Using Operators for Preprocessing
-
-See {doc}`operators_guide` for detailed operator usage.
-
 ## Basic Inference
 
 ### Dreamer
 
 ```python
 import torch
-import torchwm
 from torchwm import DreamerAgent
 
-op = torchwm.get_operator("dreamer", image_size=64, action_dim=6)
 agent = DreamerAgent.from_pretrained("dreamer_checkpoint")
 
-# Single step prediction
-obs = torch.randn(3, 64, 64)
-action = torch.tensor([0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
+# Single step prediction. Observations are float tensors in [0, 1] shaped
+# [batch, channels, height, width]; actions are [batch, action_dim].
+obs = torch.rand(1, 3, 64, 64)
+action = torch.tensor([[0.1, 0.2, 0.3, 0.4, 0.5, 0.6]])
 
 with torch.no_grad():
-    processed = op({'image': obs, 'action': action})
-    next_obs, reward = agent.predict(processed)
+    next_obs, reward = agent.predict({"obs": obs, "action": action})
 ```
 
 ### JEPA
 
+I-JEPA is evaluated with a frozen encoder, so inference means extracting
+representations rather than rolling out a policy. Load the EMA target-encoder
+from a training checkpoint and average-pool its patch tokens, exactly as the
+paper's linear-evaluation protocol does:
+
 ```python
 import torch
-import torchwm
-from torchwm import JEPAAgent
+from torchwm.training.eval_jepa import load_jepa_encoder, make_eval_transforms
 
-op = torchwm.get_operator("jepa", image_size=224, patch_size=16, mask_ratio=0.75)
-agent = JEPAAgent.from_pretrained("jepa_checkpoint")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+encoder = load_jepa_encoder("results/jepa/jepa_run-latest.pth.tar", device)
 
-# Representation learning
-images = [torch.randn(3, 224, 224) for _ in range(8)]
-processed = op({'images': images})
+transform = make_eval_transforms(crop_size=224)
+images = torch.stack([transform(pil_image) for pil_image in batch]).to(device)
 
 with torch.no_grad():
-    representations = agent.encode(processed)
+    representations = encoder(images).mean(dim=1)  # [batch, embed_dim]
 ```
+
+To reproduce the paper's ImageNet linear-probe number, use
+`torchwm.training.eval_jepa.jepa_linear_probe` instead, which trains the
+linear head on top of these features.
 
 ## Rollout and Imagination
 
@@ -90,10 +91,8 @@ batch_size = 32
 obs_batch = torch.randn(batch_size, 3, 64, 64)
 action_batch = torch.randn(batch_size, 6)
 
-processed = op({'image': obs_batch, 'action': action_batch})
-
 with torch.no_grad():
-    predictions = agent.predict_batch(processed)
+    predictions = agent.predict_batch({"obs": obs_batch, "action": action_batch})
 ```
 
 ## GPU Acceleration
@@ -104,10 +103,10 @@ Move to GPU for faster inference:
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 agent = agent.to(device)
-processed = {k: v.to(device) for k, v in processed.items()}
+inputs = {key: value.to(device) for key, value in inputs.items()}
 
 with torch.no_grad():
-    output = agent.predict(processed)
+    output = agent.predict(inputs)
 ```
 
 ## Real-time Inference
@@ -116,18 +115,20 @@ For interactive applications:
 
 ```python
 import torch
-import torchwm
 from torchwm import DreamerAgent
 
 class InferenceServer:
-    def __init__(self):
-        self.agent = DreamerAgent.from_pretrained("checkpoint").eval()
-        self.op = torchwm.get_operator("dreamer", image_size=64, action_dim=6)
+    def __init__(self, device="cuda"):
+        self.device = torch.device(device)
+        self.agent = DreamerAgent.from_pretrained("checkpoint").to(self.device).eval()
 
     def predict(self, obs, action):
-        processed = self.op({'image': obs, 'action': action})
+        inputs = {
+            "obs": obs.to(self.device),
+            "action": action.to(self.device),
+        }
         with torch.no_grad():
-            return self.agent.predict(processed)
+            return self.agent.predict(inputs)
 
 server = InferenceServer()
 ```
@@ -148,7 +149,7 @@ agent = torch.jit.script(agent)
 import torch
 
 with torch.inference_mode():
-    output = agent.predict(processed)
+    output = agent.predict(inputs)
 ```
 
 ## Exporting Models
@@ -230,7 +231,6 @@ from torchwm import DreamerAgent
 
 env = torchwm.make_env("Pendulum-v1", backend="gym")
 agent = DreamerAgent.from_pretrained("pendulum_checkpoint")
-op = torchwm.get_operator("dreamer", image_size=64, action_dim=env.action_space.shape[0])
 
 obs, _ = env.reset()
 done = False
@@ -256,9 +256,10 @@ for episode in range(10):
     total_reward = 0
 
     while True:
-        processed = op({'image': obs, 'action': action})
         with torch.no_grad():
-            next_obs_pred, reward_pred = agent.predict(processed)
+            next_obs_pred, reward_pred = agent.predict(
+                {"obs": obs, "action": action}
+            )
 
         # Use predictions for planning/control
         action = agent.plan(obs, next_obs_pred, reward_pred)
@@ -284,6 +285,6 @@ for episode in range(10):
 - Batch inputs when possible
 
 ### Accuracy Issues
-- Ensure proper preprocessing with operators
+- Ensure inputs are normalized the same way as during training
 - Check model loading
 - Verify input shapes match training

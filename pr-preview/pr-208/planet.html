@@ -19,7 +19,7 @@
 <meta name="description" content="PlaNet(Deep Pl anning Net work) is a latent-dynamics model that learns a compact state-space representation from image observations and uses online planning rather than a separately trained actor-c..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>PlaNet &#8212; TorchWM 0.5.0 documentation</title>
+    <title>PlaNet &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -269,7 +269,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -302,6 +301,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -309,6 +309,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -394,10 +395,9 @@ the backbone of Dreamer and other latent-dynamics agents.</p>
 <li><p><a class="reference internal" href="#training-options" id="id9">Training options</a></p></li>
 <li><p><a class="reference internal" href="#warmup" id="id10">Warmup</a></p></li>
 <li><p><a class="reference internal" href="#cem-planner" id="id11">CEM Planner</a></p></li>
-<li><p><a class="reference internal" href="#preprocessing-operator" id="id12">Preprocessing operator</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#see-also" id="id13">See Also</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id12">See Also</a></p></li>
 </ul>
 </li>
 </ul>
@@ -559,7 +559,7 @@ posterior and prior are within 3 nats, no further gradient pressure is applied.<
 <h3><a class="toc-backref" href="#id8" role="doc-backlink">Direct construction</a><a class="headerlink" href="#direct-construction" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
 
-<span class="n">agent</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;planet&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"planet"</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">"CartPole-v1"</span><span class="p">)</span>
 <span class="n">agent</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">steps_per_epoch</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -567,7 +567,7 @@ posterior and prior are within 3 nats, no further gradient pressure is applied.<
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Planet</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Planet</span><span class="p">(</span>
-    <span class="n">env</span><span class="o">=</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">,</span>
+    <span class="n">env</span><span class="o">=</span><span class="s2">"CartPole-v1"</span><span class="p">,</span>
     <span class="n">bit_depth</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>              <span class="c1"># image bit depth for preprocessing</span>
     <span class="n">state_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>           <span class="c1"># deterministic GRU state dimension</span>
     <span class="n">latent_size</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>           <span class="c1"># stochastic latent dimension</span>
@@ -590,8 +590,8 @@ posterior and prior are within 3 nats, no further gradient pressure is applied.<
     <span class="n">beta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>                 <span class="c1"># KL weight</span>
     <span class="n">save_every</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
     <span class="n">record_grads</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">scheduler_type</span><span class="o">=</span><span class="s2">&quot;step&quot;</span><span class="p">,</span>    <span class="c1"># LR scheduler: &quot;step&quot;, &quot;cosine&quot;, &quot;exponential&quot;, &quot;plateau&quot;, None</span>
-    <span class="n">scheduler_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;step_size&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
+    <span class="n">scheduler_type</span><span class="o">=</span><span class="s2">"step"</span><span class="p">,</span>    <span class="c1"># LR scheduler: "step", "cosine", "exponential", "plateau", None</span>
+    <span class="n">scheduler_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"step_size"</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s2">"gamma"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -610,40 +610,20 @@ start of <code class="docutils literal notranslate"><span class="pre">train()</s
 <p>The CEM planner is embedded inside the <code class="docutils literal notranslate"><span class="pre">Planet</span></code> agent and configured through the
 <code class="docutils literal notranslate"><span class="pre">policy_cfg</span></code> dict:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">agent</span> <span class="o">=</span> <span class="n">Planet</span><span class="p">(</span>
-    <span class="n">env</span><span class="o">=</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">,</span>
+    <span class="n">env</span><span class="o">=</span><span class="s2">"CartPole-v1"</span><span class="p">,</span>
     <span class="n">policy_cfg</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;planning_horizon&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
-        <span class="s2">&quot;num_candidates&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
-        <span class="s2">&quot;num_iterations&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
-        <span class="s2">&quot;top_candidates&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="s2">"planning_horizon"</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="s2">"num_candidates"</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="s2">"num_iterations"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="s2">"top_candidates"</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </section>
-<section id="preprocessing-operator">
-<h3><a class="toc-backref" href="#id12" role="doc-backlink">Preprocessing operator</a><a class="headerlink" href="#preprocessing-operator" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_operator</span><span class="p">,</span> <span class="n">PlaNetOperator</span>
-
-<span class="n">op</span> <span class="o">=</span> <span class="n">get_operator</span><span class="p">(</span><span class="s2">&quot;planet&quot;</span><span class="p">,</span> <span class="n">state_dim</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">action_dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-
-<span class="c1"># Or directly:</span>
-<span class="n">op</span> <span class="o">=</span> <span class="n">PlaNetOperator</span><span class="p">(</span><span class="n">state_dim</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">action_dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">({</span>
-    <span class="s2">&quot;obs&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
-    <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span>
-    <span class="s2">&quot;reward&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
-    <span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">})</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;obs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>     <span class="c1"># (1, 32)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (1, 4)</span>
-</pre></div>
-</div>
-</section>
 </section>
 <section id="see-also">
-<h2><a class="toc-backref" href="#id13" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="dreamer.html"><span class="doc">Dreamer: Model-Based RL with Latent Dynamics</span></a> — successor to PlaNet; replaces CEM with a trained actor-critic</p></li>
 <li><p><a class="reference internal" href="iris.html"><span class="doc">IRIS: Transformers for Sample-Efficient World Models</span></a> — discrete world model that also uses the CEM-style planning</p></li>
@@ -713,7 +693,6 @@ start of <code class="docutils literal notranslate"><span class="pre">train()</s
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-options">Training options</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#warmup">Warmup</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cem-planner">CEM Planner</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#preprocessing-operator">Preprocessing operator</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>

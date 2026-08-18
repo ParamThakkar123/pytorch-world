@@ -19,7 +19,7 @@
 <meta name="description" content="TorchWM provides a general-purpose evaluation package for measuring the quality of generative world models. It implements the three metrics used in the DIAMOND paper(Alonso et al., NeurIPS 2024, Ap..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Evaluation Guide &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Evaluation Guide &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -269,7 +269,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Evaluation Guide</a></li>
@@ -302,6 +301,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -309,6 +309,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -386,7 +387,7 @@ not just DIAMOND.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">FID</span><span class="p">,</span> <span class="n">FVD</span><span class="p">,</span> <span class="n">LPIPS</span>
 
-<span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+<span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cuda"</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"cpu"</span><span class="p">)</span>
 
 <span class="c1"># Load your real and generated data</span>
 <span class="n">real_images</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>  <span class="c1"># [N, C, H, W] in [0, 1]</span>
@@ -394,18 +395,18 @@ not just DIAMOND.</p>
 
 <span class="c1"># FID: compares distributions of real vs generated frames</span>
 <span class="n">fid</span> <span class="o">=</span> <span class="n">FID</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FID: </span><span class="si">{</span><span class="n">fid</span><span class="p">(</span><span class="n">real_images</span><span class="p">,</span><span class="w"> </span><span class="n">gen_images</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"FID: </span><span class="si">{</span><span class="n">fid</span><span class="p">(</span><span class="n">real_images</span><span class="p">,</span><span class="w"> </span><span class="n">gen_images</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="c1"># LPIPS: pairwise perceptual similarity</span>
 <span class="n">lpips</span> <span class="o">=</span> <span class="n">LPIPS</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LPIPS: </span><span class="si">{</span><span class="n">lpips</span><span class="p">(</span><span class="n">real_images</span><span class="p">,</span><span class="w"> </span><span class="n">gen_images</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"LPIPS: </span><span class="si">{</span><span class="n">lpips</span><span class="p">(</span><span class="n">real_images</span><span class="p">,</span><span class="w"> </span><span class="n">gen_images</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="c1"># FVD: requires video tensors [B, C, T, H, W]</span>
 <span class="n">real_videos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
 <span class="n">gen_videos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
 
 <span class="n">fvd</span> <span class="o">=</span> <span class="n">FVD</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FVD: </span><span class="si">{</span><span class="n">fvd</span><span class="p">(</span><span class="n">real_videos</span><span class="p">,</span><span class="w"> </span><span class="n">gen_videos</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"FVD: </span><span class="si">{</span><span class="n">fvd</span><span class="p">(</span><span class="n">real_videos</span><span class="p">,</span><span class="w"> </span><span class="n">gen_videos</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -429,8 +430,19 @@ torchwm<span class="w"> </span><span class="nb">eval</span><span class="w"> </sp
 <span class="w">    </span>--seed<span class="w"> </span><span class="m">42</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--metrics<span class="w"> </span>fid,fvd,lpips<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--record<span class="w"> </span>eval_video.mp4
+
+<span class="c1"># Linear-probe an I-JEPA checkpoint (frozen encoder; no FID/FVD involved)</span>
+torchwm<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>jepa<span class="w"> </span>--checkpoint<span class="w"> </span>results/jepa/jepa_run-latest.pth.tar<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--root-path<span class="w"> </span>/data/imagenet<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--model-name<span class="w"> </span>vit_base<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--output<span class="w"> </span>probe.json
 </pre></div>
 </div>
+<p>I-JEPA is scored differently from the generative world models: there is no
+rollout to compare against the environment, so <code class="docutils literal notranslate"><span class="pre">--model</span> <span class="pre">jepa</span></code> freezes the EMA
+target-encoder and trains a linear head on its average-pooled patch tokens,
+following Appendix A.2 of the paper. See <a class="reference internal" href="jepa.html"><span class="doc">JEPA: Joint Embedding Predictive Architecture</span></a> for the protocol and the
+Python API (<code class="docutils literal notranslate"><span class="pre">torchwm.jepa_linear_probe</span></code>).</p>
 </section>
 <section id="interactive-play">
 <h3>Interactive Play<a class="headerlink" href="#interactive-play" title="Link to this heading">#</a></h3>
@@ -438,7 +450,7 @@ torchwm<span class="w"> </span><span class="nb">eval</span><span class="w"> </sp
 torchwm<span class="w"> </span>play<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>path/to/model.pt<span class="w"> </span>--game<span class="w"> </span>Breakout-v5
 
 <span class="c1"># Switch to dream mode (TAB) to watch the agent inside its imagination</span>
-<span class="c1"># Press arrow keys / WASD to override the agent&#39;s actions</span>
+<span class="c1"># Press arrow keys / WASD to override the agent's actions</span>
 torchwm<span class="w"> </span>play<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt
 
 <span class="c1"># Record gameplay video</span>
@@ -763,14 +775,18 @@ diffusion model autoregressively generates future frames using the EDM sampler.<
 <ol class="arabic simple">
 <li><p>Create <code class="docutils literal notranslate"><span class="pre">scripts/eval_&lt;model&gt;.py</span></code> with a <code class="docutils literal notranslate"><span class="pre">run_eval()</span></code> function matching the
 signature in <a class="reference internal" href="cli.html"><span class="doc">TorchWM CLI</span></a>.</p></li>
-<li><p>Register it in <code class="docutils literal notranslate"><span class="pre">EVAL_MODULES</span></code> in <code class="docutils literal notranslate"><span class="pre">tools/cli.py</span></code>:</p></li>
+<li><p>Register it in <code class="docutils literal notranslate"><span class="pre">EVAL_MODULES</span></code> in <code class="docutils literal notranslate"><span class="pre">torchwm/cli.py</span></code>:</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">EVAL_MODULES</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;diamond&quot;</span><span class="p">:</span> <span class="s2">&quot;scripts.eval_diamond&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;my_model&quot;</span><span class="p">:</span> <span class="s2">&quot;scripts.eval_my_model&quot;</span><span class="p">,</span>
+    <span class="s2">"diamond"</span><span class="p">:</span> <span class="s2">"scripts.eval_diamond"</span><span class="p">,</span>
+    <span class="s2">"jepa"</span><span class="p">:</span> <span class="s2">"torchwm.training.eval_jepa"</span><span class="p">,</span>
+    <span class="s2">"my_model"</span><span class="p">:</span> <span class="s2">"scripts.eval_my_model"</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>If the new model needs options the others do not, list them in
+<code class="docutils literal notranslate"><span class="pre">EVAL_MODEL_OPTIONS</span></code> so passing them to a different <code class="docutils literal notranslate"><span class="pre">--model</span></code> is an error
+rather than a silent no-op.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">torchwm</span> <span class="pre">eval</span></code> command will then accept <code class="docutils literal notranslate"><span class="pre">--model</span> <span class="pre">my_model</span></code>.</p>
 </section>
 <section id="trajectory-collection-utilities">

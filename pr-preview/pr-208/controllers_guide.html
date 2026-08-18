@@ -19,7 +19,7 @@
 <meta name="description" content="TorchWM provides several controller and policy classes that convert latent representations into environment actions. The right choice depends on whether you plan online (CEM at every step), use a t..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Controllers and Policies &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Controllers and Policies &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -300,6 +299,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -307,6 +307,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -456,7 +457,7 @@ Gaussian to the best candidates.</p>
     <span class="n">num_candidates</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>      <span class="c1"># N — candidates per iteration</span>
     <span class="n">num_iterations</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>        <span class="c1"># I — CEM refitting iterations</span>
     <span class="n">top_candidates</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>       <span class="c1"># K — elite candidates kept</span>
-    <span class="n">device</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span><span class="p">),</span>
+    <span class="n">device</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">),</span>
 <span class="p">)</span>
 
 <span class="c1"># At each environment step:</span>
@@ -484,7 +485,7 @@ episode-based <code class="docutils literal notranslate"><span class="pre">Memor
 
 <span class="n">generator</span> <span class="o">=</span> <span class="n">RolloutGenerator</span><span class="p">(</span>
     <span class="n">env</span><span class="p">,</span>                          <span class="c1"># Gymnasium-compatible environment</span>
-    <span class="n">device</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span><span class="p">),</span>
+    <span class="n">device</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">),</span>
     <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>                <span class="c1"># RSSMPolicy (or None for random actions)</span>
     <span class="n">episode_gen</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">Episode</span><span class="p">(</span><span class="n">postprocess_fn</span><span class="p">),</span>
     <span class="n">max_episode_steps</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
@@ -510,9 +511,9 @@ episode-based <code class="docutils literal notranslate"><span class="pre">Memor
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">episode</span><span class="p">,</span> <span class="n">frames</span><span class="p">,</span> <span class="n">metrics</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">rollout_eval</span><span class="p">()</span>
 
 <span class="c1"># metrics contains:</span>
-<span class="c1">#   &quot;eval/episode_reward&quot;       — total undiscounted return</span>
-<span class="c1">#   &quot;eval/reconstruction_loss&quot;  — MSE between reconstructed and true frames</span>
-<span class="c1">#   &quot;eval/reward_pred_loss&quot;     — MSE between predicted and true reward</span>
+<span class="c1">#   "eval/episode_reward"       — total undiscounted return</span>
+<span class="c1">#   "eval/reconstruction_loss"  — MSE between reconstructed and true frames</span>
+<span class="c1">#   "eval/reward_pred_loss"     — MSE between predicted and true reward</span>
 </pre></div>
 </div>
 <p>The evaluation rollout collects reconstructed frames through the RSSM decoder
@@ -524,7 +525,7 @@ and logs prediction quality metrics.</p>
     <span class="n">env</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span>
     <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>
     <span class="n">enable_streaming_video</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">streaming_video_path</span><span class="o">=</span><span class="s2">&quot;rollouts/&quot;</span><span class="p">,</span>
+    <span class="n">streaming_video_path</span><span class="o">=</span><span class="s2">"rollouts/"</span><span class="p">,</span>
     <span class="n">streaming_video_fps</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
@@ -602,7 +603,7 @@ instance from the actor.</p>
 <span class="n">frames</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
 <span class="n">logits</span> <span class="o">=</span> <span class="n">policy</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>                <span class="c1"># (4, 6)</span>
 <span class="n">action</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">act</span><span class="p">(</span><span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>         <span class="c1"># scalar action index</span>
-<span class="n">hidden</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">init_hidden</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+<span class="n">hidden</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">init_hidden</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s2">"cuda"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">IRISPolicy</span></code> is a convenience wrapper around <code class="docutils literal notranslate"><span class="pre">IRISActor</span></code>. It does <strong>not</strong>
@@ -647,11 +648,11 @@ pipeline for a complete example.</p>
 <h2><a class="toc-backref" href="#id15" role="doc-backlink">Export</a><a class="headerlink" href="#export" title="Link to this heading">#</a></h2>
 <p>RSSM policies and IRIS actor-critic networks can be exported to ONNX /
 TorchScript for deployment:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Export RSSMPolicy&#39;s underlying RSSM model:</span>
-<span class="n">rssm</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">&quot;rssm.onnx&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;onnx&quot;</span><span class="p">,</span> <span class="n">example_inputs</span><span class="o">=...</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Export RSSMPolicy's underlying RSSM model:</span>
+<span class="n">rssm</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"rssm.onnx"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"onnx"</span><span class="p">,</span> <span class="n">example_inputs</span><span class="o">=...</span><span class="p">)</span>
 
 <span class="c1"># Export IRIS actor:</span>
-<span class="n">actor</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">&quot;actor.onnx&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;onnx&quot;</span><span class="p">,</span> <span class="n">example_inputs</span><span class="o">=...</span><span class="p">)</span>
+<span class="n">actor</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"actor.onnx"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"onnx"</span><span class="p">,</span> <span class="n">example_inputs</span><span class="o">=...</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

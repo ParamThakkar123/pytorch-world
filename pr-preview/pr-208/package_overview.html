@@ -19,7 +19,7 @@
 <meta name="description" content="TorchWM is organized into focused modules so you can use only the pieces you need. Quick Import (Public API): For applications and examples, prefer the installed package name, torchwm. It mirrors t..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Package Overview &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Package Overview &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -300,6 +299,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -307,6 +307,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -375,16 +376,15 @@ API without importing optional training backends until you use them.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">torchwm</span><span class="o">.</span><span class="n">list_models</span><span class="p">())</span>
-<span class="n">agent</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;dreamer&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">&quot;walker-walk&quot;</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">)</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">make_env</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;gym&quot;</span><span class="p">)</span>
-<span class="n">op</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">get_operator</span><span class="p">(</span><span class="s2">&quot;dreamer&quot;</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">action_dim</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"dreamer"</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">"walker-walk"</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">make_env</span><span class="p">(</span><span class="s2">"CartPole-v1"</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">"gym"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Use <code class="docutils literal notranslate"><span class="pre">torchwm</span></code> for direct component imports as well as factory helpers:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">DreamerAgent</span><span class="p">,</span> <span class="n">DreamerConfig</span>
 
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">DreamerConfig</span><span class="p">()</span>
-<span class="n">cfg</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="s2">&quot;walker-walk&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="s2">"walker-walk"</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">DreamerAgent</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -421,12 +421,6 @@ API without importing optional training backends until you use them.</p>
 <tr class="row-odd"><td><p><strong>Memory</strong></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ReplayBuffer</span></code>, <code class="docutils literal notranslate"><span class="pre">Memory</span></code>, <code class="docutils literal notranslate"><span class="pre">Episode</span></code>, <code class="docutils literal notranslate"><span class="pre">IRISReplayBuffer</span></code>, <code class="docutils literal notranslate"><span class="pre">IRISOnPolicyBuffer</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><strong>Operators</strong></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">get_operator</span></code>, <code class="docutils literal notranslate"><span class="pre">DreamerOperator</span></code>, <code class="docutils literal notranslate"><span class="pre">JEPAOperator</span></code>, <code class="docutils literal notranslate"><span class="pre">IrisOperator</span></code>, <code class="docutils literal notranslate"><span class="pre">PlaNetOperator</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><strong>Inference</strong></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DreamerOperator</span></code>, <code class="docutils literal notranslate"><span class="pre">JEPAOperator</span></code>, <code class="docutils literal notranslate"><span class="pre">IrisOperator</span></code>, <code class="docutils literal notranslate"><span class="pre">PlaNetOperator</span></code></p></td>
-</tr>
 <tr class="row-even"><td><p><strong>Reward / Value</strong></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">RewardModel</span></code>, <code class="docutils literal notranslate"><span class="pre">ValueModel</span></code>, <code class="docutils literal notranslate"><span class="pre">DreamerRewardModel</span></code>, <code class="docutils literal notranslate"><span class="pre">DreamerValueModel</span></code></p></td>
 </tr>
@@ -461,21 +455,16 @@ API without importing optional training backends until you use them.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
 
 <span class="c1"># Training</span>
-<span class="n">agent</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;dreamer&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">&quot;walker-walk&quot;</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"dreamer"</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">"walker-walk"</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">)</span>
 <span class="n">agent</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
-
-<span class="c1"># Inference preprocessing</span>
-<span class="n">op</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">get_operator</span><span class="p">(</span><span class="s2">&quot;dreamer&quot;</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">action_dim</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
-<span class="n">processed</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">({</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="p">})</span>
 </pre></div>
 </div>
 </section>
 </section>
 <section id="core-modules">
 <h2>Core Modules<a class="headerlink" href="#core-modules" title="Link to this heading">#</a></h2>
-<p>The module paths below are the public <code class="docutils literal notranslate"><span class="pre">torchwm.*</span></code> surface. They mirror the
-internal <code class="docutils literal notranslate"><span class="pre">world_models</span></code> implementation package one-to-one, so every submodule is
-importable either way (<code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">torchwm.models</span> <span class="pre">import</span> <span class="pre">Dreamer</span></code>).</p>
+<p>The module paths below are the public <code class="docutils literal notranslate"><span class="pre">torchwm.*</span></code> surface
+(<code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">torchwm.models</span> <span class="pre">import</span> <span class="pre">Dreamer</span></code>).</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">torchwm.models</span></code>: High-level models and agents (<code class="docutils literal notranslate"><span class="pre">Dreamer</span></code>, <code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code>, <code class="docutils literal notranslate"><span class="pre">Planet</span></code>, <code class="docutils literal notranslate"><span class="pre">JEPAAgent</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs</span></code>: Configuration containers for Dreamer, JEPA, and diffusion runs</p></li>

@@ -19,7 +19,7 @@
 <meta name="description" content="TorchWM provides replay buffers and episodic memory for each agent family. All buffers store environment interaction data and support sequence sampling for world-model training. Contents: Memory &a..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Memory &amp; Replay Buffers &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Memory &amp; Replay Buffers &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -300,6 +299,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -307,6 +307,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -416,22 +417,22 @@ for world-model training.</p>
 <tbody>
 <tr class="row-even"><td><p>Dreamer (V1/V2/V3)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ReplayBuffer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.memory.dreamer_memory</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.memory.dreamer_memory</span></code></p></td>
 <td><p>Ring buffer of individual transitions</p></td>
 </tr>
 <tr class="row-odd"><td><p>PlaNet / RSSM</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Memory</span></code> + <code class="docutils literal notranslate"><span class="pre">Episode</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.memory.planet_memory</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.memory.planet_memory</span></code></p></td>
 <td><p>Deque of complete episodes</p></td>
 </tr>
 <tr class="row-even"><td><p>IRIS</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">IRISReplayBuffer</span></code> + <code class="docutils literal notranslate"><span class="pre">IRISOnPolicyBuffer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.memory.iris_memory</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.memory.iris_memory</span></code></p></td>
 <td><p>Ring buffer of individual transitions</p></td>
 </tr>
 <tr class="row-odd"><td><p>DIAMOND</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ReplayBuffer</span></code> + <code class="docutils literal notranslate"><span class="pre">SequenceDataset</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.datasets.diamond_dataset</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.datasets.diamond_dataset</span></code></p></td>
 <td><p>Ring buffer with next-observation + PyTorch Dataset wrapper</p></td>
 </tr>
 </tbody>
@@ -461,7 +462,7 @@ learning.</p>
 
 <span class="c1"># Add a transition during environment interaction</span>
 <span class="n">buffer</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">)</span>
-<span class="c1">#   obs:    dict with key &quot;image&quot; containing (C, H, W) uint8</span>
+<span class="c1">#   obs:    dict with key "image" containing (C, H, W) uint8</span>
 <span class="c1">#   action: (action_size,) float32</span>
 <span class="c1">#   reward: scalar float</span>
 <span class="c1">#   done:   1.0 if terminal, 0.0 otherwise</span>
@@ -633,10 +634,10 @@ with DataLoader-based training loops.</p>
 
 <span class="c1"># Checkpointing</span>
 <span class="n">state</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
-<span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="s2">&quot;buffer.pt&quot;</span><span class="p">)</span>
+<span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="s2">"buffer.pt"</span><span class="p">)</span>
 
 <span class="c1"># Restore</span>
-<span class="n">state</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;buffer.pt&quot;</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">state</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"buffer.pt"</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">buffer</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -658,7 +659,7 @@ interactions.</p>
 <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">total_steps</span><span class="p">):</span>
     <span class="n">action</span> <span class="o">=</span> <span class="n">policy</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
     <span class="n">next_obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
-    <span class="n">buffer</span><span class="o">.</span><span class="n">add</span><span class="p">({</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">obs</span><span class="p">},</span> <span class="n">action</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">done</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">))</span>
+    <span class="n">buffer</span><span class="o">.</span><span class="n">add</span><span class="p">({</span><span class="s2">"image"</span><span class="p">:</span> <span class="n">obs</span><span class="p">},</span> <span class="n">action</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">done</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">))</span>
     <span class="n">obs</span> <span class="o">=</span> <span class="n">next_obs</span>
 </pre></div>
 </div>
@@ -671,7 +672,7 @@ interactions.</p>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">collect_steps</span><span class="p">):</span>
         <span class="n">action</span> <span class="o">=</span> <span class="n">policy</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
         <span class="n">next_obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
-        <span class="n">buffer</span><span class="o">.</span><span class="n">add</span><span class="p">({</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">obs</span><span class="p">},</span> <span class="n">action</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">done</span><span class="p">))</span>
+        <span class="n">buffer</span><span class="o">.</span><span class="n">add</span><span class="p">({</span><span class="s2">"image"</span><span class="p">:</span> <span class="n">obs</span><span class="p">},</span> <span class="n">action</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">done</span><span class="p">))</span>
         <span class="n">obs</span> <span class="o">=</span> <span class="n">next_obs</span>
 
     <span class="c1"># Train on sampled sequences</span>

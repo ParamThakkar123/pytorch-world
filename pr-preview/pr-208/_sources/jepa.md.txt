@@ -64,7 +64,7 @@ graph TD
 
 ### Vision Transformer (ViT)
 
-The backbone encoder in `world_models.models.vit` is a Vision Transformer
+The backbone encoder in `torchwm.models.vit` is a Vision Transformer
 following the standard ViT architecture with JEPA-specific modifications.
 
 **Patch embedding:**
@@ -105,8 +105,11 @@ where `m` is the momentum coefficient (default: cosine schedule from 0.996 to
 
 ### Predictor
 
-The predictor `g_φ` is a smaller transformer (default 6 layers, 384 dim) that
-predicts target patch representations from context patch representations.
+The predictor `g_φ` is a narrow transformer that predicts target patch
+representations from context patch representations. Its width is fixed at 384
+channels and its head count is inherited from the backbone; its depth follows
+the backbone (Appendix A): 6 layers for ViT-B, 12 for ViT-L/H, 16 for ViT-G.
+Leave `pred_depth=None` to get the paper's depth for the configured backbone.
 
 Key design:
 
@@ -122,23 +125,33 @@ I-JEPA uses **multi-block masking**: random rectangular blocks are masked
 rather than individual patches.
 
 ```python
-config.num_enc_masks = 1           # Number of context blocks
-config.enc_mask_scale = (0.15, 0.2)   # Context covers 15-20% of image
-config.num_pred_masks = 4          # Number of target blocks
+config.num_enc_masks = 1              # 1 context block
+config.enc_mask_scale = (0.85, 1.0)   # Context covers 85-100% of the image
+config.num_pred_masks = 4             # 4 target blocks
 config.pred_mask_scale = (0.15, 0.2)  # Each target is 15-20%
-config.aspect_ratio = (0.75, 1.5)     # Block aspect ratio range
+config.aspect_ratio = (0.75, 1.5)     # Target block aspect ratio range
 ```
 
-The predictor sees the context patches and must predict the representation of
-each target block's patches. With 4 target blocks and context covering ~15-20%,
-most of the image must be predicted from a small visible region.
+The context block is sampled at unit aspect ratio, and every region overlapping
+a target block is then removed from it, leaving ~25% of the patches visible on
+average. The predictor sees those context patches and must predict the
+representation of each target block's patches.
+
+These are not free parameters -- the paper's ablations turn on them:
+
+| Setting | Paper value | Low-shot top-1 if changed |
+|---|---|---|
+| Target blocks (Table 10) | 4 | 9.0 with 1 block, vs 54.2 |
+| Target scale (Table 8) | (0.15, 0.2) | 33.6 at (0.2, 0.3), vs 54.2 |
+| Context scale (Table 9) | (0.85, 1.0) | 31.2 at (0.40, 1.0), vs 54.2 |
 
 ## Training
 
 ### Loss Function
 
 The I-JEPA loss is the L2 distance between predicted and target representations,
-averaged over masked patches:
+averaged over masked patches (`loss_type="l2"`; `"l2_sum"` keeps the paper's
+per-block sum, and `"smooth_l1"` matches the reference implementation):
 
 ```{math}
 \mathcal{L}_{\text{JEPA}} =
@@ -159,10 +172,15 @@ averaged over masked patches:
 
 ### Learning Rate Schedule
 
-Three-phase schedule:
-1. **Warmup** (0 → `warmup_epochs`): Linear increase from 0 to `lr`
-2. **Cosine decay** (`warmup_epochs` → `epochs`): Cosine annealing to `min_lr`
-3. **Constant**: After `epochs`, remains at `min_lr`
+Appendix A: linear warmup from `start_lr` (1e-4) to `lr` (1e-3) over the first
+15 epochs, then cosine decay to `final_lr` (1e-6). Weight decay is raised
+linearly from 0.04 to 0.4 across pretraining, and the EMA momentum from 0.996
+to 1.0.
+
+Those learning rates are quoted for the paper's batch size of 2048. TorchWM
+scales them linearly by `batch_size * world_size / lr_reference_batch_size`, so
+smaller batches get a proportionally smaller learning rate automatically. Set
+`lr_reference_batch_size = None` to use `lr` verbatim.
 
 ## Usage in TorchWM
 
@@ -174,7 +192,7 @@ import torchwm
 agent = torchwm.create_model(
     "jepa",
     dataset="imagenet",
-    batch_size=64,
+    batch_size=64,   # the paper uses 2048 across 16 GPUs; the LR follows it
     epochs=100,
 )
 agent.train()
@@ -191,7 +209,6 @@ cfg.root_path = "/data/imagenet"
 cfg.image_folder = "train"
 cfg.batch_size = 64
 cfg.epochs = 100
-cfg.lr = 1.5e-4
 
 agent = JEPAAgent(cfg)
 agent.train()
@@ -214,8 +231,10 @@ cfg.download = True
 ```
 
 ```{note}
-JEPA does NOT rely on heavy augmentation like contrastive methods. The
-core learning signal comes from the masking prediction task, not from image distortion.
+I-JEPA uses **no** hand-crafted view augmentations -- that is the paper's
+central claim. `use_horizontal_flip`, `use_color_distortion` and
+`use_gaussian_blur` all default to `False`, leaving only the random resized crop
+of the reference implementation. Turning them on departs from the paper.
 ```
 
 ### CLI
@@ -228,19 +247,60 @@ See {doc}`configs_reference` for the full JEPAConfig field reference with defaul
 
 ## Inference and Downstream Tasks
 
+I-JEPA is evaluated with a frozen encoder. Load the EMA target-encoder -- the
+one the paper evaluates -- and average-pool its patch tokens:
+
 ```python
-cfg.eval = True
-cfg.read_checkpoint = "./output/checkpoint.pth"
+import torch
+from torchwm.training.eval_jepa import load_jepa_encoder
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+encoder = load_jepa_encoder("results/jepa/jepa_run-latest.pth.tar", device)
+
+with torch.no_grad():
+    representations = encoder(images).mean(dim=1)   # [batch, embed_dim]
 ```
 
 ### Linear probing protocol
 
-| Method | Top-1 Accuracy (ViT-B/16) |
-|--------|---------------------------|
-| I-JEPA | 72.4% |
-| MAE | 68.5% |
-| iBOT | 74.7% |
-| DINOv2 | 78.3% |
+`torchwm.training.eval_jepa` implements Appendix A.2: the encoder is
+frozen, features are the average-pooled patch tokens (I-JEPA has no `[cls]`
+token), and a linear head is trained on them with LARS for 50 epochs at batch
+16384, decaying the learning rate 10x every 15 epochs. It sweeps reference
+learning rates `[0.01, 0.05, 0.001]`, weight decays `[0.0005, 0.0]`, the
+average-pooled last layer against the concatenated last four layers, and a head
+with and without a preceding batch-norm, reporting the best.
+
+```bash
+torchwm eval --model jepa \
+    --checkpoint results/jepa/jepa_run-latest.pth.tar \
+    --root-path /data/imagenet --model-name vit_base --output probe.json
+
+# equivalent, without the CLI wrapper
+python -m torchwm.training.eval_jepa \
+    --checkpoint results/jepa/jepa_run-latest.pth.tar \
+    --root-path /data/imagenet --model-name vit_base
+```
+
+```python
+from torchwm.training.eval_jepa import jepa_linear_probe
+
+results = jepa_linear_probe(
+    checkpoint="results/jepa/jepa_run-latest.pth.tar",
+    root_path="/data/imagenet",
+)
+print(results["top1"], results["sweep"])
+```
+
+Paper reference points on ImageNet-1K linear evaluation (Table 1):
+
+| Method | Arch. | Epochs | Top-1 |
+|---|---|---|---|
+| I-JEPA | ViT-B/16 | 600 | 72.9% |
+| I-JEPA | ViT-L/16 | 600 | 77.5% |
+| I-JEPA | ViT-H/14 | 300 | 79.3% |
+| MAE | ViT-B/16 | 1600 | 68.0% |
+| data2vec | ViT-L/16 | 1600 | 77.3% |
 
 ## I-JEPA vs V-JEPA
 

@@ -11,15 +11,15 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/environments_guide.html" />
 <meta property="og:site_name" content="TorchWM Documentation" />
-<meta property="og:description" content="For the full environment backend reference — including installation, factory functions, observation/action contracts, and troubleshooting — see the environments/index:Environment Backends page. Env..." />
+<meta property="og:description" content="For the full environment backend reference — including installation, factory functions, observation/action contracts, and troubleshooting — see the Environment Backends page. Environment Backends. ..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/_images/social_previews/summary_environments_guide_d57d6709.png" />
-<meta property="og:image:alt" content="For the full environment backend reference — including installation, factory functions, observation/action contracts, and troubleshooting — see the environments/index:Environment Backends page. Env..." />
-<meta name="description" content="For the full environment backend reference — including installation, factory functions, observation/action contracts, and troubleshooting — see the environments/index:Environment Backends page. Env..." />
+<meta property="og:image" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/_images/social_previews/summary_environments_guide_7d5c4be8.png" />
+<meta property="og:image:alt" content="For the full environment backend reference — including installation, factory functions, observation/action contracts, and troubleshooting — see the Environment Backends page. Environment Backends. ..." />
+<meta name="description" content="For the full environment backend reference — including installation, factory functions, observation/action contracts, and troubleshooting — see the Environment Backends page. Environment Backends. ..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Environments Guide &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Environments Guide &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -303,6 +302,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -310,6 +310,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -371,7 +372,7 @@
 <h1>Environments Guide<a class="headerlink" href="#environments-guide" title="Link to this heading">#</a></h1>
 <p>For the full environment backend reference — including installation, factory
 functions, observation/action contracts, and troubleshooting — see the
-<span class="xref std std-ref">environments/index:Environment Backends</span> page.</p>
+<a class="reference internal" href="environments/index.html"><span class="doc">Environment Backends</span></a> page.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="environments/index.html">Environment Backends</a></li>
@@ -382,8 +383,8 @@ functions, observation/action contracts, and troubleshooting — see the
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">DreamerConfig</span>
 
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">DreamerConfig</span><span class="p">()</span>
-<span class="n">cfg</span><span class="o">.</span><span class="n">env_backend</span> <span class="o">=</span> <span class="s2">&quot;dmc&quot;</span>
-<span class="n">cfg</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="s2">&quot;walker-walk&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">env_backend</span> <span class="o">=</span> <span class="s2">"dmc"</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="s2">"walker-walk"</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">image_size</span> <span class="o">=</span> <span class="mi">64</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">action_repeat</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">time_limit</span> <span class="o">=</span> <span class="mi">1000</span>
@@ -401,9 +402,9 @@ functions, observation/action contracts, and troubleshooting — see the
     <span class="n">make_robotics_env</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="n">dmc_env</span> <span class="o">=</span> <span class="n">DeepMindControlEnv</span><span class="p">(</span><span class="s2">&quot;cheetah-run&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
-<span class="n">gym_env</span> <span class="o">=</span> <span class="n">make_gym_env</span><span class="p">(</span><span class="s2">&quot;Pendulum-v1&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
-<span class="n">atari_env</span> <span class="o">=</span> <span class="n">make_atari_env</span><span class="p">(</span><span class="s2">&quot;ALE/Pong-v5&quot;</span><span class="p">,</span> <span class="n">obs_type</span><span class="o">=</span><span class="s2">&quot;rgb&quot;</span><span class="p">,</span> <span class="n">frameskip</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">dmc_env</span> <span class="o">=</span> <span class="n">DeepMindControlEnv</span><span class="p">(</span><span class="s2">"cheetah-run"</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+<span class="n">gym_env</span> <span class="o">=</span> <span class="n">make_gym_env</span><span class="p">(</span><span class="s2">"Pendulum-v1"</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+<span class="n">atari_env</span> <span class="o">=</span> <span class="n">make_atari_env</span><span class="p">(</span><span class="s2">"ALE/Pong-v5"</span><span class="p">,</span> <span class="n">obs_type</span><span class="o">=</span><span class="s2">"rgb"</span><span class="p">,</span> <span class="n">frameskip</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>See <a class="reference internal" href="environments/index.html"><span class="doc">Environment Backends</span></a> for the full list of backends, their

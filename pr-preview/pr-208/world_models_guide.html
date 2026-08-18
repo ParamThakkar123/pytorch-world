@@ -19,7 +19,7 @@
 <meta name="description" content="This page is a conceptual and practical map of the model families implemented in TorchWM. It is written as a study guide: start with the shared vocabulary, then compare the model families, then use..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>World Models Study Guide &#8212; TorchWM 0.5.0 documentation</title>
+    <title>World Models Study Guide &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -493,7 +493,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -625,7 +625,6 @@ window.runMermaid = runMermaid;</script>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -658,6 +657,7 @@ window.runMermaid = runMermaid;</script>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -665,6 +665,7 @@ window.runMermaid = runMermaid;</script>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -760,31 +761,31 @@ window.runMermaid = runMermaid;</script>
 <tbody>
 <tr class="row-even"><td><p>Latent-dynamics model-based RL from pixels</p></td>
 <td><p>Dreamer</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.dreamer</span></code>, <code class="docutils literal notranslate"><span class="pre">world_models.models.dreamer_rssm</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.dreamer</span></code>, <code class="docutils literal notranslate"><span class="pre">torchwm.models.dreamer_rssm</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Classical latent planning with CEM-style imagination</p></td>
 <td><p>PlaNet / RSSM</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.planet</span></code>, <code class="docutils literal notranslate"><span class="pre">world_models.models.rssm</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.planet</span></code>, <code class="docutils literal notranslate"><span class="pre">torchwm.models.rssm</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Swappable encoders, decoders, and recurrent backbones</p></td>
 <td><p>Modular RSSM</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.modular_rssm</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.modular_rssm</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Self-supervised visual representations</p></td>
 <td><p>JEPA + ViT</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.jepa_agent</span></code>, <code class="docutils literal notranslate"><span class="pre">world_models.models.vit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.jepa_agent</span></code>, <code class="docutils literal notranslate"><span class="pre">torchwm.models.vit</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Sample-efficient Atari with discrete token imagination</p></td>
 <td><p>IRIS</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.iris_agent</span></code>, <code class="docutils literal notranslate"><span class="pre">world_models.models.iris_transformer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.iris_agent</span></code>, <code class="docutils literal notranslate"><span class="pre">torchwm.models.iris_transformer</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Unsupervised controllable video-world modeling</p></td>
 <td><p>Genie</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.genie</span></code>, <code class="docutils literal notranslate"><span class="pre">world_models.models.latent_action_model</span></code>, <code class="docutils literal notranslate"><span class="pre">world_models.models.dynamics_model</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.genie</span></code>, <code class="docutils literal notranslate"><span class="pre">torchwm.models.latent_action_model</span></code>, <code class="docutils literal notranslate"><span class="pre">torchwm.models.dynamics_model</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Diffusion world models and image/video generation</p></td>
 <td><p>DDPM, DiT, DIAMOND</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.diffusion.*</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.diffusion.*</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -886,7 +887,7 @@ window.runMermaid = runMermaid;</script>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">JEPAAgent</span></code> coordinates representation learning.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">VisionTransformer</span></code> and ViT helper constructors provide patch-based encoders.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_models.masks.*</span></code> contains masking/collation strategies for context-target prediction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">torchwm.masks.*</span></code> contains masking/collation strategies for context-target prediction.</p></li>
 </ul>
 </section>
 <section id="id1">
@@ -1000,17 +1001,17 @@ q(x_t \mid x_0)
 <tr class="row-even"><td><p>1</p></td>
 <td><p><strong>V — Vision (ConvVAE)</strong></p></td>
 <td><p>Unsupervised reconstruction on random rollouts. Encodes 64×64 RGB frames → latent <code class="docutils literal notranslate"><span class="pre">z</span></code> (typically 32-d).</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.VAE.ConvVAE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.VAE.ConvVAE</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>2</p></td>
 <td><p><strong>M — Memory (MDN-RNN)</strong></p></td>
 <td><p>Predicts next latent <code class="docutils literal notranslate"><span class="pre">z_{t+1}</span></code> as a Gaussian mixture conditioned on <code class="docutils literal notranslate"><span class="pre">(a_t,</span> <span class="pre">z_t,</span> <span class="pre">h_t)</span></code>. Also predicts rewards and terminal flags.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.mdrnn</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.mdrnn</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>3</p></td>
 <td><p><strong>C — Controller (Linear)</strong></p></td>
 <td><p>Maps <code class="docutils literal notranslate"><span class="pre">(z_t,</span> <span class="pre">h_t)</span></code> → <code class="docutils literal notranslate"><span class="pre">a_t</span></code>. Trained with CMA-ES (not backprop) to maximize cumulative reward.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.controller</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -1045,47 +1046,47 @@ q(x_t \mid x_0)
 </thead>
 <tbody>
 <tr class="row-even"><td><p>VAE</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.VAE.ConvVAE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.VAE.ConvVAE</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ConvVAE</span></code>, <code class="docutils literal notranslate"><span class="pre">ConvVAEEncoder</span></code>, <code class="docutils literal notranslate"><span class="pre">ConvVAEDecoder</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Dynamics</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.mdrnn</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.mdrnn</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">MDRNN</span></code>, <code class="docutils literal notranslate"><span class="pre">MDRNNCell</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Policy</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.controller</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Controller</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Configs</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.configs.wm_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.configs.wm_config</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">WMVAEConfig</span></code>, <code class="docutils literal notranslate"><span class="pre">WMMDNRNNConfig</span></code>, <code class="docutils literal notranslate"><span class="pre">WMControllerConfig</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Datasets</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.datasets.wm_dataset</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.datasets.wm_dataset</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">RolloutDataset</span></code>, <code class="docutils literal notranslate"><span class="pre">ObservationDataset</span></code>, <code class="docutils literal notranslate"><span class="pre">SequenceDataset</span></code>, <code class="docutils literal notranslate"><span class="pre">LatentSequenceDataset</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Losses</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.losses.convae_loss</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.losses.convae_loss</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">conv_vae_loss_fn</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.losses.gmm_loss</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.losses.gmm_loss</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">gmm_loss</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Training</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.training.train_world_model</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.training.train_world_model</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">run_training_pipeline</span></code>, <code class="docutils literal notranslate"><span class="pre">generate_rollouts</span></code>, <code class="docutils literal notranslate"><span class="pre">test_trained_model</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.training.train_convvae</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.training.train_convvae</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">train_convae</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.training.train_mdn_rnn</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.training.train_mdn_rnn</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">train_mdn_rnn</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.training.train_controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.training.train_controller</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">train_controller</span></code></p></td>
 </tr>
 </tbody>
@@ -1101,25 +1102,25 @@ q(x_t \mid x_0)
 
 <span class="c1"># Stage 1: Train VAE</span>
 <span class="n">vae_config</span> <span class="o">=</span> <span class="n">WMVAEConfig</span><span class="p">({</span>
-    <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">&quot;latent_size&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
-    <span class="s2">&quot;data_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;./data/carracing&quot;</span><span class="p">,</span> <span class="s2">&quot;logdir&quot;</span><span class="p">:</span> <span class="s2">&quot;./results/carracing&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;num_epochs&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span>
+    <span class="s2">"height"</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">"width"</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">"latent_size"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
+    <span class="s2">"data_dir"</span><span class="p">:</span> <span class="s2">"./data/carracing"</span><span class="p">,</span> <span class="s2">"logdir"</span><span class="p">:</span> <span class="s2">"./results/carracing"</span><span class="p">,</span>
+    <span class="s2">"num_epochs"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">"learning_rate"</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span>
 <span class="p">})</span>
 <span class="n">train_convae</span><span class="p">(</span><span class="n">vae_config</span><span class="p">)</span>
 
 <span class="c1"># Stage 2: Train MDN-RNN</span>
 <span class="n">mdrnn_config</span> <span class="o">=</span> <span class="n">WMMDNRNNConfig</span><span class="p">({</span>
-    <span class="s2">&quot;latent_size&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">&quot;action_size&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;hidden_size&quot;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-    <span class="s2">&quot;gmm_components&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;data_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;./data/carracing&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;logdir&quot;</span><span class="p">:</span> <span class="s2">&quot;./results/carracing&quot;</span><span class="p">,</span> <span class="s2">&quot;num_epochs&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="s2">"latent_size"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"action_size"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"hidden_size"</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
+    <span class="s2">"gmm_components"</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">"data_dir"</span><span class="p">:</span> <span class="s2">"./data/carracing"</span><span class="p">,</span>
+    <span class="s2">"logdir"</span><span class="p">:</span> <span class="s2">"./results/carracing"</span><span class="p">,</span> <span class="s2">"num_epochs"</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
 <span class="p">})</span>
 <span class="n">train_mdn_rnn</span><span class="p">(</span><span class="n">vae_config</span><span class="p">,</span> <span class="n">mdrnn_config</span><span class="p">)</span>
 
 <span class="c1"># Stage 3: Train Controller with CMA-ES</span>
 <span class="n">ctrl_config</span> <span class="o">=</span> <span class="n">WMControllerConfig</span><span class="p">({</span>
-    <span class="s2">&quot;latent_size&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">&quot;hidden_size&quot;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">&quot;action_size&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-    <span class="s2">&quot;env_name&quot;</span><span class="p">:</span> <span class="s2">&quot;CarRacing-v2&quot;</span><span class="p">,</span> <span class="s2">&quot;logdir&quot;</span><span class="p">:</span> <span class="s2">&quot;./results/carracing&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;pop_size&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;target_return&quot;</span><span class="p">:</span> <span class="mf">950.0</span><span class="p">,</span>
+    <span class="s2">"latent_size"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"hidden_size"</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">"action_size"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">"env_name"</span><span class="p">:</span> <span class="s2">"CarRacing-v2"</span><span class="p">,</span> <span class="s2">"logdir"</span><span class="p">:</span> <span class="s2">"./results/carracing"</span><span class="p">,</span>
+    <span class="s2">"pop_size"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"target_return"</span><span class="p">:</span> <span class="mf">950.0</span><span class="p">,</span>
 <span class="p">})</span>
 <span class="n">train_controller</span><span class="p">(</span><span class="n">ctrl_config</span><span class="p">)</span>
 </pre></div>
@@ -1130,8 +1131,8 @@ q(x_t \mid x_0)
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.training.train_world_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">test_trained_model</span>
 
 <span class="n">test_trained_model</span><span class="p">(</span>
-    <span class="n">logdir</span><span class="o">=</span><span class="s2">&quot;./results/carracing&quot;</span><span class="p">,</span>
-    <span class="n">env_name</span><span class="o">=</span><span class="s2">&quot;CarRacing-v2&quot;</span><span class="p">,</span>
+    <span class="n">logdir</span><span class="o">=</span><span class="s2">"./results/carracing"</span><span class="p">,</span>
+    <span class="n">env_name</span><span class="o">=</span><span class="s2">"CarRacing-v2"</span><span class="p">,</span>
     <span class="n">action_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
     <span class="n">num_episodes</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
 <span class="p">)</span>

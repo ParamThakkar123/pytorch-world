@@ -64,7 +64,19 @@ torchwm eval --model diamond --checkpoint model.pt \
     --seed 42 \
     --metrics fid,fvd,lpips \
     --record eval_video.mp4
+
+# Linear-probe an I-JEPA checkpoint (frozen encoder; no FID/FVD involved)
+torchwm eval --model jepa --checkpoint results/jepa/jepa_run-latest.pth.tar \
+    --root-path /data/imagenet \
+    --model-name vit_base \
+    --output probe.json
 ```
+
+I-JEPA is scored differently from the generative world models: there is no
+rollout to compare against the environment, so `--model jepa` freezes the EMA
+target-encoder and trains a linear head on its average-pooled patch tokens,
+following Appendix A.2 of the paper. See {doc}`jepa` for the protocol and the
+Python API (`torchwm.jepa_linear_probe`).
 
 ### Interactive Play
 
@@ -292,14 +304,19 @@ To add evaluation for a new model:
 
 1. Create `scripts/eval_<model>.py` with a `run_eval()` function matching the
    signature in {doc}`cli`.
-2. Register it in `EVAL_MODULES` in `tools/cli.py`:
+2. Register it in `EVAL_MODULES` in `torchwm/cli.py`:
 
 ```python
 EVAL_MODULES = {
     "diamond": "scripts.eval_diamond",
+    "jepa": "torchwm.training.eval_jepa",
     "my_model": "scripts.eval_my_model",
 }
 ```
+
+   If the new model needs options the others do not, list them in
+   `EVAL_MODEL_OPTIONS` so passing them to a different `--model` is an error
+   rather than a silent no-op.
 
 The `torchwm eval` command will then accept `--model my_model`.
 

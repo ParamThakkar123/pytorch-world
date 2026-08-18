@@ -19,7 +19,7 @@
 <meta name="description" content="Installation: Install from PyPI: Install from source: For development and tests: Logging with Weights &amp; Biases and TensorBoard: TorchWM supports logging experiment results to Weights &amp; Bias..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Getting Started &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Getting Started &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -300,6 +299,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -307,6 +307,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -379,7 +380,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </pre></div>
 </div>
 <p>For development and tests:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[dev]"</span>
 </pre></div>
 </div>
 </section>
@@ -390,8 +391,8 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <h3>Weights &amp; Biases<a class="headerlink" href="#weights-biases" title="Link to this heading">#</a></h3>
 <p>To use WandB logging, set the <code class="docutils literal notranslate"><span class="pre">WANDB_API_KEY</span></code> environment variable (anonymous logins are no longer supported). You can get your key from <a class="reference external" href="https://wandb.ai/settings">wandb.ai</a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span><span class="o">.</span><span class="n">enable_wandb</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="n">cfg</span><span class="o">.</span><span class="n">wandb_project</span> <span class="o">=</span> <span class="s2">&quot;torchwm&quot;</span>
-<span class="n">cfg</span><span class="o">.</span><span class="n">wandb_entity</span> <span class="o">=</span> <span class="s2">&quot;your-entity&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">wandb_project</span> <span class="o">=</span> <span class="s2">"torchwm"</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">wandb_entity</span> <span class="o">=</span> <span class="s2">"your-entity"</span>
 </pre></div>
 </div>
 </section>
@@ -399,7 +400,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <h3>TensorBoard<a class="headerlink" href="#tensorboard" title="Link to this heading">#</a></h3>
 <p>Enable TensorBoard logging:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span><span class="o">.</span><span class="n">enable_tensorboard</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="n">cfg</span><span class="o">.</span><span class="n">log_dir</span> <span class="o">=</span> <span class="s2">&quot;runs&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">log_dir</span> <span class="o">=</span> <span class="s2">"runs"</span>
 </pre></div>
 </div>
 <p>Logs will be saved to the specified directory and can be viewed with <code class="docutils literal notranslate"><span class="pre">tensorboard</span> <span class="pre">--logdir</span> <span class="pre">runs</span></code>.</p>
@@ -409,19 +410,18 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <h2>Quick Start: Friendly API<a class="headerlink" href="#quick-start-friendly-api" title="Link to this heading">#</a></h2>
 <p>The recommended entrypoint for common workflows is <code class="docutils literal notranslate"><span class="pre">torchwm</span></code>. It mirrors the
 TorchWM implementation package, but gives users short factory helpers for
-discovery, model creation, environment creation, and operators.</p>
+discovery, model creation, and environment creation.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">torchwm</span><span class="o">.</span><span class="n">list_models</span><span class="p">())</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">torchwm</span><span class="o">.</span><span class="n">list_env_backends</span><span class="p">())</span>
 
-<span class="c1"># Runs on `pip install torchwm[gym]`. Use env=&quot;walker-walk&quot; (default backend)</span>
+<span class="c1"># Runs on `pip install torchwm[gym]`. Use env="walker-walk" (default backend)</span>
 <span class="c1"># with `pip install torchwm[dmc]` for DeepMind Control tasks.</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span>
-    <span class="s2">&quot;dreamer&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">&quot;Pendulum-v1&quot;</span><span class="p">,</span> <span class="n">env_backend</span><span class="o">=</span><span class="s2">&quot;gym&quot;</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="mi">5_000</span>
+    <span class="s2">"dreamer"</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">"Pendulum-v1"</span><span class="p">,</span> <span class="n">env_backend</span><span class="o">=</span><span class="s2">"gym"</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="mi">5_000</span>
 <span class="p">)</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">make_env</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;gym&quot;</span><span class="p">)</span>
-<span class="n">op</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">get_operator</span><span class="p">(</span><span class="s2">&quot;dreamer&quot;</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">action_dim</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">make_env</span><span class="p">(</span><span class="s2">"CartPole-v1"</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">"gym"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>You can still import direct research components from <code class="docutils literal notranslate"><span class="pre">torchwm</span></code> when you
@@ -429,8 +429,8 @@ need lower-level control:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">DreamerAgent</span><span class="p">,</span> <span class="n">DreamerConfig</span>
 
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">DreamerConfig</span><span class="p">()</span>
-<span class="n">cfg</span><span class="o">.</span><span class="n">env_backend</span> <span class="o">=</span> <span class="s2">&quot;gym&quot;</span>       <span class="c1"># or the default &quot;dmc&quot; with torchwm[dmc] installed</span>
-<span class="n">cfg</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="s2">&quot;Pendulum-v1&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">env_backend</span> <span class="o">=</span> <span class="s2">"gym"</span>       <span class="c1"># or the default "dmc" with torchwm[dmc] installed</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="s2">"Pendulum-v1"</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">DreamerAgent</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -465,132 +465,18 @@ need lower-level control:</p>
 </tbody>
 </table>
 </div>
-</section>
-<section id="quick-start-inference-with-operators">
-<h2>Quick Start: Inference with Operators<a class="headerlink" href="#quick-start-inference-with-operators" title="Link to this heading">#</a></h2>
-<p>TorchWM now includes standardized operators for preprocessing inputs during inference, making it easy to deploy models consistently.</p>
-<section id="what-are-operators">
-<h3>What are Operators?<a class="headerlink" href="#what-are-operators" title="Link to this heading">#</a></h3>
-<p>Operators handle input preprocessing: normalizing images, encoding actions, tokenizing text, and generating masks. Each model has a dedicated operator that ensures inputs are in the correct format.</p>
-</section>
-<section id="basic-usage">
-<h3>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
-
-<span class="c1"># Create operator with config parameters</span>
-<span class="n">op</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">get_operator</span><span class="p">(</span>
-    <span class="s2">&quot;dreamer&quot;</span><span class="p">,</span>
-    <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>  <span class="c1"># Image size for Dreamer</span>
-    <span class="n">action_dim</span><span class="o">=</span><span class="mi">6</span>    <span class="c1"># Action dimension</span>
-<span class="p">)</span>
-
-<span class="c1"># Process raw inputs</span>
-<span class="n">raw_inputs</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">your_pil_image_or_tensor</span><span class="p">,</span>  <span class="c1"># PIL Image or torch.Tensor</span>
-    <span class="s1">&#39;action&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]</span>  <span class="c1"># Action as list</span>
-<span class="p">}</span>
-
-<span class="c1"># Get processed tensors</span>
-<span class="n">processed</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">raw_inputs</span><span class="p">)</span>
-<span class="c1"># Returns: {&#39;obs&#39;: tensor(B, 3, 64, 64), &#39;action&#39;: tensor(B, 6)}</span>
-</pre></div>
-</div>
-</section>
-<section id="available-operators">
-<h3>Available Operators<a class="headerlink" href="#available-operators" title="Link to this heading">#</a></h3>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Operator</p></th>
-<th class="head"><p>Model</p></th>
-<th class="head"><p>Purpose</p></th>
-<th class="head"><p>Key Parameters</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerOperator</span></code></p></td>
-<td><p>Dreamer</p></td>
-<td><p>Image/action preprocessing</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">image_size</span></code>, <code class="docutils literal notranslate"><span class="pre">action_dim</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">JEPAOperator</span></code></p></td>
-<td><p>JEPA</p></td>
-<td><p>Image masking and patching</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">image_size</span></code>, <code class="docutils literal notranslate"><span class="pre">patch_size</span></code>, <code class="docutils literal notranslate"><span class="pre">mask_ratio</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IrisOperator</span></code></p></td>
-<td><p>IRIS</p></td>
-<td><p>Sequence tokenization</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">seq_length</span></code>, <code class="docutils literal notranslate"><span class="pre">vocab_size</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PlaNetOperator</span></code></p></td>
-<td><p>PlaNet</p></td>
-<td><p>State/action transitions</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">state_dim</span></code>, <code class="docutils literal notranslate"><span class="pre">action_dim</span></code></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="jepa-example-self-supervised">
-<h3>JEPA Example (Self-Supervised)<a class="headerlink" href="#jepa-example-self-supervised" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">JEPAOperator</span>
-
-<span class="n">op</span> <span class="o">=</span> <span class="n">JEPAOperator</span><span class="p">(</span><span class="n">image_size</span><span class="o">=</span><span class="mi">224</span><span class="p">,</span> <span class="n">patch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">mask_ratio</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
-<span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">image1</span><span class="p">,</span> <span class="n">image2</span><span class="p">]}</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-<span class="c1"># result[&#39;images&#39;]: stacked normalized images</span>
-<span class="c1"># result[&#39;mask&#39;]: random mask for self-supervised learning</span>
-</pre></div>
-</div>
-</section>
-<section id="iris-example-sequence-processing">
-<h3>IRIS Example (Sequence Processing)<a class="headerlink" href="#iris-example-sequence-processing" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">IrisOperator</span>
-
-<span class="n">op</span> <span class="o">=</span> <span class="n">IrisOperator</span><span class="p">(</span><span class="n">seq_length</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">vocab_size</span><span class="o">=</span><span class="mi">32000</span><span class="p">)</span>
-<span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tokens&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">101</span><span class="p">,</span> <span class="mi">2054</span><span class="p">,</span> <span class="mi">2003</span><span class="p">,</span> <span class="mi">102</span><span class="p">]}</span>  <span class="c1"># Token sequence</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-<span class="c1"># result[&#39;input_ids&#39;]: padded token tensor</span>
-<span class="c1"># result[&#39;attention_mask&#39;]: attention mask</span>
-</pre></div>
-</div>
-</section>
-<section id="integration-with-configs">
-<h3>Integration with Configs<a class="headerlink" href="#integration-with-configs" title="Link to this heading">#</a></h3>
-<p>Operators can reuse matching config fields, but operator-only parameters such as
-action dimensions should be supplied from the target environment:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
-
-<span class="n">cfg</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_config</span><span class="p">(</span><span class="s2">&quot;dreamer&quot;</span><span class="p">)</span>
-<span class="n">op</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">get_operator</span><span class="p">(</span>
-    <span class="s2">&quot;dreamer&quot;</span><span class="p">,</span>
-    <span class="n">image_size</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-    <span class="n">action_dim</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="utilities">
-<h3>Utilities<a class="headerlink" href="#utilities" title="Link to this heading">#</a></h3>
-<p>For most applications, use <code class="docutils literal notranslate"><span class="pre">torchwm.get_operator()</span></code> for preprocessing. Advanced utility functions remain available to package internals.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
-
-<span class="n">op</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">get_operator</span><span class="p">(</span><span class="s2">&quot;jepa&quot;</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="mi">224</span><span class="p">,</span> <span class="n">patch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">mask_ratio</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
-<span class="n">processed</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">process</span><span class="p">({</span><span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">pil_image</span><span class="p">]})</span>
-</pre></div>
-</div>
 <p>Train a complete world model pipeline (VAE + MDNRNN + Controller) on any Gym environment:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Train on CarRacing</span>
-python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2
+python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2
 
 <span class="c1"># Train on Pendulum</span>
-python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>Pendulum-v1
+python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>Pendulum-v1
 
 <span class="c1"># Test trained model</span>
-python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span>--test
+python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span>--test
 
 <span class="c1"># Specify action size manually for environments with missing dependencies</span>
-python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>BipedalWalker-v3<span class="w"> </span>--action_size<span class="w"> </span><span class="m">4</span>
+python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>BipedalWalker-v3<span class="w"> </span>--action_size<span class="w"> </span><span class="m">4</span>
 </pre></div>
 </div>
 <p>Dreamer supports multiple backends through <code class="docutils literal notranslate"><span class="pre">DreamerConfig.env_backend</span></code>; the
@@ -630,7 +516,6 @@ environment creation:</p>
 </tbody>
 </table>
 </div>
-</section>
 </section>
 <section id="typical-training-flow">
 <h2>Typical Training Flow<a class="headerlink" href="#typical-training-flow" title="Link to this heading">#</a></h2>
@@ -700,16 +585,6 @@ environment creation:</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-friendly-api">Quick Start: Friendly API</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-dreamer">Quick Start: Dreamer</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-inference-with-operators">Quick Start: Inference with Operators</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-are-operators">What are Operators?</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#available-operators">Available Operators</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#jepa-example-self-supervised">JEPA Example (Self-Supervised)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iris-example-sequence-processing">IRIS Example (Sequence Processing)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-with-configs">Integration with Configs</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utilities">Utilities</a></li>
-</ul>
-</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#typical-training-flow">Typical Training Flow</a></li>
 </ul>
   </nav></div>

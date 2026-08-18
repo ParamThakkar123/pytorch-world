@@ -37,7 +37,7 @@ Wrappers <wrappers>
 | [Unity ML-Agents](unity.md) | External Unity executable simulations with continuous-control behaviors | `UnityMLAgentsEnv`, `env_backend="unity_mlagents"` | Dict with `image` | Continuous `Box[-1, 1]` |
 | [Vectorized environments](vectorized.md) | Multiprocess/vector rollout collection and native ALE vectorization | `TorchVectorizedEnv`, `make_atari_vector_env` | Batched observations | Batched actions |
 | [World Model Env](world_model.md) | Model-based RL, policy optimization, and evaluation inside learned dynamics | `WorldModelEnv`, `make_world_model_env`, `env_backend="world-model"` | Adapter-defined Gymnasium space | Adapter-defined Gymnasium space |
-| [Wrappers](wrappers.md) | Shared preprocessing, action conversion, time limits, reward observations, and image transforms | `world_models.envs.wrappers` | Backend-dependent | Backend-dependent |
+| [Wrappers](wrappers.md) | Shared preprocessing, action conversion, time limits, reward observations, and image transforms | `torchwm.envs.wrappers` | Backend-dependent | Backend-dependent |
 
 ## Shared conventions
 

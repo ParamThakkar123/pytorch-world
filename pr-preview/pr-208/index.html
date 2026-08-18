@@ -19,7 +19,7 @@
 <meta name="description" content="TorchWM is a modular PyTorch library for world models, latent-dynamics planning, and representation learning. Train Dreamer, JEPA, IRIS, DiT, Genie, and DIAMOND agents with a unified API. Get Start..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>TorchWM Documentation &#8212; TorchWM 0.5.0 documentation</title>
+    <title>TorchWM Documentation &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -286,7 +286,7 @@ agents with a unified API.</p>
 
 <span class="c1"># Runs on ``pip install torchwm[gym]``.</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span>
-    <span class="s2">&quot;dreamer&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">&quot;Pendulum-v1&quot;</span><span class="p">,</span> <span class="n">env_backend</span><span class="o">=</span><span class="s2">&quot;gym&quot;</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="mi">5_000</span>
+    <span class="s2">"dreamer"</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">"Pendulum-v1"</span><span class="p">,</span> <span class="n">env_backend</span><span class="o">=</span><span class="s2">"gym"</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="mi">5_000</span>
 <span class="p">)</span>
 <span class="n">agent</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
@@ -302,7 +302,6 @@ agents with a unified API.</p>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -339,6 +338,7 @@ agents with a unified API.</p>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -348,6 +348,7 @@ agents with a unified API.</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </section>

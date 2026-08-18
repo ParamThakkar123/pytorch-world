@@ -11,15 +11,15 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/public_api.html" />
 <meta property="og:site_name" content="TorchWM Documentation" />
-<meta property="og:description" content="TorchWM exposes torchwm as the friendly public namespace for both application code and direct component imports. Use it for factory helpers, operators, model classes, config classes, and environmen..." />
+<meta property="og:description" content="TorchWM exposes torchwm as the friendly public namespace for both application code and direct component imports. Use it for factory helpers, model classes, config classes, and environment construct..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/_images/social_previews/summary_public_api_99e8a648.png" />
-<meta property="og:image:alt" content="TorchWM exposes torchwm as the friendly public namespace for both application code and direct component imports. Use it for factory helpers, operators, model classes, config classes, and environmen..." />
-<meta name="description" content="TorchWM exposes torchwm as the friendly public namespace for both application code and direct component imports. Use it for factory helpers, operators, model classes, config classes, and environmen..." />
+<meta property="og:image" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/_images/social_previews/summary_public_api_05d42957.png" />
+<meta property="og:image:alt" content="TorchWM exposes torchwm as the friendly public namespace for both application code and direct component imports. Use it for factory helpers, model classes, config classes, and environment construct..." />
+<meta name="description" content="TorchWM exposes torchwm as the friendly public namespace for both application code and direct component imports. Use it for factory helpers, model classes, config classes, and environment construct..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Public API Quick Reference &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Public API Quick Reference &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
     <link rel="canonical" href="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/public_api.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Using Operators for Inference" href="operators_guide.html" />
+    <link rel="next" title="Training Guide" href="training_guide.html" />
     <link rel="prev" title="Installation" href="installation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -300,6 +299,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -307,6 +307,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -368,7 +369,7 @@
 <h1>Public API Quick Reference<a class="headerlink" href="#public-api-quick-reference" title="Link to this heading">#</a></h1>
 <p>TorchWM exposes <code class="docutils literal notranslate"><span class="pre">torchwm</span></code> as the friendly public namespace for both
 application code and direct component imports. Use it for factory helpers,
-operators, model classes, config classes, and environment constructors.</p>
+model classes, config classes, and environment constructors.</p>
 <section id="common-workflow">
 <h2>Common Workflow<a class="headerlink" href="#common-workflow" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
@@ -379,17 +380,15 @@ operators, model classes, config classes, and environment constructors.</p>
 
 <span class="c1"># Configure and create a model in one step.</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span>
-    <span class="s2">&quot;dreamer&quot;</span><span class="p">,</span>
-    <span class="n">env_backend</span><span class="o">=</span><span class="s2">&quot;dmc&quot;</span><span class="p">,</span>
-    <span class="n">env</span><span class="o">=</span><span class="s2">&quot;walker-walk&quot;</span><span class="p">,</span>
+    <span class="s2">"dreamer"</span><span class="p">,</span>
+    <span class="n">env_backend</span><span class="o">=</span><span class="s2">"dmc"</span><span class="p">,</span>
+    <span class="n">env</span><span class="o">=</span><span class="s2">"walker-walk"</span><span class="p">,</span>
     <span class="n">total_steps</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Create standalone environments through a consistent backend selector.</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">make_env</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;gym&quot;</span><span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">make_env</span><span class="p">(</span><span class="s2">"CartPole-v1"</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">"gym"</span><span class="p">)</span>
 
-<span class="c1"># Build preprocessing operators without importing deep modules.</span>
-<span class="n">op</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">get_operator</span><span class="p">(</span><span class="s2">&quot;dreamer&quot;</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">action_dim</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -431,7 +430,7 @@ using direct imports from <code class="docutils literal notranslate"><span class
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">DreamerAgent</span><span class="p">,</span> <span class="n">DreamerConfig</span><span class="p">,</span> <span class="n">RSSM</span>
 
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">DreamerConfig</span><span class="p">()</span>
-<span class="n">cfg</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="s2">&quot;walker-walk&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="s2">"walker-walk"</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">DreamerAgent</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -460,11 +459,11 @@ or need access to implementation-specific constructors.</p>
       </div>
     </a>
     <a class="right-next"
-       href="operators_guide.html"
+       href="training_guide.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Using Operators for Inference</p>
+        <p class="prev-next-title">Training Guide</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

@@ -19,7 +19,7 @@
 <meta name="description" content="WorldModelEnv is a Gymnasium-compatible facade around a trained world model. The key idea is that RL libraries do not need to know whether a transition came from MuJoCo, Atari, Brax, or a learned d..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Tutorial: Plug TorchWM world models into RL libraries &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Tutorial: Plug TorchWM world models into RL libraries &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation_guide.html">Evaluation Guide</a></li>
@@ -300,6 +299,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -307,6 +307,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -392,7 +393,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">reset_world_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">latent</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample_initial_state</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
     <span class="n">obs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">decode_observation</span><span class="p">(</span><span class="n">latent</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">latent</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">obs</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;world_model&quot;</span><span class="p">}}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"state"</span><span class="p">:</span> <span class="n">latent</span><span class="p">,</span> <span class="s2">"observation"</span><span class="p">:</span> <span class="n">obs</span><span class="p">,</span> <span class="s2">"info"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"world_model"</span><span class="p">}}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">transition_world_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
@@ -401,10 +402,10 @@
     <span class="n">reward</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_reward</span><span class="p">(</span><span class="n">next_state</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
     <span class="n">done</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_terminal</span><span class="p">(</span><span class="n">next_state</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">next_state</span><span class="p">,</span>
-        <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">obs</span><span class="p">,</span>
-        <span class="s2">&quot;reward&quot;</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
-        <span class="s2">&quot;terminated&quot;</span><span class="p">:</span> <span class="n">done</span><span class="p">,</span>
+        <span class="s2">"state"</span><span class="p">:</span> <span class="n">next_state</span><span class="p">,</span>
+        <span class="s2">"observation"</span><span class="p">:</span> <span class="n">obs</span><span class="p">,</span>
+        <span class="s2">"reward"</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
+        <span class="s2">"terminated"</span><span class="p">:</span> <span class="n">done</span><span class="p">,</span>
     <span class="p">}</span>
 
 
@@ -452,12 +453,12 @@
 <span class="n">check_env</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="n">sb3_env</span> <span class="o">=</span> <span class="n">Monitor</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">PPO</span><span class="p">(</span><span class="s2">&quot;MlpPolicy&quot;</span><span class="p">,</span> <span class="n">sb3_env</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">PPO</span><span class="p">(</span><span class="s2">"MlpPolicy"</span><span class="p">,</span> <span class="n">sb3_env</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">total_timesteps</span><span class="o">=</span><span class="mi">10_000</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>For dictionary observations, use <code class="docutils literal notranslate"><span class="pre">MultiInputPolicy</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">PPO</span><span class="p">(</span><span class="s2">&quot;MultiInputPolicy&quot;</span><span class="p">,</span> <span class="n">sb3_env</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">PPO</span><span class="p">(</span><span class="s2">"MultiInputPolicy"</span><span class="p">,</span> <span class="n">sb3_env</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>For image observations, prefer channel-first <code class="docutils literal notranslate"><span class="pre">uint8</span></code> images and choose <code class="docutils literal notranslate"><span class="pre">CnnPolicy</span></code> or <code class="docutils literal notranslate"><span class="pre">MultiInputPolicy</span></code> depending on whether the observation is a plain image or a dictionary containing an image.</p>

@@ -111,15 +111,72 @@ providing better scalability and global context.
 
 ```{mermaid}
 graph TD
-    A["Noisy image x_t"] --> B["Patchify: (C,H,W) → (N,D)"]
-    C["Timestep t"] --> D["Timestep embedding"]
-    D --> E["AdaLN modulation"]
-    B --> F["DiT Block × depth"]
-    E --> F
-    F --> G["..."]
-    G --> H["Output head: (N,D) → (C,H,W)"]
-    H --> I["Predicted noise ε_θ"]
+    A["Noisy latent x_t"] --> B["Patchify + fixed sin-cos pos embed"]
+    C["Timestep t"] --> D["Timestep embedder"]
+    Y["Class label y"] --> Z["Label embedder (+ null token)"]
+    D --> E["c = t_emb + y_emb"]
+    Z --> E
+    E --> F["DiT Block × depth (adaLN-Zero)"]
+    B --> F
+    F --> H["Final layer: adaLN + linear → p·p·2C"]
+    E --> H
+    H --> I["Predicted noise ε_θ and covariance Σ_θ"]
 ```
+
+### adaLN-Zero conditioning
+
+Conditioning is the **sum** of the timestep and class embeddings. A single
+`SiLU → Linear` per block regresses six vectors from it — shift, scale and
+**gate** for each of the attention and MLP sub-layers (`6 × hidden`; vanilla
+adaLN uses `4 ×` because it has no gates).
+
+The gates are zero-initialised, so every block begins as the identity function.
+Figure 5 of the paper shows this is not a detail: adaLN-Zero reaches roughly half
+the FID of in-context conditioning at 400K steps, and clearly beats vanilla
+adaLN, which is otherwise the same block.
+
+### Model presets
+
+Table 1 configs, selected by name and patch size:
+
+```python
+from torchwm import DiT, dit_preset_config
+
+model = DiT.from_config(dit_preset_config("DiT-XL", patch_size=2))
+```
+
+| Preset | Layers | Hidden | Heads | Params (/2) |
+|---|---|---|---|---|
+| `DiT-S` | 12 | 384 | 6 | 33M |
+| `DiT-B` | 12 | 768 | 12 | 130M |
+| `DiT-L` | 24 | 1024 | 16 | 458M |
+| `DiT-XL` | 28 | 1152 | 16 | 675M |
+
+Patch size is the other axis of the design space (2, 4, 8). Halving it quadruples
+the token count and so the Gflops, which Figure 8 identifies — not parameter
+count — as what actually drives FID.
+
+### Classifier-free guidance
+
+The label embedder holds `num_classes + 1` rows; the extra one is a learned null
+token that `class_dropout_prob` randomly substitutes during training. At sampling
+time:
+
+```python
+out = model.forward_with_cfg(x_t, t, y, cfg_scale=1.5)
+```
+
+which computes `ε(x,∅) + s·(ε(x,y) − ε(x,∅))`. Guidance is what takes DiT-XL/2
+from FID 9.62 to 2.27 in Table 2. Pass `guided_channels=3` to reproduce the
+appendix's subset-of-channels variant.
+
+### Output channels
+
+With `learn_sigma=True` (the default, paper 3.1) the model emits `2C` channels:
+the predicted noise followed by the diagonal covariance parameterisation. The
+built-in training loop applies `L_simple` to the noise half only — training
+`Σ_θ` needs the full variational bound, which is not implemented here. Set
+`learn_sigma=False` for a strictly ε-only model.
 
 ### Patch Embedding
 
@@ -275,14 +332,14 @@ cfg.obs_size = 64
 ### DIAMOND CLI
 
 ```bash
-torchwm train diamond --config world_models/configs/experiments/diamond.yaml \
+torchwm train diamond --config torchwm/configs/experiments/diamond.yaml \
     preset=small seed=1
 ```
 
 Or directly:
 
 ```bash
-python -m world_models.training.train_diamond --game Breakout-v5 --preset small
+python -m torchwm.training.train_diamond --game Breakout-v5 --preset small
 ```
 
 ### DIAMOND Training Loop

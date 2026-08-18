@@ -391,7 +391,7 @@ graph TD
 
 ### Recurrent State-Space Model (RSSM)
 
-The core of Dreamer is the RSSM, defined in `world_models.models.dreamer_rssm.RSSM`.
+The core of Dreamer is the RSSM, defined in `torchwm.models.dreamer_rssm.RSSM`.
 It maintains a hybrid state with two components:
 
 **1. Deterministic state** `h_t` — a GRU hidden state that captures temporal
@@ -423,7 +423,7 @@ The model operates in two modes:
 Key insight: the prior learns to predict the posterior without seeing the
 observation. During imagination, the prior serves as the dynamics model.
 
-### CNN Encoder (`world_models.vision.dreamer_encoder.ConvEncoder`)
+### CNN Encoder (`torchwm.vision.dreamer_encoder.ConvEncoder`)
 
 Four-layer CNN with increasing channels (32 → 64 → 128 → 256) and ReLU
 activations. Strided convolutions (stride 2) halve spatial resolution at
@@ -439,7 +439,7 @@ Input:  (3, 64, 64)
 Output: embed_size-d vector
 ```
 
-### CNN Decoder (`world_models.vision.dreamer_decoder.ConvDecoder`)
+### CNN Decoder (`torchwm.vision.dreamer_decoder.ConvDecoder`)
 
 Mirrored transposed-CNN structure:
 

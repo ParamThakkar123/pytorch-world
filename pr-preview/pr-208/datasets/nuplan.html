@@ -19,7 +19,7 @@
 <meta name="description" content="The NuPlan dataset backend provides a PyTorch interface to the Motional NuPlan autonomous driving dataset. It loads real-world driving scenarios, rasterises local map tiles, and returns structured ..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>NuPlan Dataset &#8212; TorchWM 0.5.0 documentation</title>
+    <title>NuPlan Dataset &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation_guide.html">Evaluation Guide</a></li>
@@ -300,6 +299,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -307,6 +307,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -381,7 +382,7 @@
 
 <span class="c1"># Build a dataset over the mini split.</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">NuPlanDataset</span><span class="p">(</span>
-    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+    <span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">,</span>
     <span class="n">planning_horizon</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>   <span class="c1"># 8 seconds at 10 Hz</span>
     <span class="n">past_horizon</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>       <span class="c1"># 2 seconds at 10 Hz</span>
     <span class="n">map_extent</span><span class="o">=</span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">),</span>
@@ -401,7 +402,7 @@
 
 <span class="c1"># Or create a DataLoader directly.</span>
 <span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span> <span class="o">=</span> <span class="n">make_nuplan_dataloader</span><span class="p">(</span>
-    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+    <span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
     <span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
     <span class="n">limit_scenarios</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
@@ -463,7 +464,7 @@
 <h2>Sample structure<a class="headerlink" href="#sample-structure" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">world_models.datasets.nuplan.</span></span><span class="sig-name descname"><span class="pre">NuPlanSample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scenario_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ego_past</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ego_future</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents_past</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents_future</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">planning_target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/world_models/datasets/nuplan.html#NuPlanSample"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">torchwm.datasets.nuplan.</span></span><span class="sig-name descname"><span class="pre">NuPlanSample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scenario_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ego_past</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ego_future</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents_past</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents_future</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">planning_target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchwm/datasets/nuplan.html#NuPlanSample"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A single training sample from the NuPlan dataset.</p>
 <dl class="field-list simple">
@@ -533,8 +534,8 @@
 <h2>Dataset class<a class="headerlink" href="#dataset-class" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">world_models.datasets.nuplan.</span></span><span class="sig-name descname"><span class="pre">NuPlanDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'train'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nuplan-maps-v1.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">planning_horizon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">80</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">past_horizon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(100.0,</span> <span class="pre">100.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_agents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit_scenarios</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/world_models/datasets/nuplan.html#NuPlanDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">NuPlanSample</span></code>]</p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">torchwm.datasets.nuplan.</span></span><span class="sig-name descname"><span class="pre">NuPlanDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'train'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nuplan-maps-v1.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">planning_horizon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">80</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">past_horizon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(100.0,</span> <span class="pre">100.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_agents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit_scenarios</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchwm/datasets/nuplan.html#NuPlanDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>[<a class="reference internal" href="../api_reference.html#torchwm.datasets.nuplan.NuPlanSample" title="torchwm.datasets.nuplan.NuPlanSample"><code class="xref py py-class docutils literal notranslate"><span class="pre">NuPlanSample</span></code></a>]</p>
 <p>PyTorch Dataset over NuPlan scenarios for world model training.</p>
 <p>Each sample contains rasterised map tiles, ego and agent history, and
 future planning targets at 10 Hz.</p>
@@ -564,7 +565,7 @@ auto-discovers files under <code class="docutils literal notranslate"><span clas
 <h2>DataLoader factory<a class="headerlink" href="#dataloader-factory" title="Link to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">world_models.datasets.nuplan.</span></span><span class="sig-name descname"><span class="pre">make_nuplan_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'train'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">dataset_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/world_models/datasets/nuplan.html#make_nuplan_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="sig-prename descclassname"><span class="pre">torchwm.datasets.nuplan.</span></span><span class="sig-name descname"><span class="pre">make_nuplan_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'train'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">dataset_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchwm/datasets/nuplan.html#make_nuplan_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Create a NuPlan DataLoader.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -573,11 +574,11 @@ auto-discovers files under <code class="docutils literal notranslate"><span clas
 <li><p><strong>split</strong> (<em>str</em>) – Dataset split.</p></li>
 <li><p><strong>batch_size</strong> (<em>int</em>) – Batch size.</p></li>
 <li><p><strong>num_workers</strong> (<em>int</em>) – Worker count for the DataLoader.</p></li>
-<li><p><strong>**dataset_kwargs</strong> (<em>Any</em>) – Extra arguments forwarded to <code class="xref py py-class docutils literal notranslate"><span class="pre">NuPlanDataset</span></code>.</p></li>
+<li><p><strong>**dataset_kwargs</strong> (<em>Any</em>) – Extra arguments forwarded to <a class="reference internal" href="../api_reference.html#torchwm.datasets.nuplan.NuPlanDataset" title="torchwm.datasets.nuplan.NuPlanDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">NuPlanDataset</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>(dataset, dataloader)</p>
+<dd class="field-even"><p>(<a class="reference internal" href="../api_reference.html#torchwm.configs.jepa_config.JEPAConfig.dataset" title="torchwm.configs.jepa_config.JEPAConfig.dataset">dataset</a>, dataloader)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -597,16 +598,16 @@ auto-discovers files under <code class="docutils literal notranslate"><span clas
 <section id="integration-with-world-models">
 <h2>Integration with world models<a class="headerlink" href="#integration-with-world-models" title="Link to this heading">#</a></h2>
 <p>The NuPlan dataset can be used to train world models that operate on structured driving scenarios. The map raster and agent trajectories serve as context inputs, while the future ego trajectory provides a regression target for the planning head. A typical workflow:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span> <span class="o">=</span> <span class="n">make_nuplan_dataloader</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span> <span class="o">=</span> <span class="n">make_nuplan_dataloader</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
         <span class="c1"># batch is a dict with keys matching the NuPlanSample fields.</span>
-        <span class="n">map_raster</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;map_raster&quot;</span><span class="p">]</span>         <span class="c1"># (B, 3, H, W)</span>
-        <span class="n">ego_past</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;ego_past&quot;</span><span class="p">]</span>             <span class="c1"># (B, T_past, 6)</span>
-        <span class="n">agents_past</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;agents_past&quot;</span><span class="p">]</span>       <span class="c1"># (B, N, T_past, 6)</span>
-        <span class="n">agents_mask</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;agents_mask&quot;</span><span class="p">]</span>       <span class="c1"># (B, N)</span>
-        <span class="n">planning_target</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;planning_target&quot;</span><span class="p">]</span>  <span class="c1"># (B, T_future, 2)</span>
+        <span class="n">map_raster</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">"map_raster"</span><span class="p">]</span>         <span class="c1"># (B, 3, H, W)</span>
+        <span class="n">ego_past</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">"ego_past"</span><span class="p">]</span>             <span class="c1"># (B, T_past, 6)</span>
+        <span class="n">agents_past</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">"agents_past"</span><span class="p">]</span>       <span class="c1"># (B, N, T_past, 6)</span>
+        <span class="n">agents_mask</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">"agents_mask"</span><span class="p">]</span>       <span class="c1"># (B, N)</span>
+        <span class="n">planning_target</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">"planning_target"</span><span class="p">]</span>  <span class="c1"># (B, T_future, 2)</span>
 
         <span class="c1"># forward through a world model ...</span>
         <span class="n">loss</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">map_raster</span><span class="p">,</span> <span class="n">ego_past</span><span class="p">,</span> <span class="n">agents_past</span><span class="p">,</span> <span class="n">agents_mask</span><span class="p">,</span> <span class="n">planning_target</span><span class="p">)</span>

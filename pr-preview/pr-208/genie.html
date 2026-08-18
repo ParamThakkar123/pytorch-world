@@ -19,7 +19,7 @@
 <meta name="description" content="Genie is a generative model trained from video-only data that can be used as an interactive environment for reinforcement learning and decision-making tasks, without requiring any action labels. Ba..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Genie: Generative Interactive Environment &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Genie: Generative Interactive Environment &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -493,7 +493,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -625,7 +625,6 @@ window.runMermaid = runMermaid;</script>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -658,6 +657,7 @@ window.runMermaid = runMermaid;</script>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -665,6 +665,7 @@ window.runMermaid = runMermaid;</script>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -802,10 +803,10 @@ needing explicit action labels.</p>
 <h3><a class="toc-backref" href="#id4" role="doc-backlink">1. Video Tokenizer</a><a class="headerlink" href="#video-tokenizer" title="Link to this heading">#</a></h3>
 <p>Converts raw video frames into discrete tokens using a VQ-VAE approach with
 spatio-temporal downsampling:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span><span class="p">:</span>  <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span> <span class="n">video</span> <span class="n">clip</span>
-  <span class="err">└─</span> <span class="mi">3</span><span class="n">D</span> <span class="n">convolutions</span> <span class="p">(</span><span class="n">spatio</span><span class="o">-</span><span class="n">temporal</span> <span class="n">downsampling</span><span class="p">)</span>
-  <span class="err">└─</span> <span class="n">VQ</span> <span class="n">layer</span> <span class="p">(</span><span class="n">codebook</span> <span class="n">size</span><span class="p">:</span> <span class="mi">1024</span><span class="p">)</span>
-<span class="n">Output</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span> <span class="n">discrete</span> <span class="n">token</span> <span class="n">grid</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Input:  (3, 16, 64, 64) video clip
+  └─ 3D convolutions (spatio-temporal downsampling)
+  └─ VQ layer (codebook size: 1024)
+Output: (16, 16, 16) discrete token grid
 </pre></div>
 </div>
 <p>Total tokens per frame: <code class="docutils literal notranslate"><span class="pre">(64/4)</span> <span class="pre">×</span> <span class="pre">(64/4)</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">×</span> <span class="pre">16</span> <span class="pre">=</span> <span class="pre">256</span></code> tokens.</p>
@@ -814,10 +815,10 @@ spatio-temporal downsampling:</p>
 <h3><a class="toc-backref" href="#id5" role="doc-backlink">2. Latent Action Model (LAM)</a><a class="headerlink" href="#latent-action-model-lam" title="Link to this heading">#</a></h3>
 <p>Learns to infer discrete latent actions from frame-to-frame transitions
 without any supervision:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span><span class="p">:</span>  <span class="n">frame_t</span><span class="p">,</span> <span class="n">frame_t</span><span class="o">+</span><span class="mi">1</span>
-  <span class="err">└─</span> <span class="n">Encoder</span><span class="p">:</span> <span class="n">process</span> <span class="n">both</span> <span class="n">frames</span>
-  <span class="err">└─</span> <span class="n">VQ</span> <span class="n">layer</span><span class="p">:</span> <span class="n">quantize</span> <span class="n">to</span> <span class="n">action</span> <span class="n">token</span>
-<span class="n">Output</span><span class="p">:</span> <span class="n">latent</span> <span class="n">action</span> <span class="n">index</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">7</span><span class="p">})</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Input:  frame_t, frame_t+1
+  └─ Encoder: process both frames
+  └─ VQ layer: quantize to action token
+Output: latent action index (e.g., {0, ..., 7})
 </pre></div>
 </div>
 <p><strong>Training loss:</strong></p>
@@ -833,10 +834,10 @@ that minimizes the reconstruction error of the next frame.</p>
 <h3><a class="toc-backref" href="#id6" role="doc-backlink">3. Dynamics Model</a><a class="headerlink" href="#dynamics-model" title="Link to this heading">#</a></h3>
 <p>Transformer-based model that predicts future video tokens conditioned on past
 tokens and latent actions:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span><span class="p">:</span>  <span class="n">past</span> <span class="n">video</span> <span class="n">tokens</span> <span class="o">+</span> <span class="n">latent</span> <span class="n">action</span>
-  <span class="err">└─</span> <span class="n">Transformer</span> <span class="p">(</span><span class="n">causal</span> <span class="n">masking</span><span class="p">)</span>
-  <span class="err">└─</span> <span class="n">Token</span> <span class="n">prediction</span> <span class="n">head</span>
-<span class="n">Output</span><span class="p">:</span> <span class="nb">next</span> <span class="n">video</span> <span class="n">tokens</span> <span class="p">(</span><span class="k">as</span> <span class="n">logits</span><span class="p">)</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Input:  past video tokens + latent action
+  └─ Transformer (causal masking)
+  └─ Token prediction head
+Output: next video tokens (as logits)
 </pre></div>
 </div>
 <p><strong>Training loss</strong>: Cross-entropy on predicted vs. actual tokens.</p>
@@ -1056,9 +1057,9 @@ refinement strategy that is faster than autoregressive decoding:</p>
 <h2><a class="toc-backref" href="#id19" role="doc-backlink">Related Components</a><a class="headerlink" href="#related-components" title="Link to this heading">#</a></h2>
 <p>Genie is built from several core components in this library:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="operators_guide.html#videotokenizer"><span class="std std-ref"><code class="docutils literal notranslate"><span class="pre">VideoTokenizer</span></code></span></a>: Encodes video into discrete tokens</p></li>
-<li><p><a class="reference internal" href="operators_guide.html#latent-action-model"><span class="std std-ref"><code class="docutils literal notranslate"><span class="pre">LatentActionModel</span></code></span></a>: Learns latent actions from frame pairs</p></li>
-<li><p><a class="reference internal" href="operators_guide.html#dynamics-model"><span class="std std-ref"><code class="docutils literal notranslate"><span class="pre">DynamicsModel</span></code></span></a>: Transformer for future token prediction</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VideoTokenizer</span></code>: Encodes video into discrete tokens</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LatentActionModel</span></code>: Learns latent actions from frame pairs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DynamicsModel</span></code>: Transformer for future token prediction</p></li>
 </ul>
 </section>
 <section id="advantages">

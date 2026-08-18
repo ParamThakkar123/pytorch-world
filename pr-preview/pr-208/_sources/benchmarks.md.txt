@@ -7,7 +7,7 @@ in experiment logs, reports, and papers.
 ## Quick Overview
 
 - Preferred CLI entrypoint: `torchwm benchmark`.
-- Benchmark adapters live in the TorchWM source tree under `world_models/benchmarks/`.
+- Benchmark adapters live in the TorchWM source tree under `torchwm/benchmarks/`.
 
 ## Supported adapters
 
@@ -140,10 +140,10 @@ To run the full Atari 100k benchmark on all configured games with the
 centralized benchmark module:
 
 ```bash
-python -m world_models.benchmarks.atari_100k --benchmark
+python -m torchwm.benchmarks.atari_100k --benchmark
 ```
 
-This runs the Atari 100k evaluator from `world_models/benchmarks`, computes
+This runs the Atari 100k evaluator from `torchwm/benchmarks`, computes
 human-normalized scores, and reports aggregate metrics across games and seeds.
 
 ## Outputs
@@ -168,14 +168,14 @@ IQM and confidence intervals from that array.
 
 ## Extending the harness
 
-- Create an adapter in `world_models/benchmarks/adapters.py` that implements:
+- Create an adapter in `torchwm/benchmarks/adapters.py` that implements:
   - `load_checkpoint(path: str)`
   - `evaluate(num_episodes: int, render: bool = False)` returning `{"episode_returns": list[float]}`
-- Register your adapter in `world_models/benchmarks/cli.py` to expose it through `torchwm benchmark`.
+- Register your adapter in `torchwm/benchmarks/cli.py` to expose it through `torchwm benchmark`.
 
 ## Tests and CI
 
-- Place smoke tests under `world_models/benchmarks/tests/` so CI can run them quickly.
+- Place smoke tests under `torchwm/benchmarks/tests/` so CI can run them quickly.
 - The repo contains a `mocking_classes.py` helper for building fake agents and environments for fast unit tests.
 
 ## Where to start

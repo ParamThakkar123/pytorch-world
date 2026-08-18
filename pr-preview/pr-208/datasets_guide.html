@@ -11,15 +11,15 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/datasets_guide.html" />
 <meta property="og:site_name" content="TorchWM Documentation" />
-<meta property="og:description" content="TorchWM provides dataset loaders for image, video, RL trajectory, and curated benchmark data. All major datasets are accessible through the top-level package or the world_models.datasets module. Co..." />
+<meta property="og:description" content="TorchWM provides dataset loaders for image, video, RL trajectory, and curated benchmark data. All major datasets are accessible through the top-level package or the torchwm.datasets module. Content..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
 <meta property="og:image" content="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/_images/social_previews/summary_datasets_guide_74661b49.png" />
-<meta property="og:image:alt" content="TorchWM provides dataset loaders for image, video, RL trajectory, and curated benchmark data. All major datasets are accessible through the top-level package or the world_models.datasets module. Co..." />
-<meta name="description" content="TorchWM provides dataset loaders for image, video, RL trajectory, and curated benchmark data. All major datasets are accessible through the top-level package or the world_models.datasets module. Co..." />
+<meta property="og:image:alt" content="TorchWM provides dataset loaders for image, video, RL trajectory, and curated benchmark data. All major datasets are accessible through the top-level package or the torchwm.datasets module. Content..." />
+<meta name="description" content="TorchWM provides dataset loaders for image, video, RL trajectory, and curated benchmark data. All major datasets are accessible through the top-level package or the torchwm.datasets module. Content..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Datasets &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Datasets &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -300,6 +299,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -307,6 +307,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -368,7 +369,7 @@
 <h1><a class="toc-backref" href="#id1" role="doc-backlink">Datasets</a><a class="headerlink" href="#datasets" title="Link to this heading">#</a></h1>
 <p>TorchWM provides dataset loaders for image, video, RL trajectory, and
 curated benchmark data. All major datasets are accessible through the
-top-level package or the <code class="docutils literal notranslate"><span class="pre">world_models.datasets</span></code> module.</p>
+top-level package or the <code class="docutils literal notranslate"><span class="pre">torchwm.datasets</span></code> module.</p>
 <nav class="contents" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
@@ -487,7 +488,7 @@ top-level package or the <code class="docutils literal notranslate"><span class=
 <span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">make_cifar10</span><span class="p">(</span>
     <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-    <span class="n">root_path</span><span class="o">=</span><span class="s2">&quot;./data&quot;</span><span class="p">,</span>
+    <span class="n">root_path</span><span class="o">=</span><span class="s2">"./data"</span><span class="p">,</span>
     <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">world_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -539,8 +540,8 @@ dataloader. Used for JEPA and DiT prototyping.</p>
 <span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">make_imagenet1k</span><span class="p">(</span>
     <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-    <span class="n">root_path</span><span class="o">=</span><span class="s2">&quot;/data/imagenet&quot;</span><span class="p">,</span>
-    <span class="n">image_folder</span><span class="o">=</span><span class="s2">&quot;imagenet_full_size/061417/&quot;</span><span class="p">,</span>
+    <span class="n">root_path</span><span class="o">=</span><span class="s2">"/data/imagenet"</span><span class="p">,</span>
+    <span class="n">image_folder</span><span class="o">=</span><span class="s2">"imagenet_full_size/061417/"</span><span class="p">,</span>
     <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">copy_data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>      <span class="c1"># set True for SLURM with network storage</span>
 <span class="p">)</span>
@@ -569,8 +570,8 @@ dataloader. Used for JEPA and DiT prototyping.</p>
 <span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">make_imagefolder</span><span class="p">(</span>
     <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-    <span class="n">root_path</span><span class="o">=</span><span class="s2">&quot;./my_dataset&quot;</span><span class="p">,</span>
-    <span class="n">image_folder</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+    <span class="n">root_path</span><span class="o">=</span><span class="s2">"./my_dataset"</span><span class="p">,</span>
+    <span class="n">image_folder</span><span class="o">=</span><span class="s2">"train"</span><span class="p">,</span>
     <span class="n">val_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>         <span class="c1"># hold out 10% for validation</span>
 <span class="p">)</span>
 </pre></div>
@@ -582,7 +583,7 @@ dataloader. Used for JEPA and DiT prototyping.</p>
 <p>All video datasets inherit from <code class="docutils literal notranslate"><span class="pre">VideoDatasetBase</span></code> and share the same
 interface:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">VideoFolderDataset</span><span class="p">(</span>
-    <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;/path/to/videos&quot;</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/path/to/videos"</span><span class="p">,</span>
     <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
     <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
     <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -596,10 +597,10 @@ interface:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">VideoFolderDataset</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">VideoFolderDataset</span><span class="p">(</span>
-    <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;/data/videos&quot;</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/data/videos"</span><span class="p">,</span>
     <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
     <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-    <span class="n">extensions</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;.mp4&quot;</span><span class="p">,</span> <span class="s2">&quot;.avi&quot;</span><span class="p">,</span> <span class="s2">&quot;.mkv&quot;</span><span class="p">,</span> <span class="s2">&quot;.mov&quot;</span><span class="p">),</span>
+    <span class="n">extensions</span><span class="o">=</span><span class="p">(</span><span class="s2">".mp4"</span><span class="p">,</span> <span class="s2">".avi"</span><span class="p">,</span> <span class="s2">".mkv"</span><span class="p">,</span> <span class="s2">".mov"</span><span class="p">),</span>
     <span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
@@ -612,7 +613,7 @@ interface:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageFolderDataset</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">ImageFolderDataset</span><span class="p">(</span>
-    <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;/data/sequences&quot;</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/data/sequences"</span><span class="p">,</span>
     <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
     <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
 <span class="p">)</span>
@@ -633,15 +634,15 @@ stems first, then lexicographic). Shorter sequences pad with the last frame.</p>
 
 <span class="c1"># .npy file with shape (N, T, H, W, C)</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">NumPyDataset</span><span class="p">(</span>
-    <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;/data/videos.npy&quot;</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/data/videos.npy"</span><span class="p">,</span>
     <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
     <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># .npz file</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">NumPyDataset</span><span class="p">(</span>
-    <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;/data/videos.npz&quot;</span><span class="p">,</span>
-    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;videos&quot;</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/data/videos.npz"</span><span class="p">,</span>
+    <span class="n">key</span><span class="o">=</span><span class="s2">"videos"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -652,8 +653,8 @@ stems first, then lexicographic). Shorter sequences pad with the last frame.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDF5Dataset</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">HDF5Dataset</span><span class="p">(</span>
-    <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;/data/videos.h5&quot;</span><span class="p">,</span>
-    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;videos&quot;</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/data/videos.h5"</span><span class="p">,</span>
+    <span class="n">key</span><span class="o">=</span><span class="s2">"videos"</span><span class="p">,</span>
     <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
     <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
     <span class="n">memmap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>          <span class="c1"># set True for large files</span>
@@ -668,8 +669,8 @@ The <code class="docutils literal notranslate"><span class="pre">memmap=True</sp
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_video_dataloader</span>
 
 <span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span> <span class="o">=</span> <span class="n">create_video_dataloader</span><span class="p">(</span>
-    <span class="n">dataset_type</span><span class="o">=</span><span class="s2">&quot;video_folder&quot;</span><span class="p">,</span>  <span class="c1"># &quot;video_folder&quot; | &quot;image_folder&quot; | &quot;numpy&quot; | &quot;rl&quot;</span>
-    <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;/path/to/data&quot;</span><span class="p">,</span>
+    <span class="n">dataset_type</span><span class="o">=</span><span class="s2">"video_folder"</span><span class="p">,</span>  <span class="c1"># "video_folder" | "image_folder" | "numpy" | "rl"</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/path/to/data"</span><span class="p">,</span>
     <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
     <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
@@ -685,10 +686,10 @@ The <code class="docutils literal notranslate"><span class="pre">memmap=True</sp
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">RLEnvironmentDataset</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">RLEnvironmentDataset</span><span class="p">(</span>
-    <span class="n">data_source</span><span class="o">=</span><span class="s2">&quot;/data/episodes&quot;</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/data/episodes"</span><span class="p">,</span>
     <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
     <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-    <span class="n">obs_key</span><span class="o">=</span><span class="s2">&quot;observations&quot;</span><span class="p">,</span>
+    <span class="n">obs_key</span><span class="o">=</span><span class="s2">"observations"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -702,7 +703,7 @@ directories of <code class="docutils literal notranslate"><span class="pre">.npz
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.wm_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">RolloutDataset</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">RolloutDataset</span><span class="p">(</span>
-    <span class="n">root</span><span class="o">=</span><span class="s2">&quot;data/carracing&quot;</span><span class="p">,</span>
+    <span class="n">root</span><span class="o">=</span><span class="s2">"data/carracing"</span><span class="p">,</span>
     <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
     <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">buffer_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
@@ -766,7 +767,7 @@ world models.</p>
 <h3><a class="toc-backref" href="#id17" role="doc-backlink">Usage</a><a class="headerlink" href="#usage" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Single dataset</span>
 <span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span> <span class="o">=</span> <span class="n">create_tinyworlds_dataloader</span><span class="p">(</span>
-    <span class="n">dataset_name</span><span class="o">=</span><span class="s2">&quot;SONIC&quot;</span><span class="p">,</span>
+    <span class="n">dataset_name</span><span class="o">=</span><span class="s2">"SONIC"</span><span class="p">,</span>
     <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
     <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
@@ -778,18 +779,18 @@ world models.</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">TinyWorldsDataLoader</span><span class="o">.</span><span class="n">list_available_datasets</span><span class="p">())</span>
 
 <span class="c1"># Get metadata without downloading</span>
-<span class="n">info</span> <span class="o">=</span> <span class="n">TinyWorldsDataLoader</span><span class="o">.</span><span class="n">get_dataset_info</span><span class="p">(</span><span class="s2">&quot;ZELDA&quot;</span><span class="p">)</span>
+<span class="n">info</span> <span class="o">=</span> <span class="n">TinyWorldsDataLoader</span><span class="o">.</span><span class="n">get_dataset_info</span><span class="p">(</span><span class="s2">"ZELDA"</span><span class="p">)</span>
 
 <span class="c1"># Download all datasets at once</span>
 <span class="n">paths</span> <span class="o">=</span> <span class="n">download_all_datasets</span><span class="p">()</span>  <span class="c1"># returns dict of name → local path</span>
 
 <span class="c1"># Direct usage with cache</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">TinyWorldsDataset</span><span class="p">(</span>
-    <span class="n">dataset_name</span><span class="o">=</span><span class="s2">&quot;PONG&quot;</span><span class="p">,</span>
+    <span class="n">dataset_name</span><span class="o">=</span><span class="s2">"PONG"</span><span class="p">,</span>
     <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
     <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
     <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">cache_dir</span><span class="o">=</span><span class="s2">&quot;~/.cache/tinyworlds&quot;</span><span class="p">,</span>
+    <span class="n">cache_dir</span><span class="o">=</span><span class="s2">"~/.cache/tinyworlds"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>

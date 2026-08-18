@@ -19,7 +19,7 @@
 <meta name="description" content="Every TorchWM environment adapter and wrapper guarantees a minimum set of keys in the info dict returned by step(). Downstream code (value models, replay buffers, logging) may rely on these keys be..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Info dict contract &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Info dict contract &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation_guide.html">Evaluation Guide</a></li>
@@ -316,6 +315,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -323,6 +323,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -391,7 +392,7 @@
 <p>Every TorchWM environment adapter and wrapper guarantees a minimum set of keys in the <code class="docutils literal notranslate"><span class="pre">info</span></code> dict returned by <code class="docutils literal notranslate"><span class="pre">step()</span></code>. Downstream code (value models, replay buffers, logging) may rely on these keys being present.</p>
 <section id="universally-guaranteed-keys">
 <h2>Universally guaranteed keys<a class="headerlink" href="#universally-guaranteed-keys" title="Link to this heading">#</a></h2>
-<p>The function <code class="docutils literal notranslate"><span class="pre">finalize_step_info()</span></code> in <code class="docutils literal notranslate"><span class="pre">world_models.envs._contract</span></code> normalises every <code class="docutils literal notranslate"><span class="pre">step()</span></code> return. These three keys are <strong>always</strong> present:</p>
+<p>The function <code class="docutils literal notranslate"><span class="pre">finalize_step_info()</span></code> in <code class="docutils literal notranslate"><span class="pre">torchwm.envs._contract</span></code> normalises every <code class="docutils literal notranslate"><span class="pre">step()</span></code> return. These three keys are <strong>always</strong> present:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Key</p></th>
@@ -418,9 +419,9 @@
 <p><strong>Important:</strong> <code class="docutils literal notranslate"><span class="pre">GymImageEnv</span></code> without a wrapping <code class="docutils literal notranslate"><span class="pre">TimeLimit</span></code> sets <code class="docutils literal notranslate"><span class="pre">discount=0.0</span></code> on <em>any</em> <code class="docutils literal notranslate"><span class="pre">done=True</span></code> return, including truncation, because it treats all terminal transitions the same way. Wrap with <code class="docutils literal notranslate"><span class="pre">TimeLimit</span></code> to get <code class="docutils literal notranslate"><span class="pre">discount=1.0</span></code> on time-limit truncations (the Dreamer wrapper stack does this automatically). The cross-backend contract tests in <code class="docutils literal notranslate"><span class="pre">tests/envs/test_env_contract.py</span></code> (<code class="docutils literal notranslate"><span class="pre">test_env_contract_shared_assertions</span></code>) verify this behavior for each backend adapter.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
 <span class="c1"># info always contains:</span>
-<span class="k">assert</span> <span class="s2">&quot;terminated&quot;</span> <span class="ow">in</span> <span class="n">info</span>
-<span class="k">assert</span> <span class="s2">&quot;truncated&quot;</span> <span class="ow">in</span> <span class="n">info</span>
-<span class="k">assert</span> <span class="s2">&quot;discount&quot;</span> <span class="ow">in</span> <span class="n">info</span>
+<span class="k">assert</span> <span class="s2">"terminated"</span> <span class="ow">in</span> <span class="n">info</span>
+<span class="k">assert</span> <span class="s2">"truncated"</span> <span class="ow">in</span> <span class="n">info</span>
+<span class="k">assert</span> <span class="s2">"discount"</span> <span class="ow">in</span> <span class="n">info</span>
 </pre></div>
 </div>
 </section>
@@ -695,8 +696,8 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
 <span class="n">logger</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">reward</span><span class="o">=</span><span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="o">=</span><span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="o">=</span><span class="n">truncated</span><span class="p">)</span>
 <span class="c1"># MuJoCo-specific</span>
-<span class="k">if</span> <span class="s2">&quot;qpos&quot;</span> <span class="ow">in</span> <span class="n">info</span><span class="p">:</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">qpos</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;qpos&quot;</span><span class="p">])</span>
+<span class="k">if</span> <span class="s2">"qpos"</span> <span class="ow">in</span> <span class="n">info</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">qpos</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s2">"qpos"</span><span class="p">])</span>
 </pre></div>
 </div>
 </section>
@@ -705,12 +706,12 @@
 <p>Always store <code class="docutils literal notranslate"><span class="pre">info[&quot;action&quot;]</span></code> and <code class="docutils literal notranslate"><span class="pre">info[&quot;executed_action&quot;]</span></code> together so the policy update can reconstruct the exact action that was sent to the environment:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">transition</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
     <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
-    <span class="n">action</span><span class="o">=</span><span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">),</span>
-    <span class="n">executed_action</span><span class="o">=</span><span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;executed_action&quot;</span><span class="p">),</span>
+    <span class="n">action</span><span class="o">=</span><span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"action"</span><span class="p">),</span>
+    <span class="n">executed_action</span><span class="o">=</span><span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"executed_action"</span><span class="p">),</span>
     <span class="n">reward</span><span class="o">=</span><span class="n">reward</span><span class="p">,</span>
     <span class="n">terminated</span><span class="o">=</span><span class="n">terminated</span><span class="p">,</span>
     <span class="n">truncated</span><span class="o">=</span><span class="n">truncated</span><span class="p">,</span>
-    <span class="n">discount</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;discount&quot;</span><span class="p">],</span>
+    <span class="n">discount</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s2">"discount"</span><span class="p">],</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -721,9 +722,9 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">terminated</span><span class="p">:</span>
     <span class="n">target</span> <span class="o">=</span> <span class="n">reward</span>
 <span class="k">elif</span> <span class="n">truncated</span><span class="p">:</span>
-    <span class="n">target</span> <span class="o">=</span> <span class="n">reward</span> <span class="o">+</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;discount&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">next_value</span>  <span class="c1"># bootstrap normally</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">reward</span> <span class="o">+</span> <span class="n">info</span><span class="p">[</span><span class="s2">"discount"</span><span class="p">]</span> <span class="o">*</span> <span class="n">next_value</span>  <span class="c1"># bootstrap normally</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="n">target</span> <span class="o">=</span> <span class="n">reward</span> <span class="o">+</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;discount&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">next_value</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">reward</span> <span class="o">+</span> <span class="n">info</span><span class="p">[</span><span class="s2">"discount"</span><span class="p">]</span> <span class="o">*</span> <span class="n">next_value</span>
 </pre></div>
 </div>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">discount</span></code> is <code class="docutils literal notranslate"><span class="pre">0.0</span></code> for absorbing terminal states (so the bootstrap term is zero), but <code class="docutils literal notranslate"><span class="pre">1.0</span></code> for non-terminal transitions and typically also <code class="docutils literal notranslate"><span class="pre">1.0</span></code> for truncated transitions (the discount is applied <strong>after</strong> multiplying with <code class="docutils literal notranslate"><span class="pre">discount</span></code>).</p>

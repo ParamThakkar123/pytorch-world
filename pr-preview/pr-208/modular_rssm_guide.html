@@ -19,7 +19,7 @@
 <meta name="description" content="The Modular RSSM lets you mix and match encoder, backbone, and decoder components for world-model research. The standard Dreamer RSSM is a fixed architecture; the modular variant exposes every piec..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Modular RSSM &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Modular RSSM &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -300,6 +299,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -307,6 +307,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -395,6 +396,7 @@ architecture; the modular variant exposes every piece as a pluggable component.<
 <li><p><a class="reference internal" href="#custom-components" id="id14">Custom components</a></p></li>
 <li><p><a class="reference internal" href="#integration-with-training" id="id15">Integration with training</a></p></li>
 <li><p><a class="reference internal" href="#available-via-the-public-api" id="id16">Available via the public API</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id17">See Also</a></p></li>
 </ul>
 </li>
 </ul>
@@ -439,9 +441,9 @@ the factory, or can be provided manually.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_modular_rssm</span>
 
 <span class="n">rssm</span> <span class="o">=</span> <span class="n">create_modular_rssm</span><span class="p">(</span>
-    <span class="n">encoder_type</span><span class="o">=</span><span class="s2">&quot;conv&quot;</span><span class="p">,</span>      <span class="c1"># &quot;conv&quot; | &quot;mlp&quot; | &quot;vit&quot;</span>
-    <span class="n">decoder_type</span><span class="o">=</span><span class="s2">&quot;conv&quot;</span><span class="p">,</span>      <span class="c1"># &quot;conv&quot; | &quot;mlp&quot;</span>
-    <span class="n">backbone_type</span><span class="o">=</span><span class="s2">&quot;gru&quot;</span><span class="p">,</span>      <span class="c1"># &quot;gru&quot; | &quot;lstm&quot; | &quot;transformer&quot;</span>
+    <span class="n">encoder_type</span><span class="o">=</span><span class="s2">"conv"</span><span class="p">,</span>      <span class="c1"># "conv" | "mlp" | "vit"</span>
+    <span class="n">decoder_type</span><span class="o">=</span><span class="s2">"conv"</span><span class="p">,</span>      <span class="c1"># "conv" | "mlp"</span>
+    <span class="n">backbone_type</span><span class="o">=</span><span class="s2">"gru"</span><span class="p">,</span>      <span class="c1"># "gru" | "lstm" | "transformer"</span>
     <span class="n">obs_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>    <span class="c1"># (C, H, W) for images, (D,) for state vectors</span>
     <span class="n">action_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
     <span class="n">stoch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
@@ -577,8 +579,8 @@ a clear error.</p>
 imagination (prior only):</p>
 <section id="single-step-operations">
 <h3><a class="toc-backref" href="#id10" role="doc-backlink">Single-step operations</a><a class="headerlink" href="#single-step-operations" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">state</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">init_state</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
-<span class="c1">#   state = {&quot;mean&quot;: (4, 32), &quot;std&quot;: (4, 32), &quot;stoch&quot;: (4, 32), &quot;deter&quot;: (4, 200)}</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">state</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">init_state</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">)</span>
+<span class="c1">#   state = {"mean": (4, 32), "std": (4, 32), "stoch": (4, 32), "deter": (4, 200)}</span>
 
 <span class="n">action</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
 
@@ -600,8 +602,8 @@ imagination (prior only):</p>
     <span class="n">prev_state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
     <span class="n">horizon</span><span class="o">=</span><span class="n">T</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="c1">#   priors[&quot;stoch&quot;]:     (T, B, 32)</span>
-<span class="c1">#   posteriors[&quot;stoch&quot;]: (T, B, 32)</span>
+<span class="c1">#   priors["stoch"]:     (T, B, 32)</span>
+<span class="c1">#   posteriors["stoch"]: (T, B, 32)</span>
 
 <span class="c1"># Imagine a rollout using an actor policy</span>
 <span class="n">imagined</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">imagine_rollout</span><span class="p">(</span>
@@ -609,14 +611,14 @@ imagination (prior only):</p>
     <span class="n">prev_state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
     <span class="n">horizon</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="c1">#   imagined[&quot;stoch&quot;]: (15, B, 32)</span>
+<span class="c1">#   imagined["stoch"]: (15, B, 32)</span>
 </pre></div>
 </div>
 </section>
 <section id="decoding">
 <h3><a class="toc-backref" href="#id12" role="doc-backlink">Decoding</a><a class="headerlink" href="#decoding" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Decode observations from latent features</span>
-<span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">posterior</span><span class="p">[</span><span class="s2">&quot;stoch&quot;</span><span class="p">],</span> <span class="n">posterior</span><span class="p">[</span><span class="s2">&quot;deter&quot;</span><span class="p">]],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">posterior</span><span class="p">[</span><span class="s2">"stoch"</span><span class="p">],</span> <span class="n">posterior</span><span class="p">[</span><span class="s2">"deter"</span><span class="p">]],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">obs_dist</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">decode_observation</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 <span class="n">reconstruction</span> <span class="o">=</span> <span class="n">obs_dist</span><span class="o">.</span><span class="n">mean</span>  <span class="c1"># or obs_dist.sample()</span>
 
@@ -703,7 +705,7 @@ pattern is:</p>
     <span class="n">state</span> <span class="o">=</span> <span class="n">posterior</span>
 
 <span class="c1"># Train on the posterior states</span>
-<span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">posterior</span><span class="p">[</span><span class="s2">&quot;stoch&quot;</span><span class="p">],</span> <span class="n">posterior</span><span class="p">[</span><span class="s2">&quot;deter&quot;</span><span class="p">]],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">posterior</span><span class="p">[</span><span class="s2">"stoch"</span><span class="p">],</span> <span class="n">posterior</span><span class="p">[</span><span class="s2">"deter"</span><span class="p">]],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">recon_loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">rssm</span><span class="o">.</span><span class="n">decode_observation</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 <span class="n">reward_loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">rssm</span><span class="o">.</span><span class="n">decode_reward</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
@@ -719,21 +721,23 @@ sequence dimensions and gradient flow in recurrent training.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
 
 <span class="n">rssm</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_modular_rssm</span><span class="p">(</span>
-    <span class="n">encoder_type</span><span class="o">=</span><span class="s2">&quot;vit&quot;</span><span class="p">,</span>
-    <span class="n">backbone_type</span><span class="o">=</span><span class="s2">&quot;transformer&quot;</span><span class="p">,</span>
+    <span class="n">encoder_type</span><span class="o">=</span><span class="s2">"vit"</span><span class="p">,</span>
+    <span class="n">backbone_type</span><span class="o">=</span><span class="s2">"transformer"</span><span class="p">,</span>
     <span class="n">obs_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>
     <span class="n">action_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Or import directly</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModularRSSM</span><span class="p">,</span> <span class="n">create_modular_rssm</span>
-
-<span class="c1">## See Also</span>
-
-<span class="o">-</span> <span class="p">{</span><span class="n">doc</span><span class="p">}</span><span class="err">`</span><span class="n">vision_guide</span><span class="err">`</span> <span class="err">—</span> <span class="n">available</span> <span class="n">encoders</span> <span class="p">(</span><span class="n">ConvEncoder</span><span class="p">,</span> <span class="n">ViTEncoder</span><span class="p">,</span> <span class="n">MLPEncoder</span><span class="p">)</span> <span class="ow">and</span> <span class="n">decoders</span> <span class="p">(</span><span class="n">ConvDecoder</span><span class="p">,</span> <span class="n">MLPDecoder</span><span class="p">)</span>
-<span class="o">-</span> <span class="p">{</span><span class="n">doc</span><span class="p">}</span><span class="err">`</span><span class="n">dreamer</span><span class="err">`</span> <span class="err">—</span> <span class="n">using</span> <span class="n">the</span> <span class="n">ModularRSSM</span> <span class="n">inside</span> <span class="n">a</span> <span class="n">full</span> <span class="n">Dreamer</span> <span class="n">training</span> <span class="n">loop</span>
 </pre></div>
 </div>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id17" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="vision_guide.html"><span class="doc">Vision Components</span></a> — available encoders (ConvEncoder, ViTEncoder, MLPEncoder) and decoders (ConvDecoder, MLPDecoder)</p></li>
+<li><p><a class="reference internal" href="dreamer.html"><span class="doc">Dreamer: Model-Based RL with Latent Dynamics</span></a> — using the ModularRSSM inside a full Dreamer training loop</p></li>
+</ul>
 </section>
 </section>
 
@@ -803,6 +807,7 @@ sequence dimensions and gradient flow in recurrent training.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-components">Custom components</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-with-training">Integration with training</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#available-via-the-public-api">Available via the public API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
 </ul>
   </nav></div>
 

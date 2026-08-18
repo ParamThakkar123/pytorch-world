@@ -2,7 +2,7 @@
 
 TorchWM exposes `torchwm` as the friendly public namespace for both
 application code and direct component imports. Use it for factory helpers,
-operators, model classes, config classes, and environment constructors.
+model classes, config classes, and environment constructors.
 
 ## Common Workflow
 
@@ -24,8 +24,6 @@ agent = torchwm.create_model(
 # Create standalone environments through a consistent backend selector.
 env = torchwm.make_env("CartPole-v1", backend="gym")
 
-# Build preprocessing operators without importing deep modules.
-op = torchwm.get_operator("dreamer", image_size=64, action_dim=6)
 ```
 
 ## Factory Helpers

@@ -19,7 +19,7 @@
 <meta name="description" content="TorchWM includes a lightweight benchmark harness for running standardized evaluations of trained world-model agents and exporting results that can be used in experiment logs, reports, and papers. Q..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Benchmarking World Models &#8212; TorchWM 0.5.0 documentation</title>
+    <title>Benchmarking World Models &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,6 +63,7 @@
     <link rel="canonical" href="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/benchmarks.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Run Code In The Docs" href="run_code_in_docs.html" />
     <link rel="prev" title="Contributing" href="contributing.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -134,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -266,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -299,6 +299,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -306,6 +307,7 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -372,7 +374,7 @@ in experiment logs, reports, and papers.</p>
 <h2>Quick Overview<a class="headerlink" href="#quick-overview" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Preferred CLI entrypoint: <code class="docutils literal notranslate"><span class="pre">torchwm</span> <span class="pre">benchmark</span></code>.</p></li>
-<li><p>Benchmark adapters live in the TorchWM source tree under <code class="docutils literal notranslate"><span class="pre">world_models/benchmarks/</span></code>.</p></li>
+<li><p>Benchmark adapters live in the TorchWM source tree under <code class="docutils literal notranslate"><span class="pre">torchwm/benchmarks/</span></code>.</p></li>
 </ul>
 </section>
 <section id="supported-adapters">
@@ -480,8 +482,8 @@ directory. Load those reports with standard Python tools when you need custom
 analysis:</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 
-<span class="n">res</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;results/bench/benchmark_results.json&quot;</span><span class="p">))</span>
-<span class="n">per_seed</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;aggregate&quot;</span><span class="p">][</span><span class="s2">&quot;per_seed_means&quot;</span><span class="p">]</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">"results/bench/benchmark_results.json"</span><span class="p">))</span>
+<span class="n">per_seed</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">"aggregate"</span><span class="p">][</span><span class="s2">"per_seed_means"</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">per_seed</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -490,10 +492,10 @@ analysis:</p>
 <h2>Running the Atari 100k benchmark<a class="headerlink" href="#running-the-atari-100k-benchmark" title="Link to this heading">#</a></h2>
 <p>To run the full Atari 100k benchmark on all configured games with the
 centralized benchmark module:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>world_models.benchmarks.atari_100k<span class="w"> </span>--benchmark
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>torchwm.benchmarks.atari_100k<span class="w"> </span>--benchmark
 </pre></div>
 </div>
-<p>This runs the Atari 100k evaluator from <code class="docutils literal notranslate"><span class="pre">world_models/benchmarks</span></code>, computes
+<p>This runs the Atari 100k evaluator from <code class="docutils literal notranslate"><span class="pre">torchwm/benchmarks</span></code>, computes
 human-normalized scores, and reports aggregate metrics across games and seeds.</p>
 </section>
 <section id="outputs">
@@ -519,19 +521,19 @@ IQM and confidence intervals from that array.</p>
 <section id="extending-the-harness">
 <h2>Extending the harness<a class="headerlink" href="#extending-the-harness" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Create an adapter in <code class="docutils literal notranslate"><span class="pre">world_models/benchmarks/adapters.py</span></code> that implements:</p>
+<li><p>Create an adapter in <code class="docutils literal notranslate"><span class="pre">torchwm/benchmarks/adapters.py</span></code> that implements:</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">load_checkpoint(path:</span> <span class="pre">str)</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">evaluate(num_episodes:</span> <span class="pre">int,</span> <span class="pre">render:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False)</span></code> returning <code class="docutils literal notranslate"><span class="pre">{&quot;episode_returns&quot;:</span> <span class="pre">list[float]}</span></code></p></li>
 </ul>
 </li>
-<li><p>Register your adapter in <code class="docutils literal notranslate"><span class="pre">world_models/benchmarks/cli.py</span></code> to expose it through <code class="docutils literal notranslate"><span class="pre">torchwm</span> <span class="pre">benchmark</span></code>.</p></li>
+<li><p>Register your adapter in <code class="docutils literal notranslate"><span class="pre">torchwm/benchmarks/cli.py</span></code> to expose it through <code class="docutils literal notranslate"><span class="pre">torchwm</span> <span class="pre">benchmark</span></code>.</p></li>
 </ul>
 </section>
 <section id="tests-and-ci">
 <h2>Tests and CI<a class="headerlink" href="#tests-and-ci" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Place smoke tests under <code class="docutils literal notranslate"><span class="pre">world_models/benchmarks/tests/</span></code> so CI can run them quickly.</p></li>
+<li><p>Place smoke tests under <code class="docutils literal notranslate"><span class="pre">torchwm/benchmarks/tests/</span></code> so CI can run them quickly.</p></li>
 <li><p>The repo contains a <code class="docutils literal notranslate"><span class="pre">mocking_classes.py</span></code> helper for building fake agents and environments for fast unit tests.</p></li>
 </ul>
 </section>
@@ -562,6 +564,15 @@ IQM and confidence intervals from that array.</p>
         <p class="prev-next-subtitle">previous</p>
         <p class="prev-next-title">Contributing</p>
       </div>
+    </a>
+    <a class="right-next"
+       href="run_code_in_docs.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Run Code In The Docs</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>

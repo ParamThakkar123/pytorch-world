@@ -60,10 +60,10 @@ pytest
 pytest -m "not slow and not gpu and not integration"
 
 # Specific package-mirrored test area
-pytest tests/inference/test_operators.py
+pytest tests/masks/test_masks.py
 
 # With coverage
-pytest --cov=world_models --cov-report=html
+pytest --cov=torchwm --cov-report=html
 ```
 
 ## Documentation
@@ -78,30 +78,17 @@ Open `docs/build/html/index.html` in your browser.
 
 ## Adding New Features
 
-### 1. New Operators
+### 1. New Models
 
-```python
-from torchwm import OperatorABC
-
-class NewOperator(OperatorABC):
-    def preprocess(self, inputs):
-        # Your preprocessing logic
-        return processed_tensors
-```
-
-Add to `__init__.py` and create tests.
-
-### 2. New Models
-
-1. Create model class in `world_models/models/`
-2. Add config class in `world_models/configs/`
-3. Add operator in `world_models/inference/operators/`
+1. Create model class in `torchwm/models/`
+2. Add config class in `torchwm/configs/`
+3. Export both from `torchwm/__init__.py`
 4. Update training scripts
 5. Add documentation and tests
 
-### 3. New Environments
+### 2. New Environments
 
-1. Implement environment wrapper in `world_models/envs/`
+1. Implement environment wrapper in `torchwm/envs/`
 2. Add to environment registry
 3. Update documentation
 
@@ -140,9 +127,9 @@ Use conventional commit format:
 - `chore:` Maintenance
 
 Examples:
-- `feat: add VLA operator support`
+- `feat: add I-JEPA linear evaluation`
 - `fix: resolve memory leak in dreamer training`
-- `docs: update operators guide`
+- `docs: update inference guide`
 
 ## Issue Reporting
 

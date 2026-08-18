@@ -19,7 +19,7 @@
 <meta name="description" content="The project exposes a small command-line interface for common developer tasks: Run the CLI with: python -m torchwm.cli &lt;command&gt;; after installing the package an installed entrypoint is avail..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>TorchWM CLI &#8212; TorchWM 0.5.0 documentation</title>
+    <title>TorchWM CLI &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -300,6 +299,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -307,6 +307,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -381,7 +382,7 @@ commands require optional dependencies (listed below).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">version</span></code> - Print the installed <code class="docutils literal notranslate"><span class="pre">torchwm</span></code> package version (or “unknown” if
 the package cannot be imported).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">envs</span> <span class="pre">list</span></code> - List built-in environment backends and example environment ids.
-This reads the environment catalog from <code class="docutils literal notranslate"><span class="pre">world_models.catalog</span></code> if available.</p></li>
+This reads the environment catalog from <code class="docutils literal notranslate"><span class="pre">torchwm.catalog</span></code> if available.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">datasets</span> <span class="pre">list</span> <span class="pre">[PATH]</span></code> - List dataset entries under <code class="docutils literal notranslate"><span class="pre">PATH</span></code>. If <code class="docutils literal notranslate"><span class="pre">PATH</span></code> is not
 provided the command uses <code class="docutils literal notranslate"><span class="pre">TORCHWM_HOME</span></code> or defaults to <code class="docutils literal notranslate"><span class="pre">~/.torchwm</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">datasets</span> <span class="pre">convert</span> <span class="pre">&lt;src&gt;</span> <span class="pre">[--dest-format</span> <span class="pre">video]</span> <span class="pre">[--out-dir</span> <span class="pre">DIR]</span></code> - Convert a
@@ -396,17 +397,20 @@ a compressed <code class="docutils literal notranslate"><span class="pre">.npz</
 <code class="docutils literal notranslate"><span class="pre">dones</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">&lt;model&gt;</span> <span class="pre">[extra</span> <span class="pre">args...]</span> <span class="pre">[--inproc]</span></code> - Launch an existing training
 entrypoint. The CLI maps simple model names to modules in
-<code class="docutils literal notranslate"><span class="pre">world_models.training</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">diamond</span></code>, <code class="docutils literal notranslate"><span class="pre">iris</span></code>, <code class="docutils literal notranslate"><span class="pre">planet</span></code>, <code class="docutils literal notranslate"><span class="pre">jepa</span></code>, <code class="docutils literal notranslate"><span class="pre">rssm</span></code>,
+<code class="docutils literal notranslate"><span class="pre">torchwm.training</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">diamond</span></code>, <code class="docutils literal notranslate"><span class="pre">iris</span></code>, <code class="docutils literal notranslate"><span class="pre">planet</span></code>, <code class="docutils literal notranslate"><span class="pre">jepa</span></code>, <code class="docutils literal notranslate"><span class="pre">rssm</span></code>,
 <code class="docutils literal notranslate"><span class="pre">genie</span></code>). By default <code class="docutils literal notranslate"><span class="pre">train</span></code> spawns a subprocess running
-<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">world_models.training.&lt;name&gt;</span></code> and forwards any extra args. Use
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">torchwm.training.&lt;name&gt;</span></code> and forwards any extra args. Use
 <code class="docutils literal notranslate"><span class="pre">--inproc</span></code> to attempt running the training entrypoint in-process (calls the
 module’s <code class="docutils literal notranslate"><span class="pre">main()</span></code> if available). DIAMOND, IRIS, and JEPA accept
 <code class="docutils literal notranslate"><span class="pre">--config</span> <span class="pre">PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">--print-config</span></code>, and OmegaConf/Hydra-style dot-list
 overrides such as <code class="docutils literal notranslate"><span class="pre">total_epochs=100</span></code> or <code class="docutils literal notranslate"><span class="pre">optimization.lr=3e-4</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">eval</span> <span class="pre">--model</span> <span class="pre">&lt;NAME&gt;</span> <span class="pre">--checkpoint</span> <span class="pre">&lt;PATH&gt;</span> <span class="pre">[options]</span></code> - Evaluate a trained world
-model with FID, FVD, LPIPS, and PSNR metrics. Metrics compare real trajectories
-(collected from the environment) against generated trajectories (from the
-model). See <a class="reference internal" href="evaluation_guide.html"><span class="doc">Evaluation Guide</span></a> for details and interpretation.</p>
+model. Generative models (<code class="docutils literal notranslate"><span class="pre">diamond</span></code>) are scored with FID, FVD, LPIPS, and PSNR,
+comparing real trajectories (collected from the environment) against generated
+ones. <code class="docutils literal notranslate"><span class="pre">jepa</span></code> has no rollout to score, so it runs the paper’s frozen-encoder
+linear probe instead and takes <code class="docutils literal notranslate"><span class="pre">--root-path</span></code> rather than <code class="docutils literal notranslate"><span class="pre">--game</span></code>; options that
+belong to the other model are rejected rather than ignored. See
+<a class="reference internal" href="evaluation_guide.html"><span class="doc">Evaluation Guide</span></a> for details and interpretation.</p>
 <p>Key options:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">--model</span></code>, <code class="docutils literal notranslate"><span class="pre">-m</span></code> — model type (currently <code class="docutils literal notranslate"><span class="pre">diamond</span></code>)</p></li>
@@ -433,7 +437,7 @@ override the agent’s actions.</p>
 </ul>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">models</span> <span class="pre">list</span></code> - Print the known training entrypoints and (when available)
-exported model names from <code class="docutils literal notranslate"><span class="pre">world_models.models</span></code>.</p></li>
+exported model names from <code class="docutils literal notranslate"><span class="pre">torchwm.models</span></code>.</p></li>
 </ul>
 </section>
 <section id="environment-optional-dependencies">
@@ -485,25 +489,32 @@ repository.</p></li>
 <ul class="simple">
 <li><p>Example: run IRIS training with a library YAML config and a dot-list override</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span>train<span class="w"> </span>iris<span class="w"> </span>--config<span class="w"> </span>world_models/configs/experiments/iris.yaml<span class="w"> </span><span class="nv">total_epochs</span><span class="o">=</span><span class="m">100</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span>train<span class="w"> </span>iris<span class="w"> </span>--config<span class="w"> </span>torchwm/configs/experiments/iris.yaml<span class="w"> </span><span class="nv">total_epochs</span><span class="o">=</span><span class="m">100</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>Example: inspect a composed JEPA config without starting training</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span>train<span class="w"> </span>jepa<span class="w"> </span>--config<span class="w"> </span>world_models/configs/experiments/jepa.yaml<span class="w"> </span>optimization.epochs<span class="o">=</span><span class="m">50</span><span class="w"> </span>--print-config
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span>train<span class="w"> </span>jepa<span class="w"> </span>--config<span class="w"> </span>torchwm/configs/experiments/jepa.yaml<span class="w"> </span>optimization.epochs<span class="o">=</span><span class="m">50</span><span class="w"> </span>--print-config
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>Example: launch a DIAMOND preset from the unified training CLI</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span>train<span class="w"> </span>diamond<span class="w"> </span>--config<span class="w"> </span>world_models/configs/experiments/diamond.yaml<span class="w"> </span><span class="nv">preset</span><span class="o">=</span>small<span class="w"> </span><span class="nv">seed</span><span class="o">=</span><span class="m">3</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span>train<span class="w"> </span>diamond<span class="w"> </span>--config<span class="w"> </span>torchwm/configs/experiments/diamond.yaml<span class="w"> </span><span class="nv">preset</span><span class="o">=</span>small<span class="w"> </span><span class="nv">seed</span><span class="o">=</span><span class="m">3</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>Example: evaluate a DIAMOND checkpoint</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>checkpoints/diamond/checkpoint.pt<span class="w"> </span>--game<span class="w"> </span>Breakout-v5
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Example: linear-probe an I-JEPA checkpoint</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>jepa<span class="w"> </span>--checkpoint<span class="w"> </span>results/jepa/jepa_run-latest.pth.tar<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--root-path<span class="w"> </span>/data/imagenet<span class="w"> </span>--model-name<span class="w"> </span>vit_base<span class="w"> </span>--output<span class="w"> </span>probe.json
 </pre></div>
 </div>
 <ul class="simple">

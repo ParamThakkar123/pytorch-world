@@ -19,7 +19,7 @@
 <meta name="description" content="IRIS (Imagination with auto-Regression over an Inner Speech) is an implementation of the paper “Transformers are Sample-Efficient World Models” (Micheli et al., 2023). Contents: IRIS: Transformers ..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>IRIS: Transformers for Sample-Efficient World Models &#8212; TorchWM 0.5.0 documentation</title>
+    <title>IRIS: Transformers for Sample-Efficient World Models &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -493,7 +493,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -625,7 +625,6 @@ window.runMermaid = runMermaid;</script>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -658,6 +657,7 @@ window.runMermaid = runMermaid;</script>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -665,6 +665,7 @@ window.runMermaid = runMermaid;</script>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -756,15 +757,25 @@ window.runMermaid = runMermaid;</script>
 </ul>
 </li>
 <li><p><a class="reference internal" href="#benchmark-results" id="id17">Benchmark Results</a></p></li>
-<li><p><a class="reference internal" href="#common-pitfalls" id="id18">Common Pitfalls</a></p>
+<li><p><a class="reference internal" href="#checkpoint-compatibility" id="id18">Checkpoint compatibility</a></p></li>
+<li><p><a class="reference internal" href="#paper-conformance" id="id19">Paper conformance</a></p></li>
+<li><p><a class="reference internal" href="#using-the-components-directly" id="id20">Using the components directly</a></p></li>
+<li><p><a class="reference internal" href="#training-on-other-environments" id="id21">Training on other environments</a></p>
 <ul>
-<li><p><a class="reference internal" href="#codebook-collapse" id="id19">Codebook collapse</a></p></li>
-<li><p><a class="reference internal" href="#transformer-memory" id="id20">Transformer memory</a></p></li>
-<li><p><a class="reference internal" href="#slow-autoregressive-generation" id="id21">Slow autoregressive generation</a></p></li>
+<li><p><a class="reference internal" href="#minecraft-minerl-minedojo" id="id22">Minecraft (MineRL / MineDojo)</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#see-also" id="id22">See Also</a></p></li>
-<li><p><a class="reference internal" href="#references" id="id23">References</a></p></li>
+<li><p><a class="reference internal" href="#hardware-and-presets" id="id23">Hardware and presets</a></p></li>
+<li><p><a class="reference internal" href="#common-pitfalls" id="id24">Common Pitfalls</a></p>
+<ul>
+<li><p><a class="reference internal" href="#codebook-collapse" id="id25">Codebook collapse</a></p></li>
+<li><p><a class="reference internal" href="#blank-or-double-normalized-frames" id="id26">Blank or double-normalized frames</a></p></li>
+<li><p><a class="reference internal" href="#transformer-memory" id="id27">Transformer memory</a></p></li>
+<li><p><a class="reference internal" href="#slow-autoregressive-generation" id="id28">Slow autoregressive generation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#see-also" id="id29">See Also</a></p></li>
+<li><p><a class="reference internal" href="#references" id="id30">References</a></p></li>
 </ul>
 </li>
 </ul>
@@ -987,9 +998,9 @@ plus, from the aₜ position:   predict reward rₜ and termination dₜ
 <span class="kn">import</span><span class="w"> </span><span class="nn">torchwm</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span>
-    <span class="s2">&quot;iris&quot;</span><span class="p">,</span>
+    <span class="s2">"iris"</span><span class="p">,</span>
     <span class="n">action_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-    <span class="n">device</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">),</span>
+    <span class="n">device</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cuda"</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"cpu"</span><span class="p">),</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -1011,7 +1022,7 @@ plus, from the aₜ position:   predict reward rₜ and termination dₜ
 <span class="c1"># Training</span>
 <span class="n">config</span><span class="o">.</span><span class="n">total_epochs</span> <span class="o">=</span> <span class="mi">600</span>
 <span class="n">config</span><span class="o">.</span><span class="n">env_steps_per_epoch</span> <span class="o">=</span> <span class="mi">200</span>
-<span class="n">config</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="s2">&quot;ALE/Pong-v5&quot;</span>
+<span class="n">config</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="s2">"ALE/Pong-v5"</span>
 </pre></div>
 </div>
 </section>
@@ -1021,7 +1032,7 @@ plus, from the aₜ position:   predict reward rₜ and termination dₜ
 </pre></div>
 </div>
 <p>For custom research code:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_iris<span class="w"> </span>--game<span class="w"> </span><span class="s2">&quot;ALE/Pong-v5&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_iris<span class="w"> </span>--game<span class="w"> </span><span class="s2">"ALE/Pong-v5"</span>
 </pre></div>
 </div>
 <p>See <a class="reference internal" href="configs_reference.html"><span class="doc">Configs Reference</span></a> for the full IRISConfig field reference with defaults.</p>
@@ -1029,10 +1040,19 @@ plus, from the aₜ position:   predict reward rₜ and termination dₜ
 </section>
 <section id="benchmark-results">
 <h2><a class="toc-backref" href="#id17" role="doc-backlink">Benchmark Results</a><a class="headerlink" href="#benchmark-results" title="Link to this heading">#</a></h2>
+<p>These are the numbers <strong>reported in the paper</strong> (Micheli et al., ICLR 2023,
+Table 1), averaged over 5 seeds on 8× A100 40GB. They are the target this
+implementation aims at, not measurements of this codebase — reproduce them
+yourself before citing them as such.</p>
+<p>To be comparable, use the number <code class="docutils literal notranslate"><span class="pre">train()</span></code> prints at the end: the mean over
+<code class="docutils literal notranslate"><span class="pre">eval_episodes</span></code> episodes collected <strong>after</strong> training finishes (§3.2), averaged
+over 5 seeds. The periodic evaluations printed during training are for
+monitoring only — taking the best of them is the maximum of a noisy quantity and
+reads higher than the agent actually is.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Metric</p></th>
-<th class="head"><p>IRIS (ours)</p></th>
+<th class="head"><p>IRIS (paper)</p></th>
 <th class="head"><p>SPR</p></th>
 <th class="head"><p>DrQ</p></th>
 <th class="head"><p>CURL</p></th>
@@ -1058,46 +1078,202 @@ plus, from the aₜ position:   predict reward rₜ and termination dₜ
 </table>
 </div>
 </section>
-<section id="common-pitfalls">
-<h2><a class="toc-backref" href="#id18" role="doc-backlink">Common Pitfalls</a><a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h2>
-<section id="codebook-collapse">
-<h3><a class="toc-backref" href="#id19" role="doc-backlink">Codebook collapse</a><a class="headerlink" href="#codebook-collapse" title="Link to this heading">#</a></h3>
-<p>Most codebook entries go unused.</p>
-<p><strong>Fixes:</strong></p>
+<section id="checkpoint-compatibility">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">Checkpoint compatibility</a><a class="headerlink" href="#checkpoint-compatibility" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">IRISAgent.CHECKPOINT_FORMAT</span></code> is bumped whenever the module layout changes in a
+way that makes older weights unmappable. <code class="docutils literal notranslate"><span class="pre">IRISAgent.load</span></code> detects a stale
+checkpoint and raises, rather than failing with a list of missing keys.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Format</p></th>
+<th class="head"><p>Change</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>v1 → v2</p></td>
+<td><p>Transformer moved from <code class="docutils literal notranslate"><span class="pre">nn.TransformerEncoder</span></code> to GPT-2 blocks with per-layer key/value caches</p></td>
+</tr>
+<tr class="row-odd"><td><p>v2 → v3</p></td>
+<td><p>Per-layer residual stacks in encoder/decoder, decoder widened to 64 channels, actor-critic conv block moved to conv + max-pool</p></td>
+</tr>
+<tr class="row-even"><td><p>v3 → v4</p></td>
+<td><p>Decoder self-attention at 8/16, attention blocks moved into an <code class="docutils literal notranslate"><span class="pre">attentions</span></code> ModuleDict, categorical reward head over {-1, 0, +1}</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Retrain, or check out the earlier revision to use an old checkpoint.</p>
+</section>
+<section id="paper-conformance">
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">Paper conformance</a><a class="headerlink" href="#paper-conformance" title="Link to this heading">#</a></h2>
+<p>Every value in Appendix A Tables 2–6 is implemented as stated — 45/45 checked
+programmatically — and <code class="docutils literal notranslate"><span class="pre">tests/models/test_iris_paper_alignment.py</span></code> pins the
+structural details a numeric audit cannot catch: the actor-critic conv block’s
+op pattern, residual blocks per layer, self-attention resolutions, loss
+weighting, the Freeway sampling temperature, and reward handling.</p>
+<p>Where the paper leaves a choice open, the configuration exposes it:</p>
 <ul class="simple">
-<li><p>Use EMA codebook updates (default in IRIS)</p></li>
-<li><p>Lower commitment loss weight <code class="docutils literal notranslate"><span class="pre">β</span></code></p></li>
-<li><p>Add codebook reset: re-initialize unused codes</p></li>
+<li><p><strong>Reward loss.</strong> §2.2 permits “a mean-squared error loss or a cross-entropy
+loss for the reward predictor, depending on the reward function”. Atari returns
+unbounded integer rewards, so the defaults are <code class="docutils literal notranslate"><span class="pre">reward_transform:</span> <span class="pre">sign</span></code> (making
+the target categorical over {-1, 0, +1}) with <code class="docutils literal notranslate"><span class="pre">reward_loss:</span> <span class="pre">cross_entropy</span></code>. Use
+<code class="docutils literal notranslate"><span class="pre">reward_transform:</span> <span class="pre">none</span></code> + <code class="docutils literal notranslate"><span class="pre">reward_loss:</span> <span class="pre">mse</span></code> for environments with meaningful
+continuous rewards.</p></li>
+<li><p><strong>Perceptual loss weights.</strong> A.1 inherits VQGAN’s LPIPS. The calibrated
+per-channel linear weights are fetched into the torch hub cache on first use;
+<code class="docutils literal notranslate"><span class="pre">perceptual_linear_weights</span></code> overrides the location. Without network access the
+loss falls back to uniform channel weights — still LPIPS in structure — and
+logs that it has done so.</p></li>
+<li><p><strong>Actor-critic channel widths.</strong> A.3 fixes the layer pattern and LSTM hidden
+size but not the convolution channel counts; this implementation uses
+32 → 64 → 128 → 256.</p></li>
 </ul>
 </section>
+<section id="using-the-components-directly">
+<h2><a class="toc-backref" href="#id20" role="doc-backlink">Using the components directly</a><a class="headerlink" href="#using-the-components-directly" title="Link to this heading">#</a></h2>
+<p>Every piece is exported from the top-level package, so the world model can be
+used without the Atari training loop:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">IRISAgent</span><span class="p">,</span> <span class="n">IRISConfig</span><span class="p">,</span> <span class="n">IRISEncoder</span><span class="p">,</span> <span class="n">IRISDecoder</span><span class="p">,</span>
+    <span class="n">IRISTransformer</span><span class="p">,</span> <span class="n">IRISWorldModel</span><span class="p">,</span> <span class="n">IRISReplayBuffer</span><span class="p">,</span>
+    <span class="n">LPIPSPerceptualLoss</span><span class="p">,</span> <span class="n">build_perceptual_loss</span><span class="p">,</span> <span class="n">compute_lambda_return</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">IRISAgent</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">IRISConfig</span><span class="p">(),</span> <span class="n">action_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">"cuda"</span><span class="p">)</span>
+
+<span class="c1"># Roll the world model forward without touching an environment.</span>
+<span class="n">trajectory</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">imagine_rollout</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">burn_in_frames</span><span class="o">=</span><span class="n">context</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">IRISTransformer</span></code> exposes <code class="docutils literal notranslate"><span class="pre">init_cache</span></code> / <code class="docutils literal notranslate"><span class="pre">prime_cache</span></code> / <code class="docutils literal notranslate"><span class="pre">generate_frame_cached</span></code>
+for incremental generation, so it can drive imagination in your own loop.</p>
+</section>
+<section id="training-on-other-environments">
+<h2><a class="toc-backref" href="#id21" role="doc-backlink">Training on other environments</a><a class="headerlink" href="#training-on-other-environments" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">IRISTrainer</span></code> builds an Atari environment by default, but accepts any
+Gymnasium-style environment with a discrete action space and image observations:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span> <span class="o">=</span> <span class="n">IRISTrainer</span><span class="p">(</span><span class="n">game</span><span class="o">=</span><span class="s2">"MyTask"</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">my_env</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Observations are resized to <code class="docutils literal notranslate"><span class="pre">frame_height</span></code> × <code class="docutils literal notranslate"><span class="pre">frame_width</span></code>; grayscale, HWC and
+CHW inputs are all handled.</p>
+<section id="minecraft-minerl-minedojo">
+<h3><a class="toc-backref" href="#id22" role="doc-backlink">Minecraft (MineRL / MineDojo)</a><a class="headerlink" href="#minecraft-minerl-minedojo" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.envs</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_minecraft_env</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.training.train_iris</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISTrainer</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">make_minecraft_env</span><span class="p">(</span><span class="s2">"MineRLTreechop-v0"</span><span class="p">)</span>          <span class="c1"># or backend="minedojo"</span>
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">IRISTrainer</span><span class="p">(</span><span class="n">game</span><span class="o">=</span><span class="s2">"MineRLTreechop-v0"</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>MineRL’s native action space is a <code class="docutils literal notranslate"><span class="pre">Dict</span></code> of nine binary keypresses plus a
+continuous camera delta — 2⁹ × ℝ² — which a categorical policy cannot address.
+<code class="docutils literal notranslate"><span class="pre">MinecraftDiscreteEnv</span></code> collapses it to <code class="docutils literal notranslate"><span class="pre">Discrete(13)</span></code> over a curated set covering
+navigation, looking, and the two interaction verbs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">noop</span><span class="p">,</span> <span class="n">forward</span><span class="p">,</span> <span class="n">back</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">jump</span><span class="p">,</span> <span class="n">forward_jump</span><span class="p">,</span>
+<span class="n">attack</span><span class="p">,</span> <span class="n">use</span><span class="p">,</span> <span class="n">camera_left</span><span class="p">,</span> <span class="n">camera_right</span><span class="p">,</span> <span class="n">camera_up</span><span class="p">,</span> <span class="n">camera_down</span>
+</pre></div>
+</div>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">action_set=</span></code> to substitute your own — the <code class="docutils literal notranslate"><span class="pre">Obtain*</span></code> tasks additionally need
+craft/place/equip actions, and without them an agent cannot progress past what
+tool-free play allows. Actions the task does not support become no-ops rather
+than errors, so the same set works across Treechop and Navigate.</p>
+<p><code class="docutils literal notranslate"><span class="pre">minerl</span></code> and <code class="docutils literal notranslate"><span class="pre">minedojo</span></code> are <strong>not</strong> installable as TorchWM extras. MineRL 1.x
+publishes no release compatible with Python 3.11+, and MineDojo pins
+<code class="docutils literal notranslate"><span class="pre">gym==0.21.0</span></code>, whose sdist no longer builds under modern setuptools – so
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">torchwm[minerl]</span></code> could only ever fail. Install them yourself in a
+Python 3.10 environment alongside TorchWM:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Python 3.10 environment, separate from the one TorchWM is developed in.</span>
+pip<span class="w"> </span>install<span class="w"> </span>torchwm
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"setuptools&lt;66"</span><span class="w"> </span>wheel<span class="w">        </span><span class="c1"># gym 0.21's sdist needs the old backend</span>
+pip<span class="w"> </span>install<span class="w"> </span>minerl<span class="w">                       </span><span class="c1"># or: pip install minedojo</span>
+</pre></div>
+</div>
+<p>Both need a Java runtime and launch a real Minecraft client, so neither runs in a
+headless container without a virtual display.</p>
+<p><strong>Expect to retune.</strong> Minecraft is far outside the Atari 100k regime these
+defaults target: episodes are long, rewards are sparse, and each environment step
+is orders of magnitude slower. The collection budget, <code class="docutils literal notranslate"><span class="pre">imagination_horizon</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">total_epochs</span></code> all need raising.</p>
+</section>
+</section>
+<section id="hardware-and-presets">
+<h2><a class="toc-backref" href="#id23" role="doc-backlink">Hardware and presets</a><a class="headerlink" href="#hardware-and-presets" title="Link to this heading">#</a></h2>
+<p>Appendix G reports 8× A100 40GB, roughly 3.5 days per environment. Two presets
+are provided:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Preset</p></th>
+<th class="head"><p>For</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">configs/experiments/iris.yaml</span></code></p></td>
+<td><p>Reproduction</p></td>
+<td><p>Paper’s exact hyperparameters. Needs a large GPU.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">configs/experiments/iris_small_gpu.yaml</span></code></p></td>
+<td><p>Consumer GPUs (4–8GB)</p></td>
+<td><p>Smaller batches and fewer gradient steps per epoch. Measured ~2.0GB peak on a 4GB card. Expect returns below the published numbers.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The small-GPU preset keeps every <em>method</em> hyperparameter (tokens per frame,
+vocabulary, imagination horizon, burn-in length, loss weights) at the paper’s
+values and reduces only batch sizes, transformer depth, and steps per epoch.</p>
+</section>
+<section id="common-pitfalls">
+<h2><a class="toc-backref" href="#id24" role="doc-backlink">Common Pitfalls</a><a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h2>
+<section id="codebook-collapse">
+<h3><a class="toc-backref" href="#id25" role="doc-backlink">Codebook collapse</a><a class="headerlink" href="#codebook-collapse" title="Link to this heading">#</a></h3>
+<p>Most codebook entries go unused, and <code class="docutils literal notranslate"><span class="pre">perplexity</span></code> — the effective codebook size
+logged each epoch — trends toward 1. This is the quietest way for IRIS to fail:
+the reconstruction loss keeps falling (the decoder learns to emit a constant),
+the transformer keeps training, and the policy simply never receives a signal.</p>
+<p><strong>Watch <code class="docutils literal notranslate"><span class="pre">perplexity</span></code>.</strong> If it approaches 1, nothing downstream is meaningful.</p>
+<p>Both quantizers re-seed dead codes onto real encoder outputs automatically
+(<code class="docutils literal notranslate"><span class="pre">restart_dead_codes_after</span></code>, default 0.01 in units of mean assignments per
+step). Set it to <code class="docutils literal notranslate"><span class="pre">0.0</span></code> to disable.</p>
+</section>
+<section id="blank-or-double-normalized-frames">
+<h3><a class="toc-backref" href="#id26" role="doc-backlink">Blank or double-normalized frames</a><a class="headerlink" href="#blank-or-double-normalized-frames" title="Link to this heading">#</a></h3>
+<p>The replay buffer stores <code class="docutils literal notranslate"><span class="pre">uint8</span></code>. Feeding it frames already scaled to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>
+truncates every pixel to zero, and the symptoms mimic a healthy run: the
+reconstruction loss converges to ~0 and the policy entropy sits at exactly
+<code class="docutils literal notranslate"><span class="pre">ln(num_actions)</span></code>. Preprocessing returns <code class="docutils literal notranslate"><span class="pre">uint8</span></code>; conversion to float happens at
+consumption time via <code class="docutils literal notranslate"><span class="pre">IRISTrainer.to_float_tensor</span></code>.</p>
+</section>
 <section id="transformer-memory">
-<h3><a class="toc-backref" href="#id20" role="doc-backlink">Transformer memory</a><a class="headerlink" href="#transformer-memory" title="Link to this heading">#</a></h3>
-<p>Sequence length: 16 × 20 = 320 tokens.</p>
+<h3><a class="toc-backref" href="#id27" role="doc-backlink">Transformer memory</a><a class="headerlink" href="#transformer-memory" title="Link to this heading">#</a></h3>
+<p>Sequence length: (16 tokens + 1 action) × 20 timesteps = 340 positions.</p>
 <p><strong>Fixes:</strong></p>
 <ul class="simple">
-<li><p>Use gradient checkpointing</p></li>
-<li><p>Reduce context length</p></li>
+<li><p>Use gradient checkpointing (<code class="docutils literal notranslate"><span class="pre">gradient_checkpointing:</span> <span class="pre">true</span></code>)</p></li>
+<li><p>Reduce <code class="docutils literal notranslate"><span class="pre">transformer_timesteps</span></code></p></li>
 </ul>
 </section>
 <section id="slow-autoregressive-generation">
-<h3><a class="toc-backref" href="#id21" role="doc-backlink">Slow autoregressive generation</a><a class="headerlink" href="#slow-autoregressive-generation" title="Link to this heading">#</a></h3>
-<p>AR token generation is O(tokens) sequential.</p>
-<p><strong>Fixes:</strong></p>
-<ul class="simple">
-<li><p>Use KV caching for transformer inference</p></li>
-<li><p>Reduce the number of imagination steps</p></li>
-</ul>
+<h3><a class="toc-backref" href="#id28" role="doc-backlink">Slow autoregressive generation</a><a class="headerlink" href="#slow-autoregressive-generation" title="Link to this heading">#</a></h3>
+<p>Generating a frame costs K sequential steps. A cache-free implementation reruns
+the whole prefix each time, which is O(K · L²) per imagined step and dominates
+training time.</p>
+<p>The transformer keeps per-layer key/value caches (<code class="docutils literal notranslate"><span class="pre">init_cache</span></code>, <code class="docutils literal notranslate"><span class="pre">prime_cache</span></code>,
+<code class="docutils literal notranslate"><span class="pre">generate_frame_cached</span></code>), so each token is a single-position forward pass. If
+you add a code path that rolls imagination forward, use those rather than
+calling <code class="docutils literal notranslate"><span class="pre">forward</span></code> repeatedly.</p>
 </section>
 </section>
 <section id="see-also">
-<h2><a class="toc-backref" href="#id22" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id29" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="genie.html"><span class="doc">Genie: Generative Interactive Environment</span></a> — extends IRIS with latent actions and video-only training</p></li>
 <li><p><a class="reference internal" href="dreamer.html"><span class="doc">Dreamer: Model-Based RL with Latent Dynamics</span></a> — continuous world model alternative to IRIS</p></li>
 </ul>
 </section>
 <section id="references">
-<h2><a class="toc-backref" href="#id23" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id30" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Micheli, V., Alonso, E., &amp; Fleuret, F. (2023). Transformers are Sample-Efficient World Models. <em>ICLR 2023.</em></p></li>
 <li><p>Van Den Oord, A., &amp; Vinyals, O. (2017). Neural Discrete Representation Learning. <em>NeurIPS 2017.</em></p></li>
@@ -1174,8 +1350,17 @@ plus, from the aₜ position:   predict reward rₜ and termination dₜ
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#benchmark-results">Benchmark Results</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkpoint-compatibility">Checkpoint compatibility</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#paper-conformance">Paper conformance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-components-directly">Using the components directly</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-on-other-environments">Training on other environments</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minecraft-minerl-minedojo">Minecraft (MineRL / MineDojo)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hardware-and-presets">Hardware and presets</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common Pitfalls</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#codebook-collapse">Codebook collapse</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#blank-or-double-normalized-frames">Blank or double-normalized frames</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#transformer-memory">Transformer memory</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#slow-autoregressive-generation">Slow autoregressive generation</a></li>
 </ul>

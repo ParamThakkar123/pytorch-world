@@ -19,7 +19,7 @@
 <meta name="description" content="WorldModelEnv wraps a trained or adapter-backed world model as a Gymnasium-compliant environment. It lets you run simulated rollouts with the same API shape expected by RL libraries such as Stable-..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>World Model Env &#8212; TorchWM 0.5.0 documentation</title>
+    <title>World Model Env &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -267,7 +267,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation_guide.html">Evaluation Guide</a></li>
@@ -316,6 +315,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -323,6 +323,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -409,10 +410,10 @@
     <span class="n">reward</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">reward</span><span class="p">(</span><span class="n">next_state</span><span class="p">)</span>
     <span class="n">done</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">termination</span><span class="p">(</span><span class="n">next_state</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">next_state</span><span class="p">,</span>
-        <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">obs</span><span class="p">,</span>
-        <span class="s2">&quot;reward&quot;</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
-        <span class="s2">&quot;terminated&quot;</span><span class="p">:</span> <span class="n">done</span><span class="p">,</span>
+        <span class="s2">"state"</span><span class="p">:</span> <span class="n">next_state</span><span class="p">,</span>
+        <span class="s2">"observation"</span><span class="p">:</span> <span class="n">obs</span><span class="p">,</span>
+        <span class="s2">"reward"</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
+        <span class="s2">"terminated"</span><span class="p">:</span> <span class="n">done</span><span class="p">,</span>
     <span class="p">}</span>
 
 
@@ -466,7 +467,7 @@
 
 <span class="n">env</span> <span class="o">=</span> <span class="n">torchwm</span><span class="o">.</span><span class="n">make_env</span><span class="p">(</span>
     <span class="n">trained_model</span><span class="p">,</span>
-    <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;world-model&quot;</span><span class="p">,</span>
+    <span class="n">backend</span><span class="o">=</span><span class="s2">"world-model"</span><span class="p">,</span>
     <span class="n">observation_space</span><span class="o">=</span><span class="n">obs_space</span><span class="p">,</span>
     <span class="n">action_space</span><span class="o">=</span><span class="n">act_space</span><span class="p">,</span>
     <span class="n">transition_fn</span><span class="o">=</span><span class="n">transition</span><span class="p">,</span>

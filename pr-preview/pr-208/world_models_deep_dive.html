@@ -19,7 +19,7 @@
 <meta name="description" content="This page is a comprehensive technical reference for the Ha &amp; Schmidhuber World Models implementation in TorchWM. It covers the architecture, data pipeline, training details, inference, configu..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>World Models Deep Dive (Ha &amp; Schmidhuber, 2018) &#8212; TorchWM 0.5.0 documentation</title>
+    <title>World Models Deep Dive (Ha &amp; Schmidhuber, 2018) &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -493,7 +493,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -625,7 +625,6 @@ window.runMermaid = runMermaid;</script>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -658,6 +657,7 @@ window.runMermaid = runMermaid;</script>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -665,6 +665,7 @@ window.runMermaid = runMermaid;</script>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -839,7 +840,7 @@ inference, configuration, and common pitfalls.</p>
 <td><p>ConvVAE</p></td>
 <td><p>Encodes 64×64 RGB → 32-d latent <code class="docutils literal notranslate"><span class="pre">z</span></code></p></td>
 <td><p>Reconstruction loss (MSE + KL)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.vision.VAE.ConvVAE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.vision.VAE.ConvVAE</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>M</strong></p></td>
 <td><p>MDN-RNN</p></td>
@@ -851,7 +852,7 @@ inference, configuration, and common pitfalls.</p>
 <td><p>Linear Controller</p></td>
 <td><p>Maps <code class="docutils literal notranslate"><span class="pre">(zₜ,</span> <span class="pre">hₜ)</span></code> → action <code class="docutils literal notranslate"><span class="pre">aₜ</span></code></p></td>
 <td><p>CMA-ES (reward maximization)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">world_models.models.controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torchwm.models.controller</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -890,7 +891,7 @@ or the world model, and works on sparse/delayed rewards.</p></li>
   └─ Returns (mu, logsigma)                            └─ Sigmoid → 3×64×64 output
 </pre></div>
 </div>
-<p>Key classes in <code class="docutils literal notranslate"><span class="pre">world_models.vision.VAE.ConvVAE</span></code>:</p>
+<p>Key classes in <code class="docutils literal notranslate"><span class="pre">torchwm.vision.VAE.ConvVAE</span></code>:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Class</p></th>
@@ -913,7 +914,7 @@ or the world model, and works on sparse/delayed rewards.</p></li>
 </section>
 <section id="loss-function">
 <h3><a class="toc-backref" href="#id7" role="doc-backlink">Loss function</a><a class="headerlink" href="#loss-function" title="Link to this heading">#</a></h3>
-<p>Defined in <code class="docutils literal notranslate"><span class="pre">world_models.losses.convae_loss</span></code>:</p>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">torchwm.losses.convae_loss</span></code>:</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{L}_{\text{VAE}} = \underbrace{\|x - \hat{x}\|^2}_{\text{MSE reconstruction}}
   - \frac{1}{2}\sum_{i=1}^{d}\left(1 + 2\log\sigma_i - \mu_i^2 - e^{2\log\sigma_i}\right)\]</div>
@@ -943,8 +944,8 @@ or the world model, and works on sparse/delayed rewards.</p></li>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.training.train_world_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_rollouts</span>
 
 <span class="n">generate_rollouts</span><span class="p">(</span>
-    <span class="n">data_dir</span><span class="o">=</span><span class="s2">&quot;./data/carracing&quot;</span><span class="p">,</span>
-    <span class="n">env_name</span><span class="o">=</span><span class="s2">&quot;CarRacing-v2&quot;</span><span class="p">,</span>
+    <span class="n">data_dir</span><span class="o">=</span><span class="s2">"./data/carracing"</span><span class="p">,</span>
+    <span class="n">env_name</span><span class="o">=</span><span class="s2">"CarRacing-v2"</span><span class="p">,</span>
     <span class="n">num_rollouts</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
     <span class="n">seq_len</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
     <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
@@ -987,7 +988,7 @@ or the world model, and works on sparse/delayed rewards.</p></li>
 <p>The <code class="docutils literal notranslate"><span class="pre">num_test_files</span></code> parameter controls how many <code class="docutils literal notranslate"><span class="pre">.npz</span></code> files are reserved for
 validation:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">ObservationDataset</span><span class="p">(</span>
-    <span class="n">root</span><span class="o">=</span><span class="s2">&quot;./data&quot;</span><span class="p">,</span>
+    <span class="n">root</span><span class="o">=</span><span class="s2">"./data"</span><span class="p">,</span>
     <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">num_test_files</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>   <span class="c1"># last 600 files → test set</span>
 <span class="p">)</span>
@@ -1005,7 +1006,7 @@ the split with <code class="docutils literal notranslate"><span class="pre">num_
 </section>
 <section id="training-loop">
 <h3><a class="toc-backref" href="#id10" role="doc-backlink">Training loop</a><a class="headerlink" href="#training-loop" title="Link to this heading">#</a></h3>
-<p>See <code class="docutils literal notranslate"><span class="pre">world_models.training.train_convvae.train_convae()</span></code>:</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">torchwm.training.train_convvae.train_convae()</span></code>:</p>
 <ol class="arabic simple">
 <li><p>Load pretrained VAE checkpoint if available (<code class="docutils literal notranslate"><span class="pre">noreload=False</span></code>).</p></li>
 <li><p>Create <code class="docutils literal notranslate"><span class="pre">ObservationDataset</span></code> with <code class="docutils literal notranslate"><span class="pre">A.Compose</span></code> transforms (resize + optional flip).</p></li>
@@ -1039,7 +1040,7 @@ mixture weights, and <code class="docutils literal notranslate"><span class="pre
 </section>
 <section id="mdrnn-vs-mdrnncell">
 <h3><a class="toc-backref" href="#id13" role="doc-backlink">MDRNN vs MDRNNCell</a><a class="headerlink" href="#mdrnn-vs-mdrnncell" title="Link to this heading">#</a></h3>
-<p>The module <code class="docutils literal notranslate"><span class="pre">world_models.models.mdrnn</span></code> provides two variants:</p>
+<p>The module <code class="docutils literal notranslate"><span class="pre">torchwm.models.mdrnn</span></code> provides two variants:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Class</p></th>
@@ -1081,7 +1082,7 @@ layer. The output head maps the RNN hidden state to the GMM parameters:</p>
 <p>Training uses <code class="docutils literal notranslate"><span class="pre">MDRNN</span></code> (batched LSTM). Inference uses <code class="docutils literal notranslate"><span class="pre">MDRNNCell</span></code> (single-step
 LSTMCell). The weights must be copied between the two:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">batch_rnn</span> <span class="o">=</span> <span class="n">MDRNN</span><span class="p">(</span><span class="n">latents</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">hiddens</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gaussians</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="n">batch_rnn</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;mdrnn_best.tar&quot;</span><span class="p">)[</span><span class="s2">&quot;state_dict&quot;</span><span class="p">])</span>
+<span class="n">batch_rnn</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"mdrnn_best.tar"</span><span class="p">)[</span><span class="s2">"state_dict"</span><span class="p">])</span>
 
 <span class="n">cell_rnn</span> <span class="o">=</span> <span class="n">MDRNNCell</span><span class="p">(</span><span class="n">latents</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">hiddens</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gaussians</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">cell_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">batch_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">weight_ih_l0</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
@@ -1104,7 +1105,7 @@ temporal memory.</p>
 </section>
 <section id="id1">
 <h3><a class="toc-backref" href="#id15" role="doc-backlink">Loss function</a><a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
-<p>Computed in <code class="docutils literal notranslate"><span class="pre">world_models.training.train_mdn_rnn.get_loss()</span></code>:</p>
+<p>Computed in <code class="docutils literal notranslate"><span class="pre">torchwm.training.train_mdn_rnn.get_loss()</span></code>:</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{L}_{\text{MDRNN}} = \frac{1}{d+2}\left(
   \underbrace{\mathcal{L}_{\text{GMM}}(z_{t+1}, \mu, \sigma, \pi)}_{\text{next latent prediction}}
@@ -1118,7 +1119,7 @@ temporal memory.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><strong>GMM loss</strong> (<code class="docutils literal notranslate"><span class="pre">world_models.losses.gmm_loss</span></code>)</p></td>
+<tr class="row-even"><td><p><strong>GMM loss</strong> (<code class="docutils literal notranslate"><span class="pre">torchwm.losses.gmm_loss</span></code>)</p></td>
 <td><p>Negative log-likelihood of the observed next latent under the predicted Gaussian mixture. Uses numerically stable log-sum-exp: <code class="docutils literal notranslate"><span class="pre">\mathcal{L}_{\text{GMM}}</span> <span class="pre">=</span> <span class="pre">-\log\sum_k</span> <span class="pre">\pi_k</span> <span class="pre">\cdot</span> <span class="pre">\mathcal{N}(z_{t+1}</span> <span class="pre">\mid</span> <span class="pre">\mu_k,</span> <span class="pre">\sigma_k)</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>BCE loss</strong></p></td>
@@ -1141,7 +1142,7 @@ memory-intensive), <code class="docutils literal notranslate"><span class="pre">
 <ol class="arabic">
 <li><p><strong>Precomputation:</strong> <code class="docutils literal notranslate"><span class="pre">precompute_latents()</span></code> loads the trained VAE, encodes all
 observations in all rollouts, and saves the result as a single <code class="docutils literal notranslate"><span class="pre">.npz</span></code> file:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">latent_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;data/carracing/latents/latents_32.npz&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">latent_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"data/carracing/latents/latents_32.npz"</span><span class="p">)</span>
 <span class="n">latent_data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>  <span class="c1"># latents, actions, rewards, terminals</span>
 </pre></div>
 </div>
@@ -1159,7 +1160,7 @@ raw image sequences. The <code class="docutils literal notranslate"><span class=
 <h2><a class="toc-backref" href="#id17" role="doc-backlink">Stage 3: Controller — CMA-ES</a><a class="headerlink" href="#stage-3-controller-cma-es" title="Link to this heading">#</a></h2>
 <section id="linear-controller">
 <h3><a class="toc-backref" href="#id18" role="doc-backlink">Linear controller</a><a class="headerlink" href="#linear-controller" title="Link to this heading">#</a></h3>
-<p>Defined in <code class="docutils literal notranslate"><span class="pre">world_models.models.controller.Controller</span></code>:</p>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">torchwm.models.controller.Controller</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Controller</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latent_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">action_size</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">latent_size</span> <span class="o">+</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">action_size</span><span class="p">)</span>
@@ -1242,13 +1243,13 @@ from stochastic environment dynamics and the VAE’s random sampling (<code clas
 <code class="docutils literal notranslate"><span class="pre">train_world_model.py</span></code>):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 1. Load models</span>
 <span class="n">vae</span> <span class="o">=</span> <span class="n">ConvVAE</span><span class="p">(</span><span class="n">img_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">latent_size</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
-<span class="n">vae</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;vae/best.tar&quot;</span><span class="p">)[</span><span class="s2">&quot;state_dict&quot;</span><span class="p">])</span>
+<span class="n">vae</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"vae/best.tar"</span><span class="p">)[</span><span class="s2">"state_dict"</span><span class="p">])</span>
 
 <span class="n">cell_rnn</span> <span class="o">=</span> <span class="n">MDRNNCell</span><span class="p">(</span><span class="n">latents</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">hiddens</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gaussians</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="c1"># Transfer weights from trained MDRNN (see weight transfer section above)</span>
 
 <span class="n">ctrl</span> <span class="o">=</span> <span class="n">Controller</span><span class="p">(</span><span class="n">latent_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">action_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">ctrl</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;ctrl/best.tar&quot;</span><span class="p">)[</span><span class="s2">&quot;state_dict&quot;</span><span class="p">])</span>
+<span class="n">ctrl</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"ctrl/best.tar"</span><span class="p">)[</span><span class="s2">"state_dict"</span><span class="p">])</span>
 
 <span class="c1"># 2. Reset environment and hidden state</span>
 <span class="n">obs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
@@ -1674,7 +1675,7 @@ The reconstruction term therefore dominates numerically.</p>
     <span class="n">loss</span> <span class="o">=</span> <span class="n">mus</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="n">sigmas</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="n">logpi</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="n">rs</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="n">ds</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
-        <span class="k">assert</span> <span class="n">param</span><span class="o">.</span><span class="n">grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has no gradient&quot;</span>
+        <span class="k">assert</span> <span class="n">param</span><span class="o">.</span><span class="n">grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has no gradient"</span>
 </pre></div>
 </div>
 <p><strong>Testing weight transfer (MDRNN → MDRNNCell):</strong></p>
@@ -1714,24 +1715,24 @@ The reconstruction term therefore dominates numerically.</p>
 <hr class="docutils" />
 <section id="cli-usage">
 <h2><a class="toc-backref" href="#id33" role="doc-backlink">CLI Usage</a><a class="headerlink" href="#cli-usage" title="Link to this heading">#</a></h2>
-<p>The unified training script <code class="docutils literal notranslate"><span class="pre">world_models.training.train_world_model</span></code> provides a
+<p>The unified training script <code class="docutils literal notranslate"><span class="pre">torchwm.training.train_world_model</span></code> provides a
 complete CLI:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generate data + train all 3 stages</span>
-python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2
+python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2
 
 <span class="c1"># Train only specific stages</span>
-python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span>--stage<span class="w"> </span>vae
-python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span>--stage<span class="w"> </span>rnn
-python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span>--stage<span class="w"> </span>ctrl
+python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span>--stage<span class="w"> </span>vae
+python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span>--stage<span class="w"> </span>rnn
+python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span>--stage<span class="w"> </span>ctrl
 
 <span class="c1"># Generate rollouts only</span>
-python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span>--generate_only
+python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span>--generate_only
 
 <span class="c1"># Test a trained model</span>
-python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span>--test
+python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_world_model<span class="w"> </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span>--test
 
 <span class="c1"># With custom directories</span>
-python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_world_model<span class="w"> </span><span class="se">\</span>
+python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_world_model<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--env<span class="w"> </span>CarRacing-v2<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--data_dir<span class="w"> </span>./data/carracing<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--logdir<span class="w"> </span>./results/carracing<span class="w"> </span><span class="se">\</span>

@@ -17,7 +17,7 @@ Commands
   the package cannot be imported).
 
 - `envs list` - List built-in environment backends and example environment ids.
-  This reads the environment catalog from `world_models.catalog` if available.
+  This reads the environment catalog from `torchwm.catalog` if available.
 
 - `datasets list [PATH]` - List dataset entries under `PATH`. If `PATH` is not
   provided the command uses `TORCHWM_HOME` or defaults to `~/.torchwm`.
@@ -36,18 +36,21 @@ Commands
 
 - `train <model> [extra args...] [--inproc]` - Launch an existing training
   entrypoint. The CLI maps simple model names to modules in
-  `world_models.training` (e.g. `diamond`, `iris`, `planet`, `jepa`, `rssm`,
+  `torchwm.training` (e.g. `diamond`, `iris`, `planet`, `jepa`, `rssm`,
   `genie`). By default `train` spawns a subprocess running
-  `python -m world_models.training.<name>` and forwards any extra args. Use
+  `python -m torchwm.training.<name>` and forwards any extra args. Use
   `--inproc` to attempt running the training entrypoint in-process (calls the
   module's `main()` if available). DIAMOND, IRIS, and JEPA accept
   `--config PATH`, `--print-config`, and OmegaConf/Hydra-style dot-list
   overrides such as `total_epochs=100` or `optimization.lr=3e-4`.
 
 - `eval --model <NAME> --checkpoint <PATH> [options]` - Evaluate a trained world
-  model with FID, FVD, LPIPS, and PSNR metrics. Metrics compare real trajectories
-  (collected from the environment) against generated trajectories (from the
-  model). See {doc}`evaluation_guide` for details and interpretation.
+  model. Generative models (`diamond`) are scored with FID, FVD, LPIPS, and PSNR,
+  comparing real trajectories (collected from the environment) against generated
+  ones. `jepa` has no rollout to score, so it runs the paper's frozen-encoder
+  linear probe instead and takes `--root-path` rather than `--game`; options that
+  belong to the other model are rejected rather than ignored. See
+  {doc}`evaluation_guide` for details and interpretation.
 
   Key options:
   - `--model`, `-m` — model type (currently `diamond`)
@@ -72,7 +75,7 @@ Commands
   - `--record-fps` — video framerate (default 20)
 
 - `models list` - Print the known training entrypoints and (when available)
-  exported model names from `world_models.models`.
+  exported model names from `torchwm.models`.
 
 Environment / optional dependencies
 ----------------------------------
@@ -121,25 +124,32 @@ torchwm collect --env ALE/Pong-v5 --steps 1000 --out pong.npz
 - Example: run IRIS training with a library YAML config and a dot-list override
 
 ```bash
-torchwm train iris --config world_models/configs/experiments/iris.yaml total_epochs=100
+torchwm train iris --config torchwm/configs/experiments/iris.yaml total_epochs=100
 ```
 
 - Example: inspect a composed JEPA config without starting training
 
 ```bash
-torchwm train jepa --config world_models/configs/experiments/jepa.yaml optimization.epochs=50 --print-config
+torchwm train jepa --config torchwm/configs/experiments/jepa.yaml optimization.epochs=50 --print-config
 ```
 
 - Example: launch a DIAMOND preset from the unified training CLI
 
 ```bash
-torchwm train diamond --config world_models/configs/experiments/diamond.yaml preset=small seed=3
+torchwm train diamond --config torchwm/configs/experiments/diamond.yaml preset=small seed=3
 ```
 
 - Example: evaluate a DIAMOND checkpoint
 
 ```bash
 torchwm eval --model diamond --checkpoint checkpoints/diamond/checkpoint.pt --game Breakout-v5
+```
+
+- Example: linear-probe an I-JEPA checkpoint
+
+```bash
+torchwm eval --model jepa --checkpoint results/jepa/jepa_run-latest.pth.tar \
+    --root-path /data/imagenet --model-name vit_base --output probe.json
 ```
 
 - Example: interactively play inside a DIAMOND world model

@@ -19,7 +19,7 @@
 <meta name="description" content="DIAMOND ( DI ffusion A s a M odel O f e N vironment D reams) is TorchWM’s diffusion-based world-model agent for pixel-control reinforcement learning. It learns a conditional image generator that pr..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>DIAMOND &#8212; TorchWM 0.5.0 documentation</title>
+    <title>DIAMOND &#8212; TorchWM 1.0.0 documentation</title>
   
   
   
@@ -51,7 +51,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -491,7 +491,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">TorchWM 0.5.0 documentation</p>
+    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
   
 </a></div>
     
@@ -623,7 +623,6 @@ window.runMermaid = runMermaid;</script>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Using Operators for Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
@@ -656,6 +655,7 @@ window.runMermaid = runMermaid;</script>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
 </ul>
@@ -663,6 +663,7 @@ window.runMermaid = runMermaid;</script>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
 </ul>
 </div>
 </nav></div>
@@ -860,8 +861,8 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.training.train_diamond</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiamondAgent</span>
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">DiamondConfig</span><span class="p">(</span>
-    <span class="n">preset</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span>
-    <span class="n">game</span><span class="o">=</span><span class="s2">&quot;Breakout-v5&quot;</span><span class="p">,</span>
+    <span class="n">preset</span><span class="o">=</span><span class="s2">"small"</span><span class="p">,</span>
+    <span class="n">game</span><span class="o">=</span><span class="s2">"Breakout-v5"</span><span class="p">,</span>
     <span class="n">obs_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
     <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="p">)</span>
@@ -870,9 +871,9 @@ window.runMermaid = runMermaid;</script>
 </div>
 <p>For configuration files or dictionaries, use <code class="docutils literal notranslate"><span class="pre">from_config</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">agent</span> <span class="o">=</span> <span class="n">DiamondAgent</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
-    <span class="s2">&quot;world_models/configs/experiments/diamond.yaml&quot;</span><span class="p">,</span>
-    <span class="n">preset</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span>
-    <span class="n">game</span><span class="o">=</span><span class="s2">&quot;Pong-v5&quot;</span><span class="p">,</span>
+    <span class="s2">"torchwm/configs/experiments/diamond.yaml"</span><span class="p">,</span>
+    <span class="n">preset</span><span class="o">=</span><span class="s2">"small"</span><span class="p">,</span>
+    <span class="n">game</span><span class="o">=</span><span class="s2">"Pong-v5"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -880,15 +881,15 @@ window.runMermaid = runMermaid;</script>
 <section id="training-from-the-cli">
 <h2><a class="toc-backref" href="#id10" role="doc-backlink">Training from the CLI</a><a class="headerlink" href="#training-from-the-cli" title="Link to this heading">#</a></h2>
 <p>Use the unified TorchWM CLI with the starter experiment config:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span>train<span class="w"> </span>diamond<span class="w"> </span>--config<span class="w"> </span>world_models/configs/experiments/diamond.yaml<span class="w"> </span><span class="nv">preset</span><span class="o">=</span>small<span class="w"> </span><span class="nv">seed</span><span class="o">=</span><span class="m">1</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span>train<span class="w"> </span>diamond<span class="w"> </span>--config<span class="w"> </span>torchwm/configs/experiments/diamond.yaml<span class="w"> </span><span class="nv">preset</span><span class="o">=</span>small<span class="w"> </span><span class="nv">seed</span><span class="o">=</span><span class="m">1</span>
 </pre></div>
 </div>
 <p>You can also run the training module directly:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>world_models.training.train_diamond<span class="w"> </span>--game<span class="w"> </span>Breakout-v5<span class="w"> </span>--preset<span class="w"> </span>small
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>torchwm.training.train_diamond<span class="w"> </span>--game<span class="w"> </span>Breakout-v5<span class="w"> </span>--preset<span class="w"> </span>small
 </pre></div>
 </div>
 <p>Add <code class="docutils literal notranslate"><span class="pre">--print-config</span></code> to inspect the composed config before starting a long run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span>train<span class="w"> </span>diamond<span class="w"> </span>--config<span class="w"> </span>world_models/configs/experiments/diamond.yaml<span class="w"> </span><span class="nv">preset</span><span class="o">=</span>small<span class="w"> </span>--print-config
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchwm<span class="w"> </span>train<span class="w"> </span>diamond<span class="w"> </span>--config<span class="w"> </span>torchwm/configs/experiments/diamond.yaml<span class="w"> </span><span class="nv">preset</span><span class="o">=</span>small<span class="w"> </span>--print-config
 </pre></div>
 </div>
 </section>

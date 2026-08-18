@@ -51,7 +51,7 @@ Logs will be saved to the specified directory and can be viewed with `tensorboar
 
 The recommended entrypoint for common workflows is `torchwm`. It mirrors the
 TorchWM implementation package, but gives users short factory helpers for
-discovery, model creation, environment creation, and operators.
+discovery, model creation, and environment creation.
 
 ```python
 import torchwm
@@ -65,7 +65,6 @@ agent = torchwm.create_model(
     "dreamer", env="Pendulum-v1", env_backend="gym", total_steps=5_000
 )
 env = torchwm.make_env("CartPole-v1", backend="gym")
-op = torchwm.get_operator("dreamer", image_size=64, action_dim=6)
 ```
 
 You can still import direct research components from `torchwm` when you
@@ -91,111 +90,20 @@ TorchWM implements multiple world model algorithms. Click on each to see detaile
 | **IRIS** | Sample-efficient RL with Transformers | {doc}`iris` |
 | **DiT** | Diffusion models with Transformers | {doc}`dit` |
 
-## Quick Start: Inference with Operators
-
-TorchWM now includes standardized operators for preprocessing inputs during inference, making it easy to deploy models consistently.
-
-### What are Operators?
-
-Operators handle input preprocessing: normalizing images, encoding actions, tokenizing text, and generating masks. Each model has a dedicated operator that ensures inputs are in the correct format.
-
-### Basic Usage
-
-```python
-import torchwm
-
-# Create operator with config parameters
-op = torchwm.get_operator(
-    "dreamer",
-    image_size=64,  # Image size for Dreamer
-    action_dim=6    # Action dimension
-)
-
-# Process raw inputs
-raw_inputs = {
-    'image': your_pil_image_or_tensor,  # PIL Image or torch.Tensor
-    'action': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]  # Action as list
-}
-
-# Get processed tensors
-processed = op.process(raw_inputs)
-# Returns: {'obs': tensor(B, 3, 64, 64), 'action': tensor(B, 6)}
-```
-
-### Available Operators
-
-| Operator | Model | Purpose | Key Parameters |
-|----------|-------|---------|----------------|
-| `DreamerOperator` | Dreamer | Image/action preprocessing | `image_size`, `action_dim` |
-| `JEPAOperator` | JEPA | Image masking and patching | `image_size`, `patch_size`, `mask_ratio` |
-| `IrisOperator` | IRIS | Sequence tokenization | `seq_length`, `vocab_size` |
-| `PlaNetOperator` | PlaNet | State/action transitions | `state_dim`, `action_dim` |
-
-### JEPA Example (Self-Supervised)
-
-```python
-from torchwm import JEPAOperator
-
-op = JEPAOperator(image_size=224, patch_size=16, mask_ratio=0.75)
-inputs = {'images': [image1, image2]}
-result = op(inputs)
-# result['images']: stacked normalized images
-# result['mask']: random mask for self-supervised learning
-```
-
-### IRIS Example (Sequence Processing)
-
-```python
-from torchwm import IrisOperator
-
-op = IrisOperator(seq_length=512, vocab_size=32000)
-inputs = {'tokens': [101, 2054, 2003, 102]}  # Token sequence
-result = op(inputs)
-# result['input_ids']: padded token tensor
-# result['attention_mask']: attention mask
-```
-
-### Integration with Configs
-
-Operators can reuse matching config fields, but operator-only parameters such as
-action dimensions should be supplied from the target environment:
-
-```python
-import torchwm
-
-cfg = torchwm.create_config("dreamer")
-op = torchwm.get_operator(
-    "dreamer",
-    image_size=cfg.image_size[0],
-    action_dim=6,
-)
-```
-
-### Utilities
-
-For most applications, use `torchwm.get_operator()` for preprocessing. Advanced utility functions remain available to package internals.
-
-```python
-import torchwm
-
-op = torchwm.get_operator("jepa", image_size=224, patch_size=16, mask_ratio=0.75)
-processed = op.process({"images": [pil_image]})
-```
-
 Train a complete world model pipeline (VAE + MDNRNN + Controller) on any Gym environment:
 
 ```bash
 # Train on CarRacing
-python -m world_models.training.train_world_model --env CarRacing-v2
+python -m torchwm.training.train_world_model --env CarRacing-v2
 
 # Train on Pendulum
-python -m world_models.training.train_world_model --env Pendulum-v1
+python -m torchwm.training.train_world_model --env Pendulum-v1
 
 # Test trained model
-python -m world_models.training.train_world_model --env CarRacing-v2 --test
+python -m torchwm.training.train_world_model --env CarRacing-v2 --test
 
 # Specify action size manually for environments with missing dependencies
-python -m world_models.training.train_world_model --env BipedalWalker-v3 --action_size 4
+python -m torchwm.training.train_world_model --env BipedalWalker-v3 --action_size 4
 ```
 
 Dreamer supports multiple backends through `DreamerConfig.env_backend`; the

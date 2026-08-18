@@ -27,7 +27,6 @@ agents with a unified API.
    :caption: User Guides
 
    public_api
-   operators_guide
    training_guide
    inference_guide
    evaluation_guide
@@ -64,6 +63,7 @@ agents with a unified API.
    :caption: Reference
 
    api_reference
+   api_exports
    configs_reference
    export_guide
 
@@ -73,3 +73,4 @@ agents with a unified API.
 
    contributing
    benchmarks
+   run_code_in_docs
