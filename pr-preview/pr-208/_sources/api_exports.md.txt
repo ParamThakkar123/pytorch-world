@@ -35,7 +35,7 @@ generated from source, see {doc}`api_reference`.
 | `Dreamer` | `torchwm.models.dreamer` | Base Dreamer world model (RSSM-based, V1-style). |
 | `DreamerV1` | `torchwm.models.dreamer_v1` | DreamerV1 (alias for base Dreamer). |
 | `DreamerV2` | `torchwm.models.dreamer_v2` | DreamerV2 (symlog two-hot heads, balanced KL). |
-| `DreamerV3` | `torchwm.models.dreamer` | DreamerV3-style agent (currently mapped to DreamerAgent). |
+| `DreamerV3` | `torchwm.models.dreamer` | Alias of `DreamerAgent` (no separate V3 implementation in 1.0). |
 | `DreamerAgent` | `torchwm.models.dreamer` | High-level Dreamer agent with train/evaluate helpers. |
 | `Planet` | `torchwm.models.planet` | PlaNet: Deep Planning Network. |
 | `JEPAAgent` | `torchwm.models.jepa_agent` | I-JEPA agent for self-supervised visual representation learning. |

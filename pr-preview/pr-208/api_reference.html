@@ -63,6 +63,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <script src="_static/fix_navbar.js?v=92322e29"></script>
     <link rel="canonical" href="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/api_reference.html" />
+    <link rel="icon" href="_static/torchwm-favicon.svg"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Exported Names by Category" href="api_exports.html" />
@@ -136,8 +137,16 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="_static/torchwm-logo-light.svg" class="logo__image only-light" alt="TorchWM"/>
+    <img src="_static/torchwm-logo-dark.svg" class="logo__image only-dark pst-js-only" alt="TorchWM"/>
   
-    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
+  
+    <p class="title logo__title">TorchWM</p>
   
 </a></div>
     
@@ -4249,7 +4258,7 @@ which leads to more stable training.</p>
 <dd class="field-odd"><p><strong>z</strong> (<em>Tensor</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Tuple</em>[<em>Tensor</em>, <em>Tensor</em>, dict[str, <em>Tensor</em>]]</p>
+<dd class="field-even"><p>tuple[<em>Tensor</em>, <em>Tensor</em>, dict[str, <em>Tensor</em>]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -17572,7 +17581,7 @@ comparing usage against the threshold, because the restart deliberately
 lifts usage above it.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Tuple</em>[<em>Tensor</em>, <em>Tensor</em>]</p>
+<dd class="field-odd"><p>tuple[<em>Tensor</em>, <em>Tensor</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -17663,7 +17672,7 @@ which leads to more stable training.</p>
 <dd class="field-odd"><p><strong>z</strong> (<em>Tensor</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Tuple</em>[<em>Tensor</em>, <em>Tensor</em>, dict[str, <em>Tensor</em>]]</p>
+<dd class="field-even"><p>tuple[<em>Tensor</em>, <em>Tensor</em>, dict[str, <em>Tensor</em>]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -24927,7 +24936,15 @@ If render is True: tuple (episode_returns_array, videos_list, latents_array)</p>
 <dt class="sig sig-object py" id="torchwm.training.train_genie.VideoDataset">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">torchwm.training.train_genie.</span></span><span class="sig-name descname"><span class="pre">VideoDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_frames</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/torchwm/training/train_genie.html#VideoDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchwm.training.train_genie.VideoDataset" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
-<p>Dataset for video data.</p>
+<p>Video clips for Genie training, returned as <code class="docutils literal notranslate"><span class="pre">(C,</span> <span class="pre">T,</span> <span class="pre">H,</span> <span class="pre">W)</span></code> float tensors.</p>
+<p>Each entry in <code class="docutils literal notranslate"><span class="pre">video_paths</span></code> may be:</p>
+<ul class="simple">
+<li><p>a <code class="docutils literal notranslate"><span class="pre">.npy</span></code> / <code class="docutils literal notranslate"><span class="pre">.npz</span></code> array of shape <code class="docutils literal notranslate"><span class="pre">(T,</span> <span class="pre">H,</span> <span class="pre">W,</span> <span class="pre">C)</span></code> or <code class="docutils literal notranslate"><span class="pre">(C,</span> <span class="pre">T,</span> <span class="pre">H,</span> <span class="pre">W)</span></code></p></li>
+<li><p>a <code class="docutils literal notranslate"><span class="pre">.pt</span></code> / <code class="docutils literal notranslate"><span class="pre">.pth</span></code> tensor of the same layouts</p></li>
+<li><p>a video file (<code class="docutils literal notranslate"><span class="pre">.mp4</span></code>, <code class="docutils literal notranslate"><span class="pre">.avi</span></code>, <code class="docutils literal notranslate"><span class="pre">.mkv</span></code>, <code class="docutils literal notranslate"><span class="pre">.webm</span></code>, <code class="docutils literal notranslate"><span class="pre">.mov</span></code>) loaded
+with OpenCV when <code class="docutils literal notranslate"><span class="pre">opencv-python</span></code> is installed (the <code class="docutils literal notranslate"><span class="pre">viz</span></code> extra)</p></li>
+</ul>
+<p>Frames are uniformly sampled to <code class="docutils literal notranslate"><span class="pre">num_frames</span></code> and resized to <code class="docutils literal notranslate"><span class="pre">image_size</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -25058,10 +25075,9 @@ If render is True: tuple (episode_returns_array, videos_list, latents_array)</p>
 <dt class="sig sig-object py" id="torchwm.training.train_genie.main">
 <span class="sig-prename descclassname"><span class="pre">torchwm.training.train_genie.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">argv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/torchwm/training/train_genie.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchwm.training.train_genie.main" title="Link to this definition">#</a></dt>
 <dd><p>Console entrypoint for Genie trainer setup.</p>
-<p>The generic <code class="docutils literal notranslate"><span class="pre">VideoDataset</span></code> in this module is intentionally abstract, so this
-command provides a discoverable entrypoint for inspecting defaults and
-constructing a trainer. Use a concrete dataset script, such as
-<code class="docutils literal notranslate"><span class="pre">scripts/train_genie_tinyworlds.py</span></code>, for end-to-end data loading.</p>
+<p><code class="docutils literal notranslate"><span class="pre">VideoDataset</span></code> loads <code class="docutils literal notranslate"><span class="pre">.npy</span></code> / <code class="docutils literal notranslate"><span class="pre">.pt</span></code> clips, or video files when OpenCV
+is installed. For the TinyWorlds HDF5 path, use
+<code class="docutils literal notranslate"><span class="pre">scripts/train_genie_tinyworlds.py</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>argv</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p>

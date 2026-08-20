@@ -61,6 +61,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <script src="_static/fix_navbar.js?v=92322e29"></script>
     <link rel="canonical" href="https://paramthakkar123.github.io/torchwm/pr-preview/pr-208/public_api.html" />
+    <link rel="icon" href="_static/torchwm-favicon.svg"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Training Guide" href="training_guide.html" />
@@ -134,8 +135,16 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="_static/torchwm-logo-light.svg" class="logo__image only-light" alt="TorchWM"/>
+    <img src="_static/torchwm-logo-dark.svg" class="logo__image only-dark pst-js-only" alt="TorchWM"/>
   
-    <p class="title logo__title">TorchWM 1.0.0 documentation</p>
+  
+    <p class="title logo__title">TorchWM</p>
   
 </a></div>
     
@@ -437,6 +446,20 @@ using direct imports from <code class="docutils literal notranslate"><span class
 <p>Use direct imports when you are composing custom modules, subclassing internals,
 or need access to implementation-specific constructors.</p>
 </section>
+<section id="scope">
+<h2>1.0 scope<a class="headerlink" href="#scope" title="Link to this heading">#</a></h2>
+<p>These names stay in the 1.x public surface, with the following documented
+limits:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">create_model(&quot;dreamer-v3&quot;)</span></code> / <code class="docutils literal notranslate"><span class="pre">DreamerV3</span></code> construct <code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code>. There is
+no separate DreamerV3 implementation in 1.0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">agent.train()</span></code> with a step budget is the Dreamer-family path. Other
+registered models train through their dedicated trainers or CLI commands.</p></li>
+<li><p>Genie <code class="docutils literal notranslate"><span class="pre">VideoDataset</span></code> loads <code class="docutils literal notranslate"><span class="pre">.npy</span></code> / <code class="docutils literal notranslate"><span class="pre">.pt</span></code> clips, or video files when the
+<code class="docutils literal notranslate"><span class="pre">viz</span></code> extra (OpenCV) is installed. TinyWorlds training still goes through
+<code class="docutils literal notranslate"><span class="pre">scripts/train_genie_tinyworlds.py</span></code>.</p></li>
+</ul>
+</section>
 </section>
 
 
@@ -489,6 +512,7 @@ or need access to implementation-specific constructors.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-workflow">Common Workflow</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#factory-helpers">Factory Helpers</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-imports-still-work">Direct Imports Still Work</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">1.0 scope</a></li>
 </ul>
   </nav></div>
 

@@ -52,3 +52,16 @@ agent = DreamerAgent(cfg)
 
 Use direct imports when you are composing custom modules, subclassing internals,
 or need access to implementation-specific constructors.
+
+## 1.0 scope
+
+These names stay in the 1.x public surface, with the following documented
+limits:
+
+- `create_model("dreamer-v3")` / `DreamerV3` construct `DreamerAgent`. There is
+  no separate DreamerV3 implementation in 1.0.
+- `agent.train()` with a step budget is the Dreamer-family path. Other
+  registered models train through their dedicated trainers or CLI commands.
+- Genie `VideoDataset` loads `.npy` / `.pt` clips, or video files when the
+  `viz` extra (OpenCV) is installed. TinyWorlds training still goes through
+  `scripts/train_genie_tinyworlds.py`.
