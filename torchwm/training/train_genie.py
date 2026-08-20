@@ -6,6 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 from typing import Any, Optional, Dict, Tuple, Literal
 import numpy as np
 from dataclasses import dataclass
+from pathlib import Path
 
 from torchwm.configs.serialization import SerializableConfigMixin
 from torchwm.models.genie import Genie
@@ -53,12 +54,24 @@ class GenieConfig(SerializableConfigMixin):
 
 
 class VideoDataset(Dataset):
-    """Dataset for video data."""
+    """Video clips for Genie training, returned as ``(C, T, H, W)`` float tensors.
+
+    Each entry in ``video_paths`` may be:
+
+    * a ``.npy`` / ``.npz`` array of shape ``(T, H, W, C)`` or ``(C, T, H, W)``
+    * a ``.pt`` / ``.pth`` tensor of the same layouts
+    * a video file (``.mp4``, ``.avi``, ``.mkv``, ``.webm``, ``.mov``) loaded
+      with OpenCV when ``opencv-python`` is installed (the ``viz`` extra)
+
+    Frames are uniformly sampled to ``num_frames`` and resized to ``image_size``.
+    """
 
     def __init__(
         self, video_paths: list, num_frames: int = 16, image_size: int = 64
     ) -> None:
-        self.video_paths = video_paths
+        if not video_paths:
+            raise ValueError("video_paths must contain at least one clip")
+        self.video_paths = [Path(p) for p in video_paths]
         self.num_frames = num_frames
         self.image_size = image_size
 
@@ -66,7 +79,103 @@ class VideoDataset(Dataset):
         return len(self.video_paths)
 
     def __getitem__(self, idx: int) -> torch.Tensor:
-        raise NotImplementedError("Implement loading video from paths")
+        path = self.video_paths[idx]
+        frames = self._load_thwc(path)
+        frames = self._sample_frames(frames)
+        frames = self._resize_frames(frames)
+        # (T, H, W, C) -> (C, T, H, W) as GenieTrainer.train_step expects.
+        tensor = torch.from_numpy(np.ascontiguousarray(frames)).permute(3, 0, 1, 2)
+        return tensor.float()
+
+    def _load_thwc(self, path: Path) -> np.ndarray:
+        suffix = path.suffix.lower()
+        if suffix == ".npy":
+            array = np.load(path)
+            return self._to_thwc(array)
+        if suffix == ".npz":
+            payload = np.load(path)
+            key = "arr_0" if "arr_0" in payload.files else payload.files[0]
+            return self._to_thwc(payload[key])
+        if suffix in {".pt", ".pth"}:
+            array = torch.load(path, map_location="cpu", weights_only=True)
+            if isinstance(array, torch.Tensor):
+                array = array.detach().cpu().numpy()
+            return self._to_thwc(np.asarray(array))
+        return self._load_video_file(path)
+
+    def _to_thwc(self, array: np.ndarray) -> np.ndarray:
+        if array.ndim != 4:
+            raise ValueError(
+                f"Expected a 4-D clip, got shape {array.shape}"
+            )
+        array = np.asarray(array)
+        # Channel-first (C, T, H, W) vs channel-last (T, H, W, C).
+        if array.shape[0] in (1, 3) and array.shape[-1] not in (1, 3):
+            array = np.transpose(array, (1, 2, 3, 0))
+        elif array.shape[-1] not in (1, 3):
+            raise ValueError(
+                f"Could not infer channel axis for clip of shape {array.shape}"
+            )
+        if array.dtype == np.uint8:
+            return array.astype(np.float32) / 255.0
+        array = array.astype(np.float32)
+        if array.max() > 1.0:
+            array = array / 255.0
+        return array
+
+    def _sample_frames(self, frames: np.ndarray) -> np.ndarray:
+        total = int(frames.shape[0])
+        if total == 0:
+            raise ValueError("clip contains no frames")
+        if total == self.num_frames:
+            return frames
+        indices = np.linspace(0, total - 1, self.num_frames).astype(int)
+        return frames[indices]
+
+    def _resize_frames(self, frames: np.ndarray) -> np.ndarray:
+        _, h, w, _c = frames.shape
+        if h == self.image_size and w == self.image_size:
+            return frames
+        try:
+            from PIL import Image
+        except ImportError as exc:
+            raise ImportError(
+                "Resizing Genie clips requires Pillow, which TorchWM already "
+                "pulls in via torchvision."
+            ) from exc
+        resized = []
+        for frame in frames:
+            image = Image.fromarray(
+                np.clip(frame * 255.0, 0, 255).astype(np.uint8)
+            )
+            image = image.resize((self.image_size, self.image_size))
+            resized.append(np.asarray(image, dtype=np.float32) / 255.0)
+        return np.stack(resized, axis=0)
+
+    def _load_video_file(self, path: Path) -> np.ndarray:
+        try:
+            import cv2
+        except ImportError as exc:
+            raise ImportError(
+                f"Loading {path.name} needs OpenCV. Install it with "
+                "`pip install torchwm[viz]`, or pass .npy/.pt clips instead."
+            ) from exc
+        cap = cv2.VideoCapture(str(path))
+        if not cap.isOpened():
+            cap.release()
+            raise FileNotFoundError(f"Could not open video: {path}")
+        frames_list: list[np.ndarray] = []
+        try:
+            while True:
+                ok, frame = cap.read()
+                if not ok:
+                    break
+                frames_list.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        finally:
+            cap.release()
+        if not frames_list:
+            raise ValueError(f"No frames decoded from {path}")
+        return np.stack(frames_list, axis=0).astype(np.float32) / 255.0
 
 
 class GenieTrainer:
@@ -333,10 +442,9 @@ def create_genie_trainer(
 def main(argv: Optional[list[str]] = None) -> None:
     """Console entrypoint for Genie trainer setup.
 
-    The generic ``VideoDataset`` in this module is intentionally abstract, so this
-    command provides a discoverable entrypoint for inspecting defaults and
-    constructing a trainer. Use a concrete dataset script, such as
-    ``scripts/train_genie_tinyworlds.py``, for end-to-end data loading.
+    ``VideoDataset`` loads ``.npy`` / ``.pt`` clips, or video files when OpenCV
+    is installed. For the TinyWorlds HDF5 path, use
+    ``scripts/train_genie_tinyworlds.py``.
     """
     parser = argparse.ArgumentParser(description="Prepare Genie training")
     parser.add_argument(

@@ -59,6 +59,12 @@ ACTION_NAMES = {
 }
 
 
+def _as_int(value: object) -> int:
+    if hasattr(value, "item"):
+        return int(value.item())  # type: ignore[union-attr]
+    return int(value)  # type: ignore[arg-type]
+
+
 def make_agent(
     checkpoint: str,
     game: str,
@@ -97,6 +103,7 @@ def run_play(
     deterministic: bool = True,
     record: Optional[str] = None,
     record_fps: int = 20,
+    control: str = "assist",
 ) -> None:
     agent = make_agent(checkpoint, game, device, seed)
     device_obj = agent.device
@@ -159,16 +166,23 @@ def run_play(
         obs_tensor = build_obs_tensor()
 
         human_action = get_action_from_key(key)
-        if human_action is not None:
+        agent_action, policy_hidden = agent.actor_critic.get_action(
+            obs_tensor[:, -1], policy_hidden, deterministic=deterministic
+        )
+        if control == "human":
+            action = 0 if human_action is None else human_action
+            control_mode = "HUMAN"
+        elif control == "versus":
+            # You take the env; the policy's choice is shown so you can play
+            # against what the model would have done.
+            action = 0 if human_action is None else human_action
+            control_mode = "HUMAN vs AGENT"
+        elif human_action is not None:
             action = human_action
             control_mode = "HUMAN"
             policy_hidden = agent.actor_critic.init_hidden(1, device_obj)
-            agent_action = human_action
         else:
             control_mode = "AGENT"
-            agent_action, policy_hidden = agent.actor_critic.get_action(
-                obs_tensor[:, -1], policy_hidden, deterministic=deterministic
-            )
             action = agent_action
 
         act_tensor = build_action_tensor()
@@ -218,11 +232,13 @@ def run_play(
             fps_counter = 0
             fps_timer = time.time()
 
-        action_name = ACTION_NAMES.get(action, str(action))
+        action_name = ACTION_NAMES.get(_as_int(action), str(action))
+        agent_name = ACTION_NAMES.get(_as_int(agent_action), str(agent_action))
         mode_label = "DREAM" if dream_mode else "REAL"
         info_lines = [
             f"{mode_label}  {control_mode}  R: {episode_reward:.1f}  Step: {step_count}  FPS: {fps_display}",
-            f"Action: {action_name} ({action})",
+            f"Action: {action_name} ({action})"
+            + (f"  |  AGENT: {agent_name}" if control == "versus" else ""),
             "[TAB] toggle  [R] reset  [arrows/WASD] drive  [Q] quit",
         ]
         for i, line in enumerate(info_lines):
@@ -271,6 +287,18 @@ def main():
         default=20,
         help="FPS for recorded video (default: 20)",
     )
+    parser.add_argument(
+        "--control",
+        choices=("assist", "human", "versus"),
+        default="assist",
+        help="assist: keys override the policy. human: you always drive. "
+        "versus: you drive, the policy's action is shown as the opponent.",
+    )
+    parser.add_argument(
+        "--versus",
+        action="store_true",
+        help="Shortcut for --control versus.",
+    )
     args = parser.parse_args()
     run_play(
         checkpoint=args.checkpoint,
@@ -280,6 +308,7 @@ def main():
         deterministic=not args.stochastic,
         record=args.record,
         record_fps=args.record_fps,
+        control="versus" if args.versus else args.control,
     )
 
 

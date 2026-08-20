@@ -31,5 +31,7 @@ jobs:
 
     - name: Run mypy
       run: |
-        # Run mypy directly against the actual package directory
-        mypy torchwm torchwm tools evals
+        # ``mypy.ini`` already sets ``files = torchwm``. Passing the same
+        # package twice makes mypy 1.20 report a duplicate ``torchwm`` module
+        # (the ``__init__.pyi`` stub colliding with itself).
+        mypy torchwm

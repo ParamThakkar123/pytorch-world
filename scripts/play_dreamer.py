@@ -207,6 +207,7 @@ def run_play(
     deterministic: bool = True,
     record: Optional[str] = None,
     record_fps: int = 20,
+    control: str = "assist",
 ) -> None:
     player = DreamerPlayer(checkpoint, env_name=game, device=device, seed=seed)
     env = player.env
@@ -254,19 +255,33 @@ def run_play(
         human_action = get_human_action(key, player.action_size)
 
         with torch.no_grad():
+            agent_action = player.actor(
+                player.features(state), deter=deterministic
+            )
+            if control == "human":
+                control_mode = "HUMAN"
+                chosen = human_action if human_action is not None else np.zeros(
+                    player.action_size, dtype=np.float32
+                )
+            elif control == "versus":
+                control_mode = "HUMAN vs AGENT"
+                chosen = human_action if human_action is not None else np.zeros(
+                    player.action_size, dtype=np.float32
+                )
+            elif human_action is not None:
+                control_mode = "HUMAN"
+                chosen = human_action
+            else:
+                control_mode = "AGENT"
+                chosen = None
+
             if dream_mode:
                 # No environment step: the RSSM predicts the next latent, and
                 # the decoder turns it back into a frame.
-                if human_action is not None:
-                    control_mode = "HUMAN"
-                    action = torch.tensor(
-                        human_action, device=player.device
-                    ).unsqueeze(0)
+                if chosen is None:
+                    action = agent_action
                 else:
-                    control_mode = "AGENT"
-                    action = player.actor(
-                        player.features(state), deter=deterministic
-                    )
+                    action = torch.tensor(chosen, device=player.device).unsqueeze(0)
                 state = player.rssm.imagine_step(state, action)
                 display_rgb = player.decode(state)
                 prev_action = action
@@ -274,18 +289,14 @@ def run_play(
                 _, state = player.rssm.observe_step(
                     state, prev_action, player.encode(obs)
                 )
-                if human_action is not None:
-                    control_mode = "HUMAN"
-                    action_np = human_action
-                    action = torch.tensor(
-                        human_action, device=player.device
-                    ).unsqueeze(0)
-                else:
-                    control_mode = "AGENT"
-                    action = player.actor(
-                        player.features(state), deter=deterministic
-                    )
+                if chosen is None:
+                    action = agent_action
                     action_np = action[0].cpu().numpy()
+                else:
+                    action_np = chosen
+                    action = torch.tensor(
+                        chosen, device=player.device
+                    ).unsqueeze(0)
 
                 next_obs, reward, done, info = env.step(action_np)
                 executed = (
@@ -322,6 +333,12 @@ def run_play(
             f"Action: {np.round(prev_action[0].cpu().numpy(), 2).tolist()}",
             "[TAB] toggle  [R] reset  [arrows/WASD] drive  [Q] quit",
         ]
+        if control == "versus":
+            info_lines.insert(
+                2,
+                "AGENT: "
+                + str(np.round(agent_action[0].detach().cpu().numpy(), 2).tolist()),
+            )
         for i, line in enumerate(info_lines):
             cv2.putText(
                 display_bgr,
@@ -364,6 +381,14 @@ def main() -> None:
     parser.add_argument(
         "--record-fps", type=int, default=20, help="FPS for recorded video"
     )
+    parser.add_argument(
+        "--control",
+        choices=("assist", "human", "versus"),
+        default="assist",
+        help="assist: keys override the policy. human: you always drive. "
+        "versus: you drive, the policy's action is shown as the opponent.",
+    )
+    parser.add_argument("--versus", action="store_true", help="Shortcut for --control versus.")
     args = parser.parse_args()
     run_play(
         checkpoint=args.checkpoint,
@@ -373,6 +398,7 @@ def main() -> None:
         deterministic=not args.stochastic,
         record=args.record,
         record_fps=args.record_fps,
+        control="versus" if args.versus else args.control,
     )
 
 

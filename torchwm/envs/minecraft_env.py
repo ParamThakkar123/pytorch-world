@@ -326,7 +326,7 @@ class MinecraftDiscreteEnv(gym.Env):
             info,
         )
 
-    def render(self) -> NDArray[np.uint8] | None:
+    def render(self) -> Any:
         renderer = getattr(self.env, "render", None)
         if callable(renderer):
             try:

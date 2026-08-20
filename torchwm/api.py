@@ -58,7 +58,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         name="dreamer-v3",
         import_path="torchwm.models.dreamer:DreamerAgent",
         config_path="torchwm.configs.dreamer_config:DreamerConfig",
-        description="DreamerV3-style agent (currently mapped to DreamerAgent; update when dedicated V3 implementation lands).",
+        description="DreamerV3-named agent: same DreamerAgent implementation as `dreamer` (not a paper-complete V3).",
         aliases=("dreamerv3",),
     ),
     "planet": ModelSpec(

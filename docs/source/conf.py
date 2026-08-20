@@ -124,10 +124,17 @@ autodoc_mock_imports = [
 ]
 
 html_theme = "pydata_sphinx_theme"
+html_favicon = "_static/torchwm-favicon.svg"
 html_theme_options = {
     "github_url": "https://github.com/paramthakkar123/torchwm",
     "navigation_depth": 3,
     "show_nav_level": 2,
+    "logo": {
+        "image_light": "torchwm-logo-light.svg",
+        "image_dark": "torchwm-logo-dark.svg",
+        "text": "TorchWM",
+        "alt_text": "TorchWM",
+    },
     # Keep the top navbar intentionally minimal: project title/logo,
     # documentation search, and the GitHub redirect link only.
     "navbar_start": ["navbar-logo"],

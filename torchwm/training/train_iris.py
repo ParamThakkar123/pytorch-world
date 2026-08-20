@@ -6,7 +6,6 @@ from tqdm import tqdm
 import random
 from collections.abc import Sequence
 from typing import Any, Optional, cast
-from gym.spaces import Discrete, Box
 
 from types import ModuleType
 from typing import Optional as _Optional
@@ -49,6 +48,21 @@ def default_collect_temperature(game: str, configured: float) -> float:
     if "freeway" in game.lower() and configured == 1.0:
         return FREEWAY_COLLECT_TEMPERATURE
     return configured
+
+
+def _action_size(space: Any) -> int:
+    """Number of action dimensions from a Gym/Gymnasium-style space.
+
+    Avoids importing ``gym`` / ``gymnasium`` at module load so paper-alignment
+    tests can import collection helpers on a base ``pip install torchwm``.
+    """
+    n = getattr(space, "n", None)
+    if n is not None:
+        return int(n)
+    shape = getattr(space, "shape", None)
+    if shape:
+        return int(np.prod(tuple(shape)))
+    raise TypeError(f"Unsupported action_space type: {type(space)}")
 
 
 class IRISTrainer:
@@ -109,24 +123,9 @@ class IRISTrainer:
                 max_episode_steps=27000,  # Standard Atari limit
             )
 
-        # Get action space robustly (Discrete or Box)
-        # Declare attribute type for static checkers
-        self.action_size: int = 0
-
-        if isinstance(self.env.action_space, Discrete):
-            self.action_size = int(self.env.action_space.n)
-        elif isinstance(self.env.action_space, Box):
-            shape = getattr(self.env.action_space, "shape", None)
-            if shape is None:
-                raise TypeError("Box action_space has no shape")
-            self.action_size = int(np.prod(tuple(shape)))
-        else:
-            if hasattr(self.env.action_space, "n"):
-                self.action_size = int(getattr(self.env.action_space, "n"))
-            else:
-                raise TypeError(
-                    f"Unsupported action_space type: {type(self.env.action_space)}"
-                )
+        # Discrete spaces expose ``n``; Box-like spaces expose ``shape``.
+        # Duck-type both so importing this module does not require gym/gymnasium.
+        self.action_size = _action_size(self.env.action_space)
 
         # Create replay buffer
         self.replay_buffer = IRISReplayBuffer(

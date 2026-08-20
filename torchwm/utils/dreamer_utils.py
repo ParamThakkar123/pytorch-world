@@ -241,7 +241,7 @@ class Logger:
                 new_video_title = video_title + "{}_{}".format(step, i) + ".mp4"
                 filename = os.path.join(self._log_dir, new_video_title)
                 height, width = video_u8.shape[1], video_u8.shape[2]
-                fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+                fourcc = getattr(cv2, "VideoWriter_fourcc")(*"mp4v")
                 out = cv2.VideoWriter(filename, fourcc, fps, (width, height))
                 for frame in video_u8:
                     out.write(frame)

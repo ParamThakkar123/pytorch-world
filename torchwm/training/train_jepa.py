@@ -6,7 +6,10 @@ except Exception:
     pass
 
 from typing import Any
+from types import ModuleType
 import copy
+import importlib
+import importlib.util
 import logging
 import sys
 import torch.multiprocessing as mp
@@ -16,7 +19,6 @@ import yaml
 import numpy as np
 import torch
 from torch.nn.parallel import DistributedDataParallel
-import wandb
 
 from torchwm.masks.multiblock import MaskCollator as MBMaskCollator
 from torchwm.utils.utils import apply_masks
@@ -38,6 +40,10 @@ from torchwm.experiments import (
     load_experiment_config,
     parse_experiment_args,
 )
+
+_wandb: ModuleType | None = None
+if importlib.util.find_spec("wandb") is not None:
+    _wandb = importlib.import_module("wandb")
 
 log_timings = True
 log_freq = 10
@@ -90,6 +96,16 @@ def build_loss_fn(loss_type: str) -> Any:
     return losses[loss_type]
 
 
+def _require_wandb() -> Any:
+    """Return the wandb module, or explain how to install the ``ml`` extra."""
+    if _wandb is None:
+        raise ImportError(
+            "Weights & Biases is required for JEPA sweeps. "
+            "Install it with `pip install torchwm[ml]`."
+        )
+    return _wandb
+
+
 def main(args: Any = None, resume_preempt: bool = False) -> Any:
     """Run JEPA training using a CLI argv, nested dict, or `JEPAConfig` instance.
 
@@ -103,6 +119,7 @@ def main(args: Any = None, resume_preempt: bool = False) -> Any:
 
     logging_args = args.get("logging", {})
     if logging_args.get("enable_sweep", False):
+        wandb = _require_wandb()
         sweep_id = wandb.sweep(
             logging_args.get("sweep_config", {}),
             project=logging_args.get("wandb_project"),
@@ -533,6 +550,7 @@ def main(args: Any = None, resume_preempt: bool = False) -> Any:
 
 def sweep_train() -> None:
     """Function for WandB sweep agent."""
+    wandb = _require_wandb()
     with wandb.init():
         cfg = JEPAConfig()
         # Update config with sweep parameters
@@ -554,6 +572,7 @@ def main_from_cli(argv: list[str] | None = None) -> Any:
 
     logging_cfg = cfg_dict.get("logging", {})
     if logging_cfg.get("enable_sweep", False):
+        wandb = _require_wandb()
         sweep_id = wandb.sweep(
             logging_cfg.get("sweep_config", {}),
             project=logging_cfg.get("wandb_project", "torchwm"),

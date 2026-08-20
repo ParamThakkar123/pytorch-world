@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [1.0.0] — 2026-08-16
+## [1.0.0] — 2026-08-19
 
 First stable release. The public API surface documented in
 `docs/source/public_api.md` is now covered by semantic versioning: breaking
@@ -13,6 +13,14 @@ changes to it require a major version bump and a deprecation cycle.
 
 Because 0.5.0 below was never tagged or published, upgrading from 0.4.2 — the
 last release on PyPI — also brings in every 0.5.0 change.
+
+### Known limitations
+- `dreamer-v3` is a registry name for `DreamerAgent`, not a paper-complete
+  DreamerV3 implementation
+- Shared step-budget `train()` covers the Dreamer family; other models use
+  their own trainers or `torchwm train`
+- The `dmc` extra depends on `labmaze` wheels; CI does not install it on
+  Python 3.13 because labmaze currently tries to compile with Bazel
 
 ### Added
 - Throughput instrumentation: `torchwm.ThroughputMeter`, `torchwm.measure_steps`
@@ -24,6 +32,8 @@ last release on PyPI — also brings in every 0.5.0 change.
   `torch.compile` with an eager fallback) and `torchwm.to_channels_last`
 - `GenieConfig.use_amp` / `GenieSmallConfig.use_amp` — autocast for Genie
   training, preferring bfloat16 where supported so no gradient scaler is needed
+- Genie `VideoDataset` loads `.npy` / `.npz` / `.pt` clips, or video files when
+  OpenCV (`torchwm[viz]`) is installed
 - `DreamerConfig.perf_defaults` and `DreamerConfig.tf32`
 - `RSSMPolicy(..., compile_rollout=True)` compiles the CEM candidate-rollout
   step, which runs `num_iterations * planning_horizon` tiny kernels per env step

@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 import torch
 from torchwm.models import create_genie_small
 from torchwm.vision import create_video_tokenizer
@@ -200,6 +201,17 @@ class TestGenieTraining:
         losses = trainer.train_step(batch)
         assert "total_loss" in losses
         assert losses["total_loss"] > 0
+
+
+    def test_video_dataset_loads_npy_clips(self, tmp_path):
+        from torchwm.training.train_genie import VideoDataset
+
+        clip = np.random.rand(10, 48, 48, 3).astype(np.float32)
+        path = tmp_path / "clip.npy"
+        np.save(path, clip)
+        item = VideoDataset([path], num_frames=8, image_size=32)[0]
+        assert item.shape == (3, 8, 32, 32)
+        assert item.dtype == torch.float32
 
 
 class TestGenieGeneration:

@@ -81,7 +81,10 @@ def test_ml_agents_extra_matches_real_supported_sdk_series():
     project = tomllib.loads(Path("pyproject.toml").read_text())["project"]
 
     assert "mlagents-envs>=0.28.0,<0.29.0" in project["optional-dependencies"]["ml-agents"]
-    assert "protobuf>=3.20,<3.21" in project["optional-dependencies"]["ml-agents"]
+    # The extra must not reinstate a `protobuf<3.21` cap: the whole 3.x line is
+    # unpatched for the advisories GitHub reports against `uv.lock`, and no
+    # mlagents-envs release that lifts the cap is installable on Python >= 3.11.
+    assert "protobuf>=5.29.6" in project["optional-dependencies"]["ml-agents"]
 
 
 def test_procgen_extra_declares_python_support_boundary():

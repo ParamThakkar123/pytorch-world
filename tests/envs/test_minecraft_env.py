@@ -8,9 +8,15 @@ the observation dict, and the pre-Gymnasium 4-tuple step.
 
 from __future__ import annotations
 
-import gymnasium as gym
+import importlib.util
+
 import numpy as np
 import pytest
+
+if importlib.util.find_spec("gymnasium") is None:
+    pytest.skip("gymnasium is not installed", allow_module_level=True)
+
+import gymnasium as gym
 
 from torchwm.envs.minecraft_env import (
     MINECRAFT_ACTION_SET,

@@ -1,7 +1,6 @@
+from torch import nn
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple, Dict
 
 
 # A code that is never selected decays as ``usage *= ema_decay`` each step. With
@@ -17,7 +16,7 @@ def restart_dead_codes(
     usage: torch.Tensor,
     z_flat: torch.Tensor,
     threshold: float,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     """Re-seed codebook entries that have fallen out of use.
 
     Nearest-neighbour quantizers are prone to codebook collapse: a code that
@@ -114,7 +113,7 @@ class VectorQuantizer(nn.Module):
 
     def forward(
         self, z: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
+    ) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
         """Quantize the input latents.
 
         Args:
@@ -210,7 +209,7 @@ class VectorQuantizer(nn.Module):
             indices.reshape(B, H, W) if z.dim() == 4 else indices.squeeze(-1)
         )
 
-        loss: Dict[str, torch.Tensor] = {
+        loss: dict[str, torch.Tensor] = {
             "vq_loss": vq_loss,
             "perplexity": perplexity,
             "dead_codes_restarted": num_restarted,
@@ -279,7 +278,7 @@ class VectorQuantizerEMA(nn.Module):
 
     def forward(
         self, z: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
+    ) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
         """Quantize with EMA updates."""
         # Flatten spatial dims
         B, C, H, W = z.shape
@@ -376,7 +375,7 @@ class VectorQuantizerEMA(nn.Module):
             -torch.sum(avg_probs * torch.log(avg_probs + 1e-10))
         )
 
-        loss: Dict[str, torch.Tensor] = {
+        loss: dict[str, torch.Tensor] = {
             "vq_loss": commitment_loss * self.commitment_weight,
             "perplexity": perplexity,
             "dead_codes_restarted": num_restarted,

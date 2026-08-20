@@ -80,9 +80,10 @@ for algo in ["dreamer-v1", "dreamer-v2", "dreamer-v3"]:
 ```
 
 `examples/algorithm_comparison.py` runs exactly this and writes a comparison
-plot. Note that construction is unified across all 13 registered models, while a
-shared step-budget `train()` currently covers the Dreamer family — the example
-reports which is which rather than assuming.
+plot. Construction is unified across all registered models. A shared
+step-budget `train()` currently covers the Dreamer family — other agents use
+their own trainers (`torchwm train …` / `JEPAAgent.train()` / `DiamondAgent.train()`).
+The example reports which is which rather than assuming.
 
 ## Features
 
@@ -160,7 +161,7 @@ or `torchwm.create_config(...)`. Run `torchwm.list_models()` for the live list.
 | `dreamer` | **Dreamer** | Model-based RL with latent dynamics (alias for `dreamer-v1`) | Imagination, actor-critic |
 | `dreamer-v1` | **DreamerV1** | Latent imagination with Gaussian heads | Normal heads, standard KL |
 | `dreamer-v2` | **DreamerV2** | Discrete latents for pixel control | Symlog two-hot heads, balanced KL |
-| `dreamer-v3` | **DreamerV3** | General-purpose successor across domains | Symlog returns, robust defaults |
+| `dreamer-v3` | **DreamerV3 (name)** | Same `DreamerAgent` as `dreamer` | Registry name for V3-style configs; not a separate paper-complete V3 |
 | `planet` | **PlaNet** | Latent planning from pixels, no explicit policy | RSSM, CEM planner |
 | `modular-rssm` | **ModularRSSM** | Composable recurrent state-space model | Swappable priors/posteriors, custom heads |
 | `iris` | **IRIS** | Sample-efficient RL with Transformers | Discrete VAEs, world models |
