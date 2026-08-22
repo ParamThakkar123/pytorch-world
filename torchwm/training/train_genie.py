@@ -12,6 +12,7 @@ from torchwm.configs.serialization import SerializableConfigMixin
 from torchwm.models.genie import Genie
 from torchwm.models.model_io import save_config_next_to_checkpoint
 from torchwm.utils.memory_utils import enable_performance_defaults
+from torchwm.utils.train_utils import EarlyStopping
 
 
 @dataclass
@@ -51,6 +52,16 @@ class GenieConfig(SerializableConfigMixin):
 
     sample_temperature: float = 2.0
     maskgit_steps: int = 25
+
+    # Stop once held-out reconstruction loss stops improving, rather than at a
+    # fixed max_steps, which then bounds the run instead of defining it. Off by
+    # default so existing runs keep their exact length. Mirrors the same fields
+    # on torchwm.configs.genie_config.GenieConfig/GenieSmallConfig, either of
+    # which may be handed to the trainer instead of this one.
+    early_stopping: bool = False
+    patience: int = 10
+    min_delta: float = 1e-4
+    val_split: float = 0.1
 
 
 class VideoDataset(Dataset):
@@ -329,6 +340,23 @@ class GenieTrainer:
                 else torch.tensor(float(recon_loss)),
             }
 
+    def validate_epoch(self, val_dataloader: DataLoader) -> float:
+        """Mean held-out reconstruction loss over the whole validation loader.
+
+        ``validate`` scores a single batch, which is far too noisy to drive a
+        plateau test -- the batch-to-batch spread swamps the epoch-to-epoch
+        trend, so early stopping on it would fire on noise. Averaging over the
+        loader gives a comparable number per validation.
+        """
+        total, count = 0.0, 0
+        for val_batch in val_dataloader:
+            val_batch = val_batch.to(self.device)
+            metrics = self.validate(val_batch)
+            batch_size = val_batch.size(0)
+            total += float(metrics["val_recon_loss"]) * batch_size
+            count += batch_size
+        return total / max(count, 1)
+
     def train(
         self,
         train_dataloader: DataLoader,
@@ -348,6 +376,20 @@ class GenieTrainer:
         """
         if num_steps is None:
             num_steps = self.config.max_steps
+
+        stopper = None
+        best_val = float("inf")
+        if getattr(self.config, "early_stopping", False):
+            if val_dataloader is None:
+                raise ValueError(
+                    "early_stopping needs a val_dataloader; build one with "
+                    "create_tinyworlds_dataloader(val_split=..., split='val')"
+                )
+            stopper = EarlyStopping(
+                mode="min",
+                patience=self.config.patience,
+                threshold=self.config.min_delta,
+            )
 
         train_iter = iter(train_dataloader)
 
@@ -373,11 +415,24 @@ class GenieTrainer:
                 )
 
             if val_dataloader is not None and self.global_step % val_interval == 0:
-                val_iter = iter(val_dataloader)
-                val_batch = next(val_iter)
-                val_batch = val_batch.to(self.device)
-                val_metrics = self.validate(val_batch)
-                print(f"Validation: {val_metrics}")
+                val_loss = self.validate_epoch(val_dataloader)
+                message = f"Validation: val_recon_loss={val_loss:.4f}"
+                if stopper is not None:
+                    stopper.step(val_loss)
+                    if val_loss < best_val:
+                        best_val = val_loss
+                        message += " (best)"
+                    print(message)
+                    if stopper.stop:
+                        print(
+                            f"Early stopping at step {self.global_step}: held-out "
+                            f"reconstruction loss has not improved by "
+                            f"{self.config.min_delta} for {self.config.patience} "
+                            f"validations."
+                        )
+                        break
+                else:
+                    print(message)
 
         print("Training complete!")
 

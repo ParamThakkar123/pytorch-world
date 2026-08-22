@@ -150,6 +150,15 @@ class DiamondConfig(SerializableConfigMixin):
     eval_interval: int = 50
     save_interval: int = 100
 
+    # Stop once evaluation return stops improving, rather than running the full
+    # epoch budget. Off by default: the published configuration is a fixed-length
+    # run, and stopping early would change what the numbers mean. When on, the
+    # epoch count becomes a ceiling. Return, not loss, is the signal here -- the
+    # world-model loss keeps falling long after the agent stops getting better.
+    early_stopping: bool = False
+    patience: int = 10
+    min_delta: float = 1e-4
+
 
 # Atari 100k benchmark games
 ATARI_100K_GAMES = [

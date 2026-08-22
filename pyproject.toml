@@ -68,6 +68,16 @@ dmc = [
     "dm-control>=1.0.0",
     "gymnasium>=1.2.2",
 ]
+# Genie's TinyWorlds clips are HDF5 files pulled from HuggingFace. Without
+# these, `torchwm.datasets.tinyworlds` imports fine but raises as soon as a
+# dataset is actually loaded, so Genie has no training data.
+genie = [
+    "h5py>=3.11.0",
+    "huggingface-hub>=0.23.0",
+    # scripts/train_genie_tinyworlds.py parses its key=value CLI with
+    # OmegaConf and imports it at module scope, so it cannot start without it.
+    "omegaconf>=2.3.0",
+]
 mujoco = [
     "mujoco>=3.2.0",
 ]

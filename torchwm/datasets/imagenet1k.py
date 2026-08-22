@@ -290,6 +290,8 @@ def make_imagefolder(
     image_folder: str | None = None,
     drop_last: bool = True,
     val_split: float | None = None,
+    split: str = "train",
+    split_seed: int = 0,
 ) -> Tuple[
     torch.utils.data.Dataset,
     torch.utils.data.DataLoader,
@@ -299,6 +301,13 @@ def make_imagefolder(
 
     Supports optional train/validation split and distributed sampling, making
     it a drop-in replacement for ImageNet loaders in training scripts.
+
+    Args:
+        val_split: Fraction held out for validation. ``None`` uses everything.
+        split: Which side of that split to return, ``"train"`` or ``"val"``.
+            Call twice with the same ``val_split`` and ``split_seed`` to get the
+            two disjoint halves.
+        split_seed: Seed for the partition, so both calls agree on it.
     """
     # Build a string root path for ImageFolder; coerce None -> empty string
     if image_folder:
@@ -313,7 +322,17 @@ def make_imagefolder(
     if val_split:
         val_size = int(len(dataset) * val_split)
         train_size = len(dataset) - val_size
-        dataset, _ = random_split(dataset, [train_size, val_size])
+        # Seed the split so that the "train" and "val" calls partition the same
+        # dataset the same way. Without a fixed generator the two calls would
+        # draw independent splits and the validation set would overlap the
+        # training set, which makes a held-out loss meaningless.
+        generator = torch.Generator().manual_seed(split_seed)
+        train_dataset, val_dataset = random_split(
+            dataset, [train_size, val_size], generator=generator
+        )
+        if split not in ("train", "val"):
+            raise ValueError(f"split must be 'train' or 'val', got {split!r}")
+        dataset = val_dataset if split == "val" else train_dataset
     dist_sampler: torch.utils.data.distributed.DistributedSampler
     dist_sampler = torch.utils.data.distributed.DistributedSampler(
         dataset=dataset, num_replicas=world_size, rank=rank

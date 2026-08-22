@@ -150,6 +150,13 @@ class DreamerConfig(SerializableConfigMixin):
     video_format: str = "gif"  # "gif" or "mp4"
     video_fps: int = 20
     checkpoint_interval: int = 10000
+    # Stop once evaluation return stops improving, rather than running the full
+    # total_steps budget, which then acts as a ceiling. Off by default so
+    # existing runs keep their exact length. Return, not loss: the world-model
+    # loss keeps falling long after the policy stops improving.
+    early_stopping: bool = False
+    patience: int = 10
+    min_delta: float = 1e-4
     checkpoint_path: str = ""
     restore: bool = False
     experience_replay: str = ""

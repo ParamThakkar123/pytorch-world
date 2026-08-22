@@ -18,6 +18,7 @@ from torchwm.datasets.cifar10 import make_cifar10
 from torchwm.datasets.imagenet1k import make_imagenet1k, make_imagefolder
 from torchvision.transforms import RandomHorizontalFlip, Compose, ToTensor
 from torchwm.transforms.image import make_transforms
+from torchwm.utils.train_utils import EarlyStopping
 import time
 from torchvision.utils import save_image
 import os
@@ -706,11 +707,15 @@ class DiT(nn.Module):
         workdir: str = "./dit_demo",
         root_path: str = "./data",
         image_folder: str | None = None,
-        crop_size: int = 224,
+        crop_size: int | None = None,
+        num_workers: int = 4,
         download: bool = True,
         copy_data: bool = False,
         subset_file: str | None = None,
         val_split: float | None = None,
+        early_stopping: bool = False,
+        patience: int = 10,
+        min_delta: float = 1e-4,
     ) -> None:
         if torch.cuda.is_available():
             device = torch.device("cuda")
@@ -721,8 +726,12 @@ class DiT(nn.Module):
         if dataset.lower() == "cifar10":
             transform = Compose([RandomHorizontalFlip(), ToTensor()])
         else:
+            # Default the crop to the model's own input size. These are two
+            # independent knobs, and a mismatch does not fail until the first
+            # forward pass, as a bare shape error naming neither of them.
+            resolved_crop = crop_size if crop_size else img_size
             transform = make_transforms(
-                crop_size=crop_size,
+                crop_size=resolved_crop,
                 crop_scale=(0.3, 1.0),
                 color_jitter=0.5,
                 horizontal_flip=True,
@@ -731,13 +740,18 @@ class DiT(nn.Module):
                 normalization=((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
             )
 
+        # Held-out loader, built only when early stopping needs one. Training
+        # loss cannot drive it: it keeps falling well past the point where
+        # samples stop improving, so a plateau on it never arrives.
+        val_loader: torch.utils.data.DataLoader | None = None
+
         if dataset.lower() == "cifar10":
             _, train_loader, _ = make_cifar10(
                 transform=transform,
                 batch_size=batch_size,
                 collator=None,
                 pin_mem=True,
-                num_workers=4,
+                num_workers=num_workers,
                 world_size=1,
                 rank=0,
                 root_path=root_path,
@@ -745,13 +759,29 @@ class DiT(nn.Module):
                 train=True,
                 download=download,
             )
+            if early_stopping:
+                # CIFAR-10 ships a test split, so nothing has to come out of
+                # the training set.
+                _, val_loader, _ = make_cifar10(
+                    transform=transform,
+                    batch_size=batch_size,
+                    collator=None,
+                    pin_mem=True,
+                    num_workers=num_workers,
+                    world_size=1,
+                    rank=0,
+                    root_path=root_path,
+                    drop_last=False,
+                    train=False,
+                    download=download,
+                )
         elif dataset.lower() == "imagenet":
             _, train_loader, _ = make_imagenet1k(
                 transform=transform,
                 batch_size=batch_size,
                 collator=None,
                 pin_mem=True,
-                num_workers=4,
+                num_workers=num_workers,
                 world_size=1,
                 rank=0,
                 root_path=root_path,
@@ -761,20 +791,59 @@ class DiT(nn.Module):
                 drop_last=True,
                 subset_file=subset_file,
             )
+            if early_stopping:
+                # ImageNet's own validation split; `training=False` selects it.
+                _, val_loader, _ = make_imagenet1k(
+                    transform=transform,
+                    batch_size=batch_size,
+                    collator=None,
+                    pin_mem=True,
+                    num_workers=num_workers,
+                    world_size=1,
+                    rank=0,
+                    root_path=root_path,
+                    image_folder=image_folder,
+                    training=False,
+                    copy_data=copy_data,
+                    drop_last=False,
+                    subset_file=subset_file,
+                )
         elif dataset.lower() == "imagefolder":
             _, train_loader, _ = make_imagefolder(
                 transform=transform,
                 batch_size=batch_size,
                 collator=None,
                 pin_mem=True,
-                num_workers=4,
+                num_workers=num_workers,
                 world_size=1,
                 rank=0,
                 root_path=root_path,
                 image_folder=image_folder,
                 drop_last=True,
                 val_split=val_split,
+                split="train",
             )
+            if early_stopping:
+                if not val_split:
+                    raise ValueError(
+                        "early_stopping on an imagefolder needs val_split > 0 "
+                        "so there is held-out data to measure; pass e.g. "
+                        "val_split=0.05"
+                    )
+                _, val_loader, _ = make_imagefolder(
+                    transform=transform,
+                    batch_size=batch_size,
+                    collator=None,
+                    pin_mem=True,
+                    num_workers=num_workers,
+                    world_size=1,
+                    rank=0,
+                    root_path=root_path,
+                    image_folder=image_folder,
+                    drop_last=False,
+                    val_split=val_split,
+                    split="val",
+                )
         else:
             raise ValueError(
                 f"Unsupported dataset: {dataset}. Supported: cifar10, imagenet, imagefolder"
@@ -827,6 +896,57 @@ class DiT(nn.Module):
         # Paper 4: constant learning rate, no weight decay, no warmup.
         opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.0)
 
+        stopper = None
+        best_val = float("inf")
+        best_state = None
+        if early_stopping:
+            if val_loader is None:
+                raise ValueError(
+                    f"early_stopping is on but no held-out loader was built for "
+                    f"dataset={dataset!r}"
+                )
+            stopper = EarlyStopping(
+                mode="min", patience=patience, threshold=min_delta
+            )
+
+        def diffusion_loss(batch_images: torch.Tensor) -> torch.Tensor:
+            """L_simple on one batch, identical to the training objective."""
+            b = batch_images.size(0)
+            t_b = torch.randint(0, timesteps, (b,), device=device).long()
+            noise_b = torch.randn_like(batch_images)
+            x_t_b = ddpm.q_sample(batch_images, t_b, noise_b)
+            y_b = None
+            if model.y_embedder is not None:
+                y_b = torch.zeros(b, dtype=torch.long, device=device)
+            out = model(x_t_b, t_b, y_b)
+            if model.learn_sigma:
+                out = out[:, : model.in_channels]
+            return F.mse_loss(out, noise_b)
+
+        @torch.no_grad()
+        def validate() -> float:
+            """Mean held-out L_simple.
+
+            The timestep and noise are resampled per batch, so this is a noisy
+            estimator; the seed is fixed per call to keep successive epochs
+            comparable, which is what the plateau test needs.
+            """
+            loader = val_loader
+            if loader is None:
+                raise RuntimeError("validate() called without a held-out loader")
+            was_training = model.training
+            model.eval()
+            generator_state = torch.random.get_rng_state()
+            torch.manual_seed(0)
+            total, count = 0.0, 0
+            for val_imgs, _ in loader:
+                val_imgs = val_imgs.to(device)
+                total += float(diffusion_loss(val_imgs)) * val_imgs.size(0)
+                count += val_imgs.size(0)
+            torch.random.set_rng_state(generator_state)
+            model.train(was_training)
+            return total / max(count, 1)
+
         global_step = 0
         model.train()
 
@@ -869,11 +989,39 @@ class DiT(nn.Module):
                     start_time = time.time()
 
                 global_step += 1
+
+            if stopper is not None:
+                val_loss = validate()
+                stopper.step(val_loss)
+                improved = val_loss < best_val
+                if improved:
+                    best_val = val_loss
+                    # Keep the best weights, not the last: on a plateau the run
+                    # ends `patience` epochs past the best model, so saving the
+                    # final state would ship a worse one.
+                    source = ema_model if ema_model is not None else model
+                    best_state = {
+                        key: value.detach().clone().cpu()
+                        for key, value in source.state_dict().items()
+                    }
+                print(
+                    f"Epoch [{epoch}/{epochs}] val_loss: {val_loss:.4f} "
+                    f"(best {best_val:.4f}{'*' if improved else ''})"
+                )
+                if stopper.stop:
+                    print(
+                        f"Early stopping at epoch {epoch}: held-out loss has not "
+                        f"improved by {min_delta} for {patience} epochs."
+                    )
+                    break
         print("Training Complete.")
 
         os.makedirs(workdir, exist_ok=True)
 
         model_to_save = ema_model if ema_model is not None else model
+        if best_state is not None:
+            model_to_save.load_state_dict(best_state)
+            print(f"Restored the best held-out checkpoint (val_loss {best_val:.4f}).")
         checkpoint_path = Path(workdir) / "dit_model.pth"
         train_config = Config(
             DATASET=dataset,

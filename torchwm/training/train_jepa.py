@@ -32,6 +32,7 @@ from torchwm.utils.jepa_utils import (
 from torchwm.utils.jepa_utils import repeat_interleave_batch
 from torchwm.datasets.imagenet1k import make_imagenet1k, make_imagefolder
 from torchwm.datasets.cifar10 import make_cifar10
+from torchwm.utils.train_utils import EarlyStopping
 from torchwm.helpers.jepa_helper import load_checkpoint, init_model, init_opt
 from torchwm.transforms.image import make_transforms
 from torchwm.configs.jepa_config import JEPAConfig
@@ -331,6 +332,48 @@ def main(args: Any = None, resume_preempt: bool = False) -> Any:
             drop_last=True,
             val_split=val_split,
         )
+    # Held-out loader for early stopping. Built with the same mask collator, so
+    # the validation loss is the exact objective being trained, just on data the
+    # encoder never sees.
+    early_stopping = args["optimization"].get("early_stopping", False)
+    val_loader = None
+    if early_stopping:
+        if dataset_type.lower() == "cifar10":
+            _, val_loader, _ = make_cifar10(
+                transform=transform,
+                batch_size=batch_size,
+                collator=mask_collator,
+                pin_mem=pin_mem,
+                num_workers=num_workers,
+                world_size=world_size,
+                rank=rank,
+                root_path=root_path,
+                drop_last=True,
+                train=False,
+                download=download,
+            )
+        else:
+            if not val_split:
+                raise ValueError(
+                    "optimization.early_stopping needs data.val_split > 0 so "
+                    "there is held-out data to measure; pass e.g. "
+                    "data.val_split=0.05"
+                )
+            _, val_loader, _ = make_imagefolder(
+                transform=transform,
+                batch_size=batch_size,
+                collator=mask_collator,
+                pin_mem=pin_mem,
+                num_workers=num_workers,
+                world_size=world_size,
+                rank=rank,
+                root_path=root_path,
+                image_folder=image_folder,
+                drop_last=True,
+                val_split=val_split,
+                split="val",
+            )
+
     ipe = len(unsupervised_loader)
 
     # -- init optimizer and scheduler
@@ -406,6 +449,44 @@ def main(args: Any = None, resume_preempt: bool = False) -> Any:
             torch.save(save_dict, latest_path)
             if (epoch + 1) % checkpoint_freq == 0:
                 torch.save(save_dict, save_path.format(epoch=f"{epoch + 1}"))
+
+    @torch.no_grad()
+    def validate() -> float:
+        """Mean held-out loss, using the same objective the epoch just trained."""
+        if val_loader is None:
+            raise RuntimeError("validate() called without a held-out loader")
+        encoder.eval()
+        predictor.eval()
+        total, count = 0.0, 0
+        for udata, masks_enc, masks_pred in val_loader:
+            imgs = udata[0].to(device, non_blocking=True)
+            masks_enc = [m.to(device, non_blocking=True) for m in masks_enc]
+            masks_pred = [m.to(device, non_blocking=True) for m in masks_pred]
+            with torch.autocast(
+                device_type=device.type,
+                dtype=torch.bfloat16,
+                enabled=use_bfloat16,
+            ):
+                h = target_encoder(imgs)
+                h = F.layer_norm(h, (h.size(-1),))
+                h = apply_masks(h, masks_pred)
+                h = repeat_interleave_batch(h, len(imgs), repeat=len(masks_enc))
+                z = predictor(encoder(imgs, masks_enc), masks_enc, masks_pred)
+                batch_loss = float(loss_fn(z, h))
+            total += batch_loss * len(imgs)
+            count += len(imgs)
+        encoder.train()
+        predictor.train()
+        return total / max(count, 1)
+
+    stopper = None
+    best_val = float("inf")
+    if early_stopping:
+        stopper = EarlyStopping(
+            mode="min",
+            patience=args["optimization"].get("patience", 10),
+            threshold=args["optimization"].get("min_delta", 1e-4),
+        )
 
     for epoch in range(start_epoch, num_epochs):
         logger.info("Epoch %d" % (epoch + 1))
@@ -546,6 +627,28 @@ def main(args: Any = None, resume_preempt: bool = False) -> Any:
 
         logger.info("avg. loss %.3f" % loss_meter.avg)
         save_checkpoint(epoch + 1)
+
+        if stopper is not None:
+            val_loss = validate()
+            stopper.step(val_loss)
+            improved = val_loss < best_val
+            if improved:
+                best_val = val_loss
+            logger.info(
+                "epoch %d val loss %.4f (best %.4f%s)"
+                % (epoch + 1, val_loss, best_val, "*" if improved else "")
+            )
+            if stopper.stop:
+                logger.info(
+                    "Early stopping at epoch %d: held-out loss has not improved "
+                    "by %s for %s epochs."
+                    % (
+                        epoch + 1,
+                        args["optimization"].get("min_delta", 1e-4),
+                        args["optimization"].get("patience", 10),
+                    )
+                )
+                break
 
 
 def sweep_train() -> None:

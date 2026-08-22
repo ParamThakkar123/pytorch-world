@@ -27,6 +27,7 @@ from torchwm.experiments import (
     parse_experiment_args,
 )
 from torchwm.envs.diamond_atari import make_diamond_atari_env
+from torchwm.utils.train_utils import EarlyStopping
 from gymnasium.spaces import Discrete, Box
 from torchwm.datasets.diamond_dataset import (
     ReplayBuffer,
@@ -720,6 +721,16 @@ class DiamondAgent:
         print(f"Device: {self.device}")
         print(f"Action space: {self.action_dim}")
 
+        # Return, not loss: the diffusion loss keeps falling long after the
+        # policy stops improving, so a loss plateau never arrives.
+        stopper = None
+        if getattr(self.config, "early_stopping", False):
+            stopper = EarlyStopping(
+                mode="max",
+                patience=self.config.patience,
+                threshold=self.config.min_delta,
+            )
+
         for epoch in tqdm(range(self.config.num_epochs), desc="Training"):
             collected_rewards = self._collect_experience(
                 self.config.environment_steps_per_epoch
@@ -792,6 +803,17 @@ class DiamondAgent:
                 eval_reward = self.evaluate()
                 hns = self._compute_human_normalized_score(eval_reward)
                 print(f"  Eval reward: {eval_reward:.2f}, HNS: {hns:.3f}")
+
+                if stopper is not None:
+                    stopper.step(eval_reward)
+                    if stopper.stop:
+                        print(
+                            f"  Early stopping at epoch {epoch}: evaluation reward "
+                            f"has not improved by {self.config.min_delta} for "
+                            f"{self.config.patience} evaluations."
+                        )
+                        self.save_checkpoint(f"checkpoint_{epoch}.pt")
+                        break
 
             if epoch % self.config.save_interval == 0:
                 self.save_checkpoint(f"checkpoint_{epoch}.pt")

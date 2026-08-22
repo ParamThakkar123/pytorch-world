@@ -15,6 +15,13 @@ snake_case aliases (``epochs=50`` and ``EPOCHS=50`` are the same field).
 
 CIFAR-10 downloads itself into ``ROOT_PATH``. ``imagenet`` and ``imagefolder``
 read from ``ROOT_PATH`` instead and need the data to be there already.
+
+Set ``EARLY_STOPPING=true`` to train until the held-out loss stops improving
+rather than for a fixed number of epochs. ``EPOCHS`` then bounds the run
+instead of defining it, and the checkpoint holds the best epoch's weights, not
+the last:
+
+    python -m torchwm.training.train_dit EPOCHS=2000 EARLY_STOPPING=true PATIENCE=20
 """
 
 from __future__ import annotations
@@ -85,6 +92,12 @@ def train_dit(config: DiTConfig | None = None, **kwargs: Any) -> DiTConfig:
         learn_sigma=config.LEARN_SIGMA,
         workdir=config.WORKDIR,
         root_path=config.ROOT_PATH,
+        val_split=config.VAL_SPLIT,
+        crop_size=config.CROP_SIZE,
+        num_workers=config.NUM_WORKERS,
+        early_stopping=config.EARLY_STOPPING,
+        patience=config.PATIENCE,
+        min_delta=config.MIN_DELTA,
     )
     return config
 

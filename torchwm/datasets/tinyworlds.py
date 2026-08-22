@@ -309,6 +309,9 @@ class TinyWorldsDataLoader:
         cache_dir: Optional[str] = None,
         download: bool = True,
         data_file: Optional[str] = None,
+        val_split: float = 0.0,
+        split: str = "train",
+        split_seed: int = 0,
     ) -> Tuple[TinyWorldsDataset, DataLoader]:
         dataset = TinyWorldsDataset(
             dataset_name=dataset_name,
@@ -319,8 +322,30 @@ class TinyWorldsDataLoader:
             data_file=data_file,
         )
 
+        # ``TinyWorldsDataset`` carries a ``split`` attribute but never divided
+        # the clips on it, so every "split" saw the whole dataset. Partition
+        # here instead, seeded so that the train and val calls agree and stay
+        # disjoint.
+        subset: Any = dataset
+        if val_split:
+            if split not in ("train", "val"):
+                raise ValueError(f"split must be 'train' or 'val', got {split!r}")
+            val_size = int(len(dataset) * val_split)
+            train_size = len(dataset) - val_size
+            if min(train_size, val_size) == 0:
+                raise ValueError(
+                    f"val_split={val_split} leaves {train_size} train / {val_size} "
+                    f"val clips out of {len(dataset)}; pick a fraction that gives "
+                    f"both sides at least one clip"
+                )
+            generator = torch.Generator().manual_seed(split_seed)
+            train_subset, val_subset = torch.utils.data.random_split(
+                dataset, [train_size, val_size], generator=generator
+            )
+            subset = val_subset if split == "val" else train_subset
+
         loader = DataLoader(
-            dataset,
+            subset,
             batch_size=batch_size,
             shuffle=shuffle,
             num_workers=num_workers,
@@ -334,7 +359,7 @@ class TinyWorldsDataLoader:
         )
 
         logger.info(
-            f"Created {dataset_name} dataloader: {len(dataset)} samples, "
+            f"Created {dataset_name} {split} dataloader: {len(subset)} samples, "
             f"{len(loader)} batches, batch_size={batch_size}"
         )
 
@@ -366,6 +391,9 @@ def create_tinyworlds_dataloader(
     cache_dir: Optional[str] = None,
     download: bool = True,
     data_file: Optional[str] = None,
+    val_split: float = 0.0,
+    split: str = "train",
+    split_seed: int = 0,
 ) -> Tuple[TinyWorldsDataset, DataLoader]:
     return TinyWorldsDataLoader.create_dataloader(
         dataset_name=dataset_name,
@@ -377,6 +405,9 @@ def create_tinyworlds_dataloader(
         cache_dir=cache_dir,
         download=download,
         data_file=data_file,
+        val_split=val_split,
+        split=split,
+        split_seed=split_seed,
     )
 
 

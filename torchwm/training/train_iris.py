@@ -19,6 +19,7 @@ from torchwm.experiments import (
 from torchwm.models.iris_agent import IRISAgent
 from torchwm.memory.iris_memory import IRISReplayBuffer
 from torchwm.envs.ale_atari_env import make_atari_env
+from torchwm.utils.train_utils import EarlyStopping
 
 # Optional OpenCV import at module scope (avoid function-local imports)
 cv2: _Optional[ModuleType] = None
@@ -527,6 +528,16 @@ class IRISTrainer:
 
         best_eval_return = float("-inf")
 
+        # Return, not loss: the autoencoder and transformer losses keep falling
+        # well after the policy stops improving, so a loss plateau never comes.
+        stopper = None
+        if getattr(self.config, "early_stopping", False):
+            stopper = EarlyStopping(
+                mode="max",
+                patience=self.config.patience,
+                threshold=self.config.min_delta,
+            )
+
         for epoch in tqdm(range(total_epochs), desc="Training"):
             # Train one epoch
             metrics = self.train_epoch(epoch)
@@ -562,6 +573,17 @@ class IRISTrainer:
                     )
                     self.agent.save(save_path)
                     print(f"  Saved best model: {save_path}")
+
+                if stopper is not None:
+                    stopper.step(eval_metrics["eval_mean_return"])
+                    if stopper.stop:
+                        print(
+                            f"\nEarly stopping at epoch {epoch}: evaluation return "
+                            f"has not improved by {self.config.min_delta} for "
+                            f"{self.config.patience} evaluations "
+                            f"({self.config.patience * eval_interval} epochs)."
+                        )
+                        break
 
             # Checkpoint periodically
             if epoch % self.config.checkpoint_interval == 0:

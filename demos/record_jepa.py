@@ -38,6 +38,58 @@ from torchwm.utils.utils import apply_masks
 from torchwm.utils.jepa_utils import repeat_interleave_batch
 
 
+# Backbone width uniquely identifies the ViT size (torchwm.models.vit).
+_WIDTH_TO_MODEL = {
+    192: "vit_tiny",
+    384: "vit_small",
+    768: "vit_base",
+    1024: "vit_large",
+    1280: "vit_huge",
+    1408: "vit_giant",
+}
+
+
+def infer_architecture(checkpoint: dict) -> dict:
+    """Recover the encoder/predictor geometry from a JEPA checkpoint.
+
+    ``init_model`` builds whatever the CLI defaults say (vit_base/16 at 224),
+    so a checkpoint trained at any other size failed to load with a wall of
+    shape mismatches. The weights pin every one of these values, so read them
+    off instead of trusting the defaults.
+    """
+    encoder = checkpoint["encoder"]
+    predictor = checkpoint.get("predictor", {})
+    arch: dict = {}
+
+    proj = encoder.get("patch_embed.proj.weight")
+    if proj is not None:
+        # Conv2d(in_chans, embed_dim, kernel=patch, stride=patch).
+        width = int(proj.shape[0])
+        arch["patch_size"] = int(proj.shape[2])
+        arch["model_name"] = _WIDTH_TO_MODEL.get(width)
+        arch["embed_dim"] = width
+
+    pos = encoder.get("pos_embed")
+    if pos is not None and "patch_size" in arch:
+        # (1, num_patches, embed_dim) over a square grid.
+        side = round(float(pos.shape[1]) ** 0.5)
+        arch["crop_size"] = side * arch["patch_size"]
+
+    pred_embed = predictor.get("predictor_embed.weight")
+    if pred_embed is not None:
+        arch["pred_emb_dim"] = int(pred_embed.shape[0])
+
+    depth = {
+        int(key.split(".")[1])
+        for key in predictor
+        if key.startswith("predictor_blocks.") and key.split(".")[1].isdigit()
+    }
+    if depth:
+        arch["pred_depth"] = max(depth) + 1
+
+    return arch
+
+
 def load_image(path: str | None, crop_size: int) -> torch.Tensor:
     """Load an image from ``path`` (or a random noise tensor) as (1, 3, H, W)."""
     if path and Path(path).exists():
@@ -102,17 +154,43 @@ def main() -> int:
         args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     )
 
-    encoder, predictor = init_model(
-        device=device,
-        patch_size=args.patch_size,
-        model_name=args.model,
-        crop_size=args.image_size,
-        pred_depth=args.pred_depth,
-        pred_emb_dim=args.pred_emb_dim,
-    )
+    model_name = args.model
+    patch_size = args.patch_size
+    image_size = args.image_size
+    pred_depth = args.pred_depth
+    pred_emb_dim = args.pred_emb_dim
+    checkpoint = None
 
     if not args.random_init:
         checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
+        arch = infer_architecture(checkpoint)
+        if arch.get("model_name") is None:
+            raise SystemExit(
+                f"Unrecognised encoder width {arch.get('embed_dim')} in "
+                f"{args.checkpoint}; pass --model explicitly."
+            )
+        # The weights decide, not the CLI defaults. Anything the caller passed
+        # that disagrees would only produce a shape mismatch.
+        model_name = arch["model_name"]
+        patch_size = arch["patch_size"]
+        image_size = arch.get("crop_size", image_size)
+        pred_depth = arch.get("pred_depth", pred_depth)
+        pred_emb_dim = arch.get("pred_emb_dim", pred_emb_dim)
+        print(
+            f"Architecture from checkpoint: {model_name} patch={patch_size} "
+            f"img={image_size} pred_depth={pred_depth} pred_emb_dim={pred_emb_dim}"
+        )
+
+    encoder, predictor = init_model(
+        device=device,
+        patch_size=patch_size,
+        model_name=model_name,
+        crop_size=image_size,
+        pred_depth=pred_depth,
+        pred_emb_dim=pred_emb_dim,
+    )
+
+    if checkpoint is not None:
         encoder.load_state_dict(checkpoint["encoder"])
         predictor.load_state_dict(checkpoint["predictor"])
         epoch = checkpoint.get("epoch", "?")
@@ -123,12 +201,12 @@ def main() -> int:
     encoder.eval()
     predictor.eval()
 
-    img = load_image(args.image, args.image_size).to(device)
-    n_h, n_w = patch_grid(args.image_size, args.patch_size)
+    img = load_image(args.image, image_size).to(device)
+    n_h, n_w = patch_grid(image_size, patch_size)
 
     mask_collator = MBMaskCollator(
-        input_size=args.image_size,
-        patch_size=args.patch_size,
+        input_size=image_size,
+        patch_size=patch_size,
         pred_mask_scale=(0.15, 0.2),
         enc_mask_scale=(0.85, 0.95),
         aspect_ratio=(0.75, 1.5),
@@ -173,7 +251,7 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Visualise: the masked input image
-    _plot_masked_input(img, masks_enc, masks_pred, args.patch_size, out_dir)
+    _plot_masked_input(img, masks_enc, masks_pred, patch_size, out_dir)
 
     # Visualise: similarity heatmap over the predicted patches
     _plot_heatmap(heatmap, out_dir / "jepa_prediction_similarity.png")

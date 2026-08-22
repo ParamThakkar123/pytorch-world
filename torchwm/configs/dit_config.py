@@ -22,6 +22,12 @@ _SNAKE_TO_UPPER = {
     "ema_decay": "EMA_DECAY",
     "workdir": "WORKDIR",
     "root_path": "ROOT_PATH",
+    "early_stopping": "EARLY_STOPPING",
+    "patience": "PATIENCE",
+    "min_delta": "MIN_DELTA",
+    "val_split": "VAL_SPLIT",
+    "crop_size": "CROP_SIZE",
+    "num_workers": "NUM_WORKERS",
     "num_classes": "NUM_CLASSES",
     "class_dropout_prob": "CLASS_DROPOUT_PROB",
     "learn_sigma": "LEARN_SIGMA",
@@ -78,6 +84,19 @@ class DiTConfig(SerializableConfigMixin):
     EMA_DECAY: float = 0.9999  # paper 4
     WORKDIR: str = "./dit_demo"
     ROOT_PATH: str = "./data"
+    # Stop once held-out loss stops improving, instead of at a fixed EPOCHS.
+    # Off by default so existing runs keep their exact length; EPOCHS then acts
+    # as the ceiling rather than the target.
+    EARLY_STOPPING: bool = False
+    PATIENCE: int = 10
+    MIN_DELTA: float = 1e-4
+    # Held-out fraction for imagefolder/imagenet. CIFAR-10 has its own test
+    # split, which is used instead.
+    VAL_SPLIT: float = 0.05
+    # Transform resolution for imagenet/imagefolder. None follows IMG_SIZE, so
+    # the data and the model agree by default. Unused for CIFAR-10.
+    CROP_SIZE: Any = None
+    NUM_WORKERS: int = 4
 
     def __getattr__(self, name: str) -> Any:
         upper = _SNAKE_TO_UPPER.get(name)

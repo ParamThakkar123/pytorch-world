@@ -56,6 +56,9 @@ STEPS="120"
 EPOCHS=""
 TRAIN_STEPS=""
 ENV_STEPS=""
+UNTIL_CONVERGED=0
+PATIENCE=""
+MIN_DELTA=""
 TRAIN_ARGS=()
 SEED="0"
 TIMEOUT="0"
@@ -91,7 +94,7 @@ Stages:
 
 Training length (override the preset, for real runs):
   --epochs N           Training epochs, for the models counted in epochs:
-                       diamond, iris, jepa, world-model.
+                       diamond, iris, dit, jepa, world-model.
   --train-steps N      Training steps, for the models counted in steps:
                        dreamer, genie.
   --env-steps N        Environment-step (data) budget for the Atari agents,
@@ -102,6 +105,16 @@ Training length (override the preset, for real runs):
                        data. Assumes the config's per-epoch step counts.
   --train-arg ARG      Append ARG verbatim to the training command (repeatable).
                        Model-specific, so pair it with a single --models.
+  --until-converged    Train until the model stops improving instead of for a
+                       fixed length. The epoch/step count then becomes a
+                       ceiling, so pair it with a generous --epochs.
+                       diamond, iris and dreamer stop on evaluation return;
+                       dit, jepa and genie on held-out loss. planet, rssm and
+                       world-model have no convergence signal wired up.
+  --patience N         Evaluations without improvement before stopping
+                       (default: each model's own, 10).
+  --min-delta X        Improvement needed to count, as a RELATIVE fraction of
+                       the best value so far (default 1e-4, i.e. 0.01%).
 
 Run control:
   --device NAME        cpu / cuda / cuda:0. Passed to every model that takes one.
@@ -169,6 +182,11 @@ while [ "$#" -gt 0 ]; do
         --train-steps=*)   TRAIN_STEPS="${1#*=}"; shift ;;
         --env-steps)       need_value "$1" "$#"; ENV_STEPS="$2"; shift 2 ;;
         --env-steps=*)     ENV_STEPS="${1#*=}"; shift ;;
+        --until-converged) UNTIL_CONVERGED=1; shift ;;
+        --patience)        need_value "$1" "$#"; PATIENCE="$2"; shift 2 ;;
+        --patience=*)      PATIENCE="${1#*=}"; shift ;;
+        --min-delta)       need_value "$1" "$#"; MIN_DELTA="$2"; shift 2 ;;
+        --min-delta=*)     MIN_DELTA="${1#*=}"; shift ;;
         --train-arg)       need_value "$1" "$#"; TRAIN_ARGS+=("$2"); shift 2 ;;
         --train-arg=*)     TRAIN_ARGS+=("${1#*=}"); shift ;;
         --seed)            need_value "$1" "$#"; SEED="$2"; shift 2 ;;
@@ -315,6 +333,7 @@ append_duration_overrides() {
         case "${model}" in
             diamond)     CMD+=("num_epochs=${EPOCHS}") ;;
             iris)        CMD+=("epochs=${EPOCHS}") ;;
+            dit)         CMD+=("EPOCHS=${EPOCHS}") ;;
             jepa)        CMD+=("optimization.epochs=${EPOCHS}") ;;
             world-model) CMD+=(--vae_epochs "${EPOCHS}" --rnn_epochs "${EPOCHS}") ;;
             *)           NOTE="${NOTE:+${NOTE}; }--epochs does not apply to ${model}" ;;
@@ -336,9 +355,43 @@ append_duration_overrides() {
         esac
     fi
 
+    append_convergence_overrides "${model}"
+
     if [ "${#TRAIN_ARGS[@]}" -gt 0 ]; then
         CMD+=("${TRAIN_ARGS[@]}")
     fi
+}
+
+# --until-converged, spelled the way each config names those fields. DiT uses
+# the original codebase's UPPER_CASE, JEPA nests under `optimization`, and the
+# rest are flat lower-case.
+append_convergence_overrides() {
+    local model="$1"
+    [ "${UNTIL_CONVERGED}" -eq 1 ] || return 0
+
+    case "${model}" in
+        diamond|iris|dreamer|genie)
+            CMD+=("early_stopping=true")
+            [ -n "${PATIENCE}" ] && CMD+=("patience=${PATIENCE}")
+            [ -n "${MIN_DELTA}" ] && CMD+=("min_delta=${MIN_DELTA}")
+            ;;
+        dit)
+            CMD+=("EARLY_STOPPING=true")
+            [ -n "${PATIENCE}" ] && CMD+=("PATIENCE=${PATIENCE}")
+            [ -n "${MIN_DELTA}" ] && CMD+=("MIN_DELTA=${MIN_DELTA}")
+            ;;
+        jepa)
+            CMD+=("optimization.early_stopping=true")
+            [ -n "${PATIENCE}" ] && CMD+=("optimization.patience=${PATIENCE}")
+            [ -n "${MIN_DELTA}" ] && CMD+=("optimization.min_delta=${MIN_DELTA}")
+            # An imagefolder run needs data held out; CIFAR-10 uses its test
+            # split and ignores this.
+            CMD+=("data.val_split=0.05")
+            ;;
+        *)
+            NOTE="${NOTE:+${NOTE}; }--until-converged is not wired up for ${model}"
+            ;;
+    esac
 }
 
 build_train_cmd() {

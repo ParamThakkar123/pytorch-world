@@ -75,6 +75,12 @@ class JEPAConfig(SerializableConfigMixin):
     # are scaled linearly with the effective batch size. Set to ``None`` to use
     # the configured learning rates verbatim.
     lr_reference_batch_size: int | None = 2048
+    # Stop once held-out loss stops improving, rather than running all `epochs`,
+    # which then acts as a ceiling. Off by default so existing runs keep their
+    # exact length. Needs `val_split` (imagefolder) or CIFAR-10's test split.
+    early_stopping: bool = False
+    patience: int = 10
+    min_delta: float = 1e-4
 
     # logging
     folder: str = "results/jepa"
@@ -135,6 +141,9 @@ class JEPAConfig(SerializableConfigMixin):
                     "lr": self.lr,
                     "final_lr": self.final_lr,
                     "lr_reference_batch_size": self.lr_reference_batch_size,
+                    "early_stopping": self.early_stopping,
+                    "patience": self.patience,
+                    "min_delta": self.min_delta,
                 },
                 "logging": {
                     "folder": self.folder,

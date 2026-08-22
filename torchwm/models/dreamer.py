@@ -20,6 +20,7 @@ from torchwm.models.dreamer_rssm import RSSM
 from torchwm.vision.dreamer_decoder import ConvDecoder, DenseDecoder, ActionDecoder
 from torchwm.vision.dreamer_encoder import ConvEncoder
 from torchwm.utils.memory_utils import enable_performance_defaults
+from torchwm.utils.train_utils import EarlyStopping
 from torchwm.utils.dreamer_utils import (
     Logger,
     FreezeParameters,
@@ -1291,6 +1292,14 @@ class DreamerAgent(ExportableAgentMixin):
         self.logger.log_scalars(initial_logs, step=0)
         self.logger.flush()
 
+        stopper = None
+        if getattr(self.args, "early_stopping", False):
+            stopper = EarlyStopping(
+                mode="max",
+                patience=self.args.patience,
+                threshold=self.args.min_delta,
+            )
+
         while global_step <= total_steps:
             logger.info("At global step %s", global_step)
 
@@ -1365,6 +1374,22 @@ class DreamerAgent(ExportableAgentMixin):
                         "eval_std_reward": np.std(episode_rews),
                     }
                 )
+
+                if stopper is not None:
+                    stopper.step(float(np.mean(episode_rews)))
+                    if stopper.stop:
+                        self.logger.log_scalars(logs, global_step)
+                        print(
+                            f"Early stopping at step {global_step}: evaluation "
+                            f"return has not improved by {self.args.min_delta} "
+                            f"for {self.args.patience} evaluations."
+                        )
+                        ckpt_dir = os.path.join(self.logdir, "ckpts/")
+                        os.makedirs(ckpt_dir, exist_ok=True)
+                        self.dreamer.save(
+                            os.path.join(ckpt_dir, f"{global_step}_ckpt.pt")
+                        )
+                        break
 
             self.logger.log_scalars(logs, global_step)
 

@@ -49,6 +49,15 @@ class GenieConfig(SerializableConfigMixin):
     # bfloat16 is preferred where the device supports it, and needs no scaler.
     use_amp: bool = False
 
+    # Stop once held-out reconstruction loss stops improving, rather than at a
+    # fixed max_steps. Off by default so existing runs keep their exact length;
+    # max_steps then bounds the run instead of defining it.
+    early_stopping: bool = False
+    patience: int = 10
+    min_delta: float = 1e-4
+    # Fraction of clips held out to measure that loss on.
+    val_split: float = 0.1
+
 
 @dataclass
 class GenieSmallConfig(SerializableConfigMixin):
@@ -94,6 +103,15 @@ class GenieSmallConfig(SerializableConfigMixin):
     # numerics, so it is an explicit opt-in rather than a silent default.
     # bfloat16 is preferred where the device supports it, and needs no scaler.
     use_amp: bool = False
+
+    # Stop once held-out reconstruction loss stops improving, rather than at a
+    # fixed max_steps. Off by default so existing runs keep their exact length;
+    # max_steps then bounds the run instead of defining it.
+    early_stopping: bool = False
+    patience: int = 10
+    min_delta: float = 1e-4
+    # Fraction of clips held out to measure that loss on.
+    val_split: float = 0.1
 
 
 @dataclass
