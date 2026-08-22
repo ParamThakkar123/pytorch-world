@@ -43,6 +43,11 @@ gym = [
     "gymnasium[box2d]>=1.2.2",
     "huggingface-hub>=0.23.0",
     "pygame>=2.6.1",
+    # ALE itself, not just the ROM installer. `autorom` alone leaves
+    # `gym.make("ALE/Breakout-v5")` raising NamespaceNotFound, because the
+    # namespace is registered by `ale_py`, which every Atari path here
+    # (DIAMOND and IRIS) imports. ale-py >= 0.10 bundles the ROMs.
+    "ale-py>=0.10.1",
     "autorom>=0.6.1",
 ]
 # `protobuf` is deliberately *not* capped below 3.21 here. mlagents-envs 0.28

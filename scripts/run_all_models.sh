@@ -6,7 +6,8 @@
 # a recorded inference pass that picks up the checkpoint that training just
 # wrote. A stage that fails is logged and the sweep moves on, so one broken
 # model does not hide the state of the others. A summary table prints at the end
-# and the exit status is non-zero if any stage failed.
+# and the exit status is non-zero if any stage failed. Ctrl+C ends the whole
+# sweep, not just the stage it lands on.
 #
 # This is the end-to-end counterpart to scripts/benchmark_models.sh, which times
 # forward/backward passes and never trains.
@@ -227,6 +228,26 @@ model_env() {
 CMD=()
 SKIP_REASON=""
 NOTE=""
+
+# Optional third-party packages a model cannot run without, checked once so a
+# missing extra reports as an actionable SKIP instead of a stack trace 30 lines
+# into the traceback. Empty means "nothing beyond the base install".
+missing_requirement() {
+    local model="$1" module="" extra=""
+    case "${model}" in
+        # ALE registers the "ALE/" gym namespace; without it gym.make raises
+        # NamespaceNotFound. Both Atari models need it.
+        diamond|iris) module="ale_py"; extra="ale-py (in the 'gym' extra)" ;;
+        *) return 0 ;;
+    esac
+
+    [ "${DRY_RUN}" -eq 1 ] && return 0
+    if "${RUNNER[@]}" -c "import ${module}" >/dev/null 2>&1; then
+        return 0
+    fi
+    SKIP_REASON="${extra} is not installed -- reinstall with --extra gym, or: uv pip install ale-py"
+    return 1
+}
 
 build_train_cmd() {
     local model="$1"
@@ -578,20 +599,35 @@ fi
 
 ROWS=()
 FAILURES=0
+ABORTED=0
 
 record_row() {
     # model | stage | status | duration | detail
     ROWS+=("$1|$2|$3|$4|$5")
 }
 
+# Ctrl+C must end the sweep, not just the stage it lands on. Without this,
+# `set -e` is suspended around the stage (failures are meant to be survivable)
+# so bash would shrug off the interrupt and march into the next model, where
+# the next Ctrl+C would kill that one too.
+on_interrupt() {
+    ABORTED=1
+    echo
+    echo ">> interrupted -- stopping after the current stage" >&2
+}
+trap on_interrupt INT TERM
+
 run_stage() {
     local model="$1" stage="$2"
     local log="${LOG_DIR}/${model}.${stage}.log"
 
-    if [ "${stage}" = "train" ]; then
-        build_train_cmd "${model}"
-    else
-        build_infer_cmd "${model}"
+    CMD=(); SKIP_REASON=""; NOTE=""
+    if missing_requirement "${model}"; then
+        if [ "${stage}" = "train" ]; then
+            build_train_cmd "${model}"
+        else
+            build_infer_cmd "${model}"
+        fi
     fi
 
     if [ -n "${SKIP_REASON}" ]; then
@@ -629,6 +665,22 @@ run_stage() {
         return 0
     fi
 
+    # Anything above 128 is a signal, not a bug in the model: Ctrl+C (130),
+    # `kill` (143), or --timeout firing. Report it as such and stop -- counting
+    # a signal as a failure would blame the model for the operator.
+    if [ "${status}" -gt 128 ]; then
+        local signal=$((status - 128))
+        if [ "${TIMEOUT}" != "0" ] && [ "${signal}" -eq 15 ]; then
+            record_row "${model}" "${stage}" "TIMEOUT" "${elapsed}s" "hit --timeout ${TIMEOUT}s"
+            echo ">> ${model} / ${stage} hit the ${TIMEOUT}s timeout" >&2
+            return 0
+        fi
+        ABORTED=1
+        record_row "${model}" "${stage}" "INT(${signal})" "${elapsed}s" "stopped by signal ${signal}"
+        echo ">> ${model} / ${stage} stopped by signal ${signal}" >&2
+        return 1
+    fi
+
     FAILURES=$((FAILURES + 1))
     record_row "${model}" "${stage}" "FAIL(${status})" "${elapsed}s" "log: ${log}"
     echo ">> ${model} / ${stage} FAILED (exit ${status}); see ${log}" >&2
@@ -643,12 +695,15 @@ echo "checkpoints: ${CKPT_ROOT}"
 echo "output:      ${OUT_DIR}"
 
 for model in ${MODEL_LIST}; do
+    if [ "${ABORTED}" -eq 1 ]; then
+        break
+    fi
     ran_any=0
     if [ "${RUN_TRAIN}" -eq 1 ] && can_train "${model}"; then
         ran_any=1
         run_stage "${model}" "train" || break
     fi
-    if [ "${RUN_INFER}" -eq 1 ] && can_infer "${model}"; then
+    if [ "${RUN_INFER}" -eq 1 ] && can_infer "${model}" && [ "${ABORTED}" -eq 0 ]; then
         ran_any=1
         run_stage "${model}" "infer" || break
     fi
@@ -675,6 +730,12 @@ if [ "${DRY_RUN}" -eq 0 ]; then
     echo "logs:        ${LOG_DIR}"
     echo "videos:      ${OUT_DIR}/videos"
     echo "checkpoints: ${CKPT_ROOT}"
+fi
+
+if [ "${ABORTED}" -eq 1 ]; then
+    echo
+    echo "interrupted; remaining models were not run." >&2
+    exit 130
 fi
 
 if [ "${FAILURES}" -gt 0 ]; then

@@ -70,6 +70,33 @@ wheels = [
 ]
 
 [[package]]
+name = "ale-py"
+version = "0.12.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3e/e8/e69da8a5fb5feafa9fffb32ed8c2b306b7571b77faf779f61e4eb53304ec/ale_py-0.12.1.tar.gz", hash = "sha256:c503d574c5983e1063b451201ccb779d935919c0f6bf116fb0f4f8aa4c86d249", size = 11460017, upload-time = "2026-08-16T23:19:21.74Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/90/e6/98367a697ecc26135e3ef00686a38782753dcadd5728a0da32cf4b59a010/ale_py-0.12.1-cp311-cp311-macosx_13_0_arm64.whl", hash = "sha256:281fbfe90574927203b3a434da40825c7923d9bf0704fa3ac65088c503bb7e7a", size = 2251824, upload-time = "2026-08-16T23:19:01.545Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/b0/d5b0e2a412b2223567c92448593bfe8df3eb4a5e841ea51d75a8ce4fe4ac/ale_py-0.12.1-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:84977246b17eb44f4259715595b17a5ee3f920ecba0bd6da4c2be14addea1422", size = 2967027, upload-time = "2026-08-16T23:19:02.884Z" },
+    { url = "https://files.pythonhosted.org/packages/c6/96/6e461165f1256ac54a577e49d87dcd3a3f1c9280801376db78cd280d548f/ale_py-0.12.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:ba7429074ba6ffc1555f9a41bf00bee5d427b5080253101a8fe00412ca481033", size = 3111397, upload-time = "2026-08-16T23:19:04.131Z" },
+    { url = "https://files.pythonhosted.org/packages/67/93/4dd6fda6a84c4a5b8d014afeed4b546815330507e45161a0b1377eb2cabe/ale_py-0.12.1-cp311-cp311-win_amd64.whl", hash = "sha256:0ea49f8ac408a9d5088b8af448f9ba3876fcbba443cb6f4322e59c689b77cdac", size = 2145188, upload-time = "2026-08-16T23:19:05.674Z" },
+    { url = "https://files.pythonhosted.org/packages/20/37/1ad32944a1a7eb302dbd3a2d2c5acd9ad528d43933b873347b7acc418204/ale_py-0.12.1-cp312-cp312-macosx_13_0_arm64.whl", hash = "sha256:7b8af1747ea337b8ba10df7ffc039e1e5e0577d5e60feb1433f7b95d6e0f0fde", size = 2251460, upload-time = "2026-08-16T23:19:06.898Z" },
+    { url = "https://files.pythonhosted.org/packages/a2/24/81d8116fcc6c6a94f933487b4e8b49f7be70c1de65e046aef867f1ca9f74/ale_py-0.12.1-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:afd7de7ecd6d9318527c815c6c2759201862b109ec2178e6a719417042640733", size = 2966228, upload-time = "2026-08-16T23:19:08.412Z" },
+    { url = "https://files.pythonhosted.org/packages/45/53/a578291465d54032223f749c9aeb1b3fcc786f2bdc83cf3f97e9157d8ff1/ale_py-0.12.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:e67231fe655c453cb8223d51b5343ef46c58b8d49a27d6feef07326137323740", size = 3110030, upload-time = "2026-08-16T23:19:09.535Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/22/3a4f7b86c793db5b7a43d90b1561866d00c2ef51dbcf1cda16db6d00456b/ale_py-0.12.1-cp312-cp312-win_amd64.whl", hash = "sha256:a5d179d8537650a8eb394ba0b68a5864736563f21ed2da975cfd8c7db01c2e7a", size = 2145102, upload-time = "2026-08-16T23:19:10.958Z" },
+    { url = "https://files.pythonhosted.org/packages/da/d8/761d5f7ad60b3da76cb7e673f440315265b98ce156a0cd6fb45c17d07134/ale_py-0.12.1-cp313-cp313-macosx_13_0_arm64.whl", hash = "sha256:dd7101612154eedb6955dddab18781afbaad652a82e162f320773925a71623ba", size = 2251440, upload-time = "2026-08-16T23:19:12.064Z" },
+    { url = "https://files.pythonhosted.org/packages/95/e3/302f76403e743fc08c7c19c6653c8845dc2c07967c58cc87542470a9770a/ale_py-0.12.1-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c512e7a748c2d27ccbee4d1c345635774f00c3203458bc948dd783048737bebf", size = 2966193, upload-time = "2026-08-16T23:19:13.123Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/d6/510df8f46fddf26df0d8a8abd82abb02f198501b3310366073185e38bbd8/ale_py-0.12.1-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a8c0c61bd17b7853fb296909928abbcece795a3bfa45d979b044ce9a0ab452b6", size = 3109999, upload-time = "2026-08-16T23:19:14.309Z" },
+    { url = "https://files.pythonhosted.org/packages/93/c5/8e49a0ffaf87eedd2cb86acc34d590f22cb8dc71b380a75544d6a1ddb320/ale_py-0.12.1-cp313-cp313-win_amd64.whl", hash = "sha256:f000594229a0ab3580f39805195f39e4e8b23d620552208244e9f6728f2b4eff", size = 2145033, upload-time = "2026-08-16T23:19:15.38Z" },
+    { url = "https://files.pythonhosted.org/packages/52/09/82a5bcda26a0dd429314618822d128b61b0e7e2361656e200f3c8bbd3da0/ale_py-0.12.1-cp314-cp314-macosx_13_0_arm64.whl", hash = "sha256:dbdee85cb399a722f4280f3e656cdb149c379328799f1a1bb0f4cc8222987b89", size = 2251631, upload-time = "2026-08-16T23:19:16.714Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/c4/d114df0fc6666fb938c9419cd240645cb43b22e5341d5e2cd79d1257b203/ale_py-0.12.1-cp314-cp314-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:af72c31a787932cf951a647180e12ddd99a69b2fd04c32c566baaec3ecec8ba9", size = 2966494, upload-time = "2026-08-16T23:19:17.879Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/58/8c9163bd867b3014109b66dd16b8e14d690074f5b33a7ee219b86d5216c0/ale_py-0.12.1-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a51ecb3a99d0cd8985566caa6e81b3e02d6c2c90896279e8741a5165d313bc16", size = 3110227, upload-time = "2026-08-16T23:19:19.369Z" },
+    { url = "https://files.pythonhosted.org/packages/76/de/cc53ba13b245dd3980dd2bb98423d452e7ce177d10fc004025ecb8f0c3fc/ale_py-0.12.1-cp314-cp314-win_amd64.whl", hash = "sha256:66ba0fe67b6b443cc794b879a6272d10f715363f25d487ab86e54532cea7d8b5", size = 2207920, upload-time = "2026-08-16T23:19:20.596Z" },
+]
+
+[[package]]
 name = "annotated-doc"
 version = "0.0.4"
 source = { registry = "https://pypi.org/simple" }
@@ -4503,6 +4530,7 @@ dependencies = [
 
 [package.optional-dependencies]
 all = [
+    { name = "ale-py" },
     { name = "autorom" },
     { name = "brax" },
     { name = "bsuite" },
@@ -4580,6 +4608,7 @@ docs = [
     { name = "sphinxext-opengraph" },
 ]
 gym = [
+    { name = "ale-py" },
     { name = "autorom" },
     { name = "gymnasium", extra = ["box2d"] },
     { name = "huggingface-hub" },
@@ -4610,6 +4639,7 @@ viz = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ale-py", marker = "extra == 'gym'", specifier = ">=0.10.1" },
     { name = "autorom", marker = "extra == 'gym'", specifier = ">=0.6.1" },
     { name = "brax", marker = "extra == 'brax'", specifier = ">=0.13.0" },
     { name = "bsuite", marker = "extra == 'bsuite'", specifier = ">=0.3.5" },
