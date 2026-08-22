@@ -151,12 +151,12 @@ def test_console_entrypoint_run_is_exported():
 
 
 def test_train_lists_diamond_entrypoint():
-    assert cli.TRAINING_MODULES["diamond"] == "world_models.training.train_diamond"
+    assert cli.TRAINING_MODULES["diamond"] == "torchwm.training.train_diamond"
 
 
 def test_dmlab_registered_in_backend_specs():
-    from world_models.api import ENV_BACKEND_SPECS, EnvBackendSpec
-    from world_models.catalog import ENV_BACKENDS
+    from torchwm.api import ENV_BACKEND_SPECS, EnvBackendSpec
+    from torchwm.catalog import ENV_BACKENDS
 
     dmlab_spec = ENV_BACKEND_SPECS["dmlab"]
 
@@ -167,8 +167,39 @@ def test_dmlab_registered_in_backend_specs():
 
 
 def test_dmlab_backend_specs_are_public_api():
-    import world_models
+    import torchwm
 
-    assert world_models.EnvBackendSpec is not None
-    assert "dmlab" in world_models.ENV_BACKEND_SPECS
+    assert torchwm.EnvBackendSpec is not None
+    assert "dmlab" in torchwm.ENV_BACKEND_SPECS
 
+
+
+def test_play_supports_dreamer_as_well_as_diamond():
+    assert set(cli.PLAY_MODULES) == {"diamond", "dreamer"}
+    assert cli.PLAY_MODULES["dreamer"] == "scripts.play_dreamer"
+    assert set(cli.PLAY_DEFAULT_GAMES) == set(cli.PLAY_MODULES)
+
+
+def test_play_defaults_game_per_model(monkeypatch):
+    # ``--game`` means an Atari ROM for DIAMOND and a control task for Dreamer,
+    # so omitting it must not hand Breakout-v5 to Dreamer.
+    calls = {}
+
+    class FakeModule:
+        @staticmethod
+        def run_play(**kwargs):
+            calls.update(kwargs)
+
+    monkeypatch.setattr(cli.importlib, "import_module", lambda path: FakeModule)
+
+    runner = _runner()
+    res = runner.invoke(cli.app, ["play", "-m", "dreamer", "-c", "ckpt.pt"])
+
+    assert res.exit_code == 0, res.output
+    assert calls["game"] == "walker-walk"
+
+    calls.clear()
+    res = runner.invoke(cli.app, ["play", "-m", "diamond", "-c", "ckpt.pt"])
+
+    assert res.exit_code == 0, res.output
+    assert calls["game"] == "Breakout-v5"

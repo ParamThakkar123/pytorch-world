@@ -1,8 +1,8 @@
-from world_models.configs.dit_config import DiTConfig
-from world_models.configs.dreamer_config import DreamerConfig
-from world_models.configs.genie_config import GenieConfig, GenieSmallConfig
-from world_models.configs.iris_config import IRISConfig
-from world_models.configs.jepa_config import JEPAConfig
+from torchwm.configs.dit_config import DiTConfig
+from torchwm.configs.dreamer_config import DreamerConfig
+from torchwm.configs.genie_config import GenieConfig, GenieSmallConfig
+from torchwm.configs.iris_config import IRISConfig
+from torchwm.configs.jepa_config import JEPAConfig
 
 
 CONFIG_CASES = [

@@ -10,41 +10,30 @@ Public package surface
 
 These modules expose the most common imports and lazy constructors.
 
-**Primary module:** ``torchwm``. Implementation modules are documented below for API completeness.
-
 Use ``torchwm`` for common workflows::
 
    import torchwm
    agent = torchwm.create_model("dreamer", env="walker-walk")
 
+**Primary modules:** ``torchwm``, ``torchwm.models``, ``torchwm.configs``, ``torchwm.catalog``, and ``torchwm.envs``.
+
 .. automodule:: torchwm
+   :no-index:
+
+.. automodule:: torchwm.api
    :members:
    :undoc-members:
    :show-inheritance:
 
-**Primary modules:** ``world_models``, ``world_models.models``, ``world_models.configs``, ``world_models.catalog``, ``world_models.envs``, and ``world_models.inference``.
-
-.. automodule:: world_models
+.. automodule:: torchwm.export
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.api
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. automodule:: torchwm.models
+   :no-index:
 
-.. automodule:: world_models.export
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.models
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.catalog
+.. automodule:: torchwm.catalog
    :members:
    :undoc-members:
    :show-inheritance:
@@ -57,72 +46,72 @@ Core model families
 
 **Key classes:** ``Dreamer``, ``DreamerAgent``, ``RSSM``, ``RecurrentStateSpaceModel``, ``Planet``, ``ModularRSSM``, ``JEPAAgent``, ``VisionTransformer``, ``IRISAgent``, ``IRISTransformer``, ``IRISWorldModel``, ``Genie``, ``LatentActionModel``, and ``DynamicsModel``.
 
-.. automodule:: world_models.models.dreamer
+.. automodule:: torchwm.models.dreamer
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.dreamer_rssm
+.. automodule:: torchwm.models.dreamer_rssm
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.rssm
+.. automodule:: torchwm.models.rssm
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.planet
+.. automodule:: torchwm.models.planet
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.mdrnn
+.. automodule:: torchwm.models.mdrnn
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.controller
+.. automodule:: torchwm.models.controller
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.modular_rssm
+.. automodule:: torchwm.models.modular_rssm
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.jepa_agent
+.. automodule:: torchwm.models.jepa_agent
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.vit
+.. automodule:: torchwm.models.vit
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.iris_agent
+.. automodule:: torchwm.models.iris_agent
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.iris_transformer
+.. automodule:: torchwm.models.iris_transformer
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.genie
+.. automodule:: torchwm.models.genie
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.latent_action_model
+.. automodule:: torchwm.models.latent_action_model
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.dynamics_model
+.. automodule:: torchwm.models.dynamics_model
    :members:
    :undoc-members:
    :show-inheritance:
@@ -132,34 +121,34 @@ Diffusion and DIAMOND components
 
 **Key classes:** ``DiamondAgent``, ``DDPM``, ``DiT``, ``DiffusionUNet``, ``EDMPreconditioner``, ``EulerSampler``, ``RewardTerminationModel``, and ``ActorCriticNetwork``.
 
-DIAMOND exposes ``DiamondAgent`` from ``world_models.training.train_diamond``; there is no separate ``DIAMONDAgent`` class name in the package.
+DIAMOND exposes ``DiamondAgent`` from ``torchwm.training.train_diamond``; there is no separate ``DIAMONDAgent`` class name in the package.
 
-.. automodule:: world_models.models.diffusion
+.. automodule:: torchwm.models.diffusion
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.diffusion.DDPM
+.. automodule:: torchwm.models.diffusion.DDPM
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.diffusion.DiT
+.. automodule:: torchwm.models.diffusion.DiT
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.diffusion.diamond_diffusion
+.. automodule:: torchwm.models.diffusion.diamond_diffusion
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.diffusion.reward_termination
+.. automodule:: torchwm.models.diffusion.reward_termination
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.diffusion.actor_critic
+.. automodule:: torchwm.models.diffusion.actor_critic
    :members:
    :undoc-members:
    :show-inheritance:
@@ -169,62 +158,62 @@ Vision, tokenization, and layers
 
 **Key classes:** ``ConvEncoder``, ``ConvDecoder``, ``DenseDecoder``, ``ActionDecoder``, ``CNNEncoder``, ``CNNDecoder``, ``IRISEncoder``, ``IRISDecoder``, ``DiscreteAutoencoder``, ``VectorQuantizer``, ``VectorQuantizerEMA``, ``VideoTokenizer``, ``MultiHeadSelfAttention``, and ``STTransformer``.
 
-.. automodule:: world_models.vision.VAE.ConvVAE
+.. automodule:: torchwm.vision.VAE.ConvVAE
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.dreamer_encoder
+.. automodule:: torchwm.vision.dreamer_encoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.dreamer_decoder
+.. automodule:: torchwm.vision.dreamer_decoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.planet_encoder
+.. automodule:: torchwm.vision.planet_encoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.planet_decoder
+.. automodule:: torchwm.vision.planet_decoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.iris_encoder
+.. automodule:: torchwm.vision.iris_encoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.iris_decoder
+.. automodule:: torchwm.vision.iris_decoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.vq_layer
+.. automodule:: torchwm.vision.vq_layer
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.video_tokenizer
+.. automodule:: torchwm.vision.video_tokenizer
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.blocks
+.. automodule:: torchwm.blocks
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.blocks.mhsa
+.. automodule:: torchwm.blocks.mhsa
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.blocks.st_transformer
+.. automodule:: torchwm.blocks.st_transformer
    :members:
    :undoc-members:
    :show-inheritance:
@@ -232,42 +221,40 @@ Vision, tokenization, and layers
 Configuration objects
 ---------------------
 
-.. automodule:: world_models.configs
+.. automodule:: torchwm.configs
+   :no-index:
+
+.. automodule:: torchwm.configs.wm_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.configs.wm_config
+.. automodule:: torchwm.configs.dreamer_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.configs.dreamer_config
+.. automodule:: torchwm.configs.jepa_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.configs.jepa_config
+.. automodule:: torchwm.configs.iris_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.configs.iris_config
+.. automodule:: torchwm.configs.genie_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.configs.genie_config
+.. automodule:: torchwm.configs.dit_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.configs.dit_config
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.configs.diamond_config
+.. automodule:: torchwm.configs.diamond_config
    :members:
    :undoc-members:
    :show-inheritance:
@@ -277,126 +264,95 @@ Training entry points
 
 **Key classes and functions:** ``DiamondAgent``, ``train_diamond``, ``train_dreamer``, ``GenieTrainer``, ``IRISTrainer``, and related training entry points.
 
-.. automodule:: world_models.training
+.. automodule:: torchwm.training
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_world_model
+.. automodule:: torchwm.training.train_world_model
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_convvae
+.. automodule:: torchwm.training.train_convvae
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_mdn_rnn
+.. automodule:: torchwm.training.train_mdn_rnn
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_controller
+.. automodule:: torchwm.training.train_controller
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_jepa
+.. automodule:: torchwm.training.train_jepa
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_iris
+.. automodule:: torchwm.training.train_iris
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_genie
+.. automodule:: torchwm.training.train_genie
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_planet
+.. automodule:: torchwm.training.train_planet
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_rssm
+.. automodule:: torchwm.training.train_rssm
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_diamond
+.. automodule:: torchwm.training.train_diamond
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.rl_harness
+.. automodule:: torchwm.training.rl_harness
    :members:
    :undoc-members:
    :show-inheritance:
 
-Memory, controllers, and inference operators
---------------------------------------------
+Memory and controllers
+----------------------
 
-.. automodule:: world_models.memory.dreamer_memory
+.. automodule:: torchwm.memory.dreamer_memory
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.memory.planet_memory
+.. automodule:: torchwm.memory.planet_memory
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.memory.iris_memory
+.. automodule:: torchwm.memory.iris_memory
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.controller.rssm_policy
+.. automodule:: torchwm.controller.rssm_policy
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.controller.iris_policy
+.. automodule:: torchwm.controller.iris_policy
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.controller.rollout_generator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.inference.operators
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :noindex:
-
-.. automodule:: world_models.inference.operators.base
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.inference.operators.dreamer_operator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.inference.operators.planet_operator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.inference.operators.iris_operator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.inference.operators.jepa_operator
+.. automodule:: torchwm.controller.rollout_generator
    :members:
    :undoc-members:
    :show-inheritance:
@@ -413,62 +369,60 @@ DIAMOND-style Atari support is intentionally not listed as an environment
 adapter because it is Atari preprocessing rather than a separate environment
 family.
 
-.. automodule:: world_models.envs
+.. automodule:: torchwm.envs
+   :no-index:
+
+.. automodule:: torchwm.envs.dmc
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.dmc
+.. automodule:: torchwm.envs.dmlab
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.dmlab
+.. automodule:: torchwm.envs.gym_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.gym_env
+.. automodule:: torchwm.envs.ale_atari_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.ale_atari_env
+.. automodule:: torchwm.envs.ale_atari_vector_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.ale_atari_vector_env
+.. automodule:: torchwm.envs.procgen_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.procgen_env
+.. automodule:: torchwm.envs.mujoco_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.mujoco_env
+.. automodule:: torchwm.envs.robotics_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.robotics_env
+.. automodule:: torchwm.envs.unity_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.unity_env
+.. automodule:: torchwm.envs.vector_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.vector_env
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.envs.wrappers
+.. automodule:: torchwm.envs.wrappers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -479,7 +433,7 @@ Atari preprocessing helpers
 These helpers wrap Atari environments for specific training recipes. They are
 not separate environment families.
 
-.. automodule:: world_models.envs.diamond_atari
+.. automodule:: torchwm.envs.diamond_atari
    :members:
    :undoc-members:
    :show-inheritance:
@@ -487,42 +441,42 @@ not separate environment families.
 Datasets and transforms
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: world_models.datasets.wm_dataset
+.. automodule:: torchwm.datasets.wm_dataset
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.datasets.video_datasets
+.. automodule:: torchwm.datasets.video_datasets
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.datasets.tinyworlds
+.. automodule:: torchwm.datasets.tinyworlds
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.datasets.diamond_dataset
+.. automodule:: torchwm.datasets.diamond_dataset
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.datasets.cifar10
+.. automodule:: torchwm.datasets.cifar10
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.datasets.imagenet1k
+.. automodule:: torchwm.datasets.imagenet1k
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.datasets.nuplan
+.. automodule:: torchwm.datasets.nuplan
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.transforms.image
+.. automodule:: torchwm.transforms.image
    :members:
    :undoc-members:
    :show-inheritance:
@@ -530,27 +484,27 @@ Datasets and transforms
 Masking and JEPA helpers
 ------------------------
 
-.. automodule:: world_models.masks
+.. automodule:: torchwm.masks
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.masks.default
+.. automodule:: torchwm.masks.default
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.masks.multiblock
+.. automodule:: torchwm.masks.multiblock
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.masks.random
+.. automodule:: torchwm.masks.random
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.helpers.jepa_helper
+.. automodule:: torchwm.helpers.jepa_helper
    :members:
    :undoc-members:
    :show-inheritance:
@@ -558,27 +512,27 @@ Masking and JEPA helpers
 Benchmarks and reports
 ----------------------
 
-.. automodule:: world_models.benchmarks
+.. automodule:: torchwm.benchmarks
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.benchmarks.runner
+.. automodule:: torchwm.benchmarks.runner
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.benchmarks.adapters
+.. automodule:: torchwm.benchmarks.adapters
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.benchmarks.metrics
+.. automodule:: torchwm.benchmarks.metrics
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.benchmarks.reporting
+.. automodule:: torchwm.benchmarks.reporting
    :members:
    :undoc-members:
    :show-inheritance:
@@ -586,52 +540,52 @@ Benchmarks and reports
 Utilities
 ---------
 
-.. automodule:: world_models.losses.convae_loss
+.. automodule:: torchwm.losses.convae_loss
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.losses.gmm_loss
+.. automodule:: torchwm.losses.gmm_loss
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.train_utils
+.. automodule:: torchwm.utils.train_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.dreamer_utils
+.. automodule:: torchwm.utils.dreamer_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.jepa_utils
+.. automodule:: torchwm.utils.jepa_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.data_utils
+.. automodule:: torchwm.utils.data_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.jit_utils
+.. automodule:: torchwm.utils.jit_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.memory_utils
+.. automodule:: torchwm.utils.memory_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.logging_utils
+.. automodule:: torchwm.utils.logging_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.utils
+.. automodule:: torchwm.utils.utils
    :members:
    :undoc-members:
    :show-inheritance:

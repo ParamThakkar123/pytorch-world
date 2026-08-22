@@ -176,26 +176,6 @@ agent = Planet(
 )
 ```
 
-### Preprocessing operator
-
-```python
-from torchwm import get_operator, PlaNetOperator
-
-op = get_operator("planet", state_dim=32, action_dim=4)
-
-# Or directly:
-op = PlaNetOperator(state_dim=32, action_dim=4)
-
-result = op.process({
-    "obs": torch.randn(32),
-    "action": [0.1, 0.2, 0.3, 0.4],
-    "reward": 1.0,
-    "done": False,
-})
-print(result["obs"].shape)     # (1, 32)
-print(result["action"].shape)  # (1, 4)
-```
-
 ## See Also
 
 - {doc}`dreamer` — successor to PlaNet; replaces CEM with a trained actor-critic

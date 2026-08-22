@@ -50,6 +50,28 @@ pre-commit install
 - Ensure all tests pass before submitting a PR.
 - Add tests for new features or bug fixes.
 
+### Running the full suite with every backend installed
+
+With `torchwm[all]` installed, a single `pytest` process ends up holding torch,
+jax, brax, and the Unity SDK resident at the same time. On a machine with
+limited RAM the run dies partway through with allocation errors — or, worse,
+with no summary line at all, because the process was killed rather than a test
+failing.
+
+If you hit that, run the suite in file-sized chunks so memory is reclaimed
+between files instead of accumulating for the whole session:
+
+```bash
+# POSIX: a fresh process per test, memory reclaimed each time
+uv run pytest tests/ --forked
+
+# Any platform: one process per test file
+for f in tests/**/test_*.py; do uv run pytest "$f" -q || break; done
+```
+
+`-n`/`--dist loadfile` alone does *not* help here — xdist workers persist
+across files, and each additional worker is another full copy of torch.
+
 ## Pull Request Process
 
 1. Create a feature branch from `main`: `git checkout -b feature/your-feature`
@@ -74,6 +96,6 @@ Write the body in imperative mood ("fix bug" not "fixed bug" or "fixes bug"). If
 
 ## Code of Conduct
 
-Please be respectful and inclusive. Harassment or discriminatory behavior will not be tolerated.
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). Please be respectful and inclusive; harassment or discriminatory behavior will not be tolerated.
 
 For questions, reach out via GitHub issues.

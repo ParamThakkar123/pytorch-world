@@ -1,5 +1,5 @@
 import torch
-from world_models.utils.dreamer_utils import (
+from torchwm.utils.dreamer_utils import (
     get_parameters,
     FreezeParameters,
 )

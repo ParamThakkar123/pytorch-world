@@ -2,7 +2,7 @@
 
 For the full environment backend reference — including installation, factory
 functions, observation/action contracts, and troubleshooting — see the
-{ref}`environments/index:Environment Backends` page.
+{doc}`environments/index` page.
 
 ```{toctree}
 :maxdepth: 1

@@ -14,7 +14,6 @@ import torchwm
 print(torchwm.list_models())
 agent = torchwm.create_model("dreamer", env="walker-walk", total_steps=1_000_000)
 env = torchwm.make_env("CartPole-v1", backend="gym")
-op = torchwm.get_operator("dreamer", image_size=64, action_dim=6)
 ```
 
 Use `torchwm` for direct component imports as well as factory helpers:
@@ -39,8 +38,6 @@ agent = DreamerAgent(cfg)
 | **Configs** | `DreamerConfig`, `JEPAConfig`, `DiTConfig`, `DiamondConfig`, `IRISConfig`, `GenieConfig`, `GenieSmallConfig`, `STTransformerConfig`, `VideoTokenizerConfig`, `LatentActionModelConfig`, `DynamicsModelConfig` |
 | **Environments** | `make_atari_env`, `make_gym_env`, `make_mujoco_env`, `make_robotics_env`, `make_brax_env`, `make_procgen_env`, `GymImageEnv`, `ProcgenImageEnv`, `DeepMindControlEnv`, `DMLabEnv`, `make_dmlab_env`, `UnityMLAgentsEnv`, `TimeLimit`, `ActionRepeat`, wrappers, etc. |
 | **Memory** | `ReplayBuffer`, `Memory`, `Episode`, `IRISReplayBuffer`, `IRISOnPolicyBuffer` |
-| **Operators** | `get_operator`, `DreamerOperator`, `JEPAOperator`, `IrisOperator`, `PlaNetOperator` |
-| **Inference** | `DreamerOperator`, `JEPAOperator`, `IrisOperator`, `PlaNetOperator` |
 | **Reward / Value** | `RewardModel`, `ValueModel`, `DreamerRewardModel`, `DreamerValueModel` |
 | **Controllers** | `RSSMPolicy`, `RolloutGenerator`, `IRISPolicy`, `IRISActor`, `IRISCritic`, `CNNFeatureExtractor` |
 | **Transformer blocks** | `STTransformer`, `MultiHeadSelfAttention`, `MultiHeadAttention`, `AdaLNNormalization`, `RMSNorm` |
@@ -59,17 +56,12 @@ import torchwm
 # Training
 agent = torchwm.create_model("dreamer", env="walker-walk", total_steps=1_000_000)
 agent.train()
-
-# Inference preprocessing
-op = torchwm.get_operator("dreamer", image_size=64, action_dim=6)
-processed = op.process({"image": image, "action": action})
 ```
 
 ## Core Modules
 
-The module paths below are the public `torchwm.*` surface. They mirror the
-internal `world_models` implementation package one-to-one, so every submodule is
-importable either way (`from torchwm.models import Dreamer`).
+The module paths below are the public `torchwm.*` surface
+(`from torchwm.models import Dreamer`).
 
 - `torchwm.models`: High-level models and agents (`Dreamer`, `DreamerAgent`, `Planet`, `JEPAAgent`)
 - `torchwm.configs`: Configuration containers for Dreamer, JEPA, and diffusion runs

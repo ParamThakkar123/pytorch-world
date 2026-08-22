@@ -1,6 +1,6 @@
 import torch
 
-from world_models.masks import DefaultCollator, MultiblockMaskCollator, RandomMaskCollator
+from torchwm.masks import DefaultCollator, MultiblockMaskCollator, RandomMaskCollator
 
 
 def _assert_mask_collection(mask_collection, batch_size, num_masks):

@@ -3,7 +3,7 @@ import pytest
 import torch
 import numpy as np
 
-from world_models.configs.diamond_config import DiamondConfig
+from torchwm.configs.diamond_config import DiamondConfig
 
 pytestmark = [pytest.mark.integration, pytest.mark.slow]
 
@@ -17,7 +17,7 @@ def set_seeds(seed: int = 0):
 
 
 def test_reproducible_imagination(tmp_path):
-    from world_models.envs.diamond_atari import make_diamond_atari_env
+    from torchwm.envs.diamond_atari import make_diamond_atari_env
 
     try:
         make_diamond_atari_env(
@@ -26,7 +26,7 @@ def test_reproducible_imagination(tmp_path):
     except Exception:
         pytest.skip("Atari environment (Breakout) not available")
 
-    from world_models.training.train_diamond import DiamondAgent
+    from torchwm.training.train_diamond import DiamondAgent
 
     cfg = DiamondConfig(preset="small")
     cfg.game = "Breakout-v4"

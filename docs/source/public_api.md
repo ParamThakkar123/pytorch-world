@@ -2,7 +2,7 @@
 
 TorchWM exposes `torchwm` as the friendly public namespace for both
 application code and direct component imports. Use it for factory helpers,
-operators, model classes, config classes, and environment constructors.
+model classes, config classes, and environment constructors.
 
 ## Common Workflow
 
@@ -24,8 +24,6 @@ agent = torchwm.create_model(
 # Create standalone environments through a consistent backend selector.
 env = torchwm.make_env("CartPole-v1", backend="gym")
 
-# Build preprocessing operators without importing deep modules.
-op = torchwm.get_operator("dreamer", image_size=64, action_dim=6)
 ```
 
 ## Factory Helpers
@@ -54,3 +52,16 @@ agent = DreamerAgent(cfg)
 
 Use direct imports when you are composing custom modules, subclassing internals,
 or need access to implementation-specific constructors.
+
+## 1.0 scope
+
+These names stay in the 1.x public surface, with the following documented
+limits:
+
+- `create_model("dreamer-v3")` / `DreamerV3` construct `DreamerAgent`. There is
+  no separate DreamerV3 implementation in 1.0.
+- `agent.train()` with a step budget is the Dreamer-family path. Other
+  registered models train through their dedicated trainers or CLI commands.
+- Genie `VideoDataset` loads `.npy` / `.pt` clips, or video files when the
+  `viz` extra (OpenCV) is installed. TinyWorlds training still goes through
+  `scripts/train_genie_tinyworlds.py`.

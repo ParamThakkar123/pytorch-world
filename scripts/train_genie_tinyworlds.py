@@ -35,25 +35,44 @@ def main():
 
     print(f"Using device: {device}")
 
+    early_stopping = bool(cli_cfg.get("early_stopping", False))
+    patience = int(cli_cfg.get("patience", 10))
+    min_delta = float(cli_cfg.get("min_delta", 1e-4))
+    val_split = float(cli_cfg.get("val_split", 0.1 if early_stopping else 0.0))
+
     config = GenieSmallConfig()
     config.num_frames = num_frames
     config.image_size = image_size
     config.batch_size = batch_size
     config.max_steps = max_steps
     config.learning_rate = learning_rate
+    config.early_stopping = early_stopping
+    config.patience = patience
+    config.min_delta = min_delta
+    config.val_split = val_split
 
     print(f"Loading {dataset} dataset...")
-    train_dataset, train_loader = create_tinyworlds_dataloader(
+    loader_kwargs = dict(
         dataset_name=dataset,
         num_frames=num_frames,
         image_size=image_size,
         batch_size=batch_size,
         num_workers=num_workers,
-        shuffle=True,
         cache_dir=cache_dir,
         download=not data_file,
         data_file=data_file,
+        val_split=val_split,
     )
+    train_dataset, train_loader = create_tinyworlds_dataloader(
+        shuffle=True, split="train", **loader_kwargs
+    )
+
+    val_loader = None
+    if early_stopping:
+        # Same val_split and seed, so this is the disjoint other half.
+        _, val_loader = create_tinyworlds_dataloader(
+            shuffle=False, split="val", **loader_kwargs
+        )
 
     print(f"Dataset: {len(train_dataset)} samples, {len(train_loader)} batches")
 
@@ -65,7 +84,7 @@ def main():
     print("Starting training...")
     trainer.train(
         train_dataloader=train_loader,
-        val_dataloader=None,
+        val_dataloader=val_loader,
         num_steps=max_steps,
         log_interval=log_interval,
         val_interval=val_interval,

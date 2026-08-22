@@ -14,7 +14,7 @@ The export system is built around three levels of API:
 
 | Level | Function / Method | When to use |
 |---|---|---|
-| **Module method** | `module.export(path, format, ...)` | Any `torch.nn.Module` — works automatically after importing `world_models.export` |
+| **Module method** | `module.export(path, format, ...)` | Any `torch.nn.Module` — works automatically after importing `torchwm.export` |
 | **Agent method** | `agent.export(path, format, ...)` | High-level agents (`DreamerAgent`, `JEPAAgent`, `IRISAgent`) that inherit `ExportableAgentMixin` |
 | **Standalone** | `export_any(obj, path, ...)` / `export_model(module, path, ...)` | When you need explicit control over which submodule is exported or want to bypass automatic target resolution |
 
@@ -30,7 +30,7 @@ The export system is built around three levels of API:
 
 ### Exporting any `nn.Module`
 
-Importing `world_models.export` installs the `.export()` method on every
+Importing `torchwm.export` installs the `.export()` method on every
 `torch.nn.Module` instance once:
 
 ```python
@@ -199,7 +199,7 @@ agent.export(
 ```
 
 Or add inference support by implementing a matching pattern in
-`_infer_example_inputs` in `world_models/export.py`.
+`_infer_example_inputs` in `torchwm/export.py`.
 
 ## Low-level API
 
@@ -235,5 +235,4 @@ export_model(agent.policy, "policy.pt", format="torchscript")
 ## See Also
 
 - {doc}`inference_guide` — running exported models in production
-- {doc}`operators_guide` — preprocessing inputs for exported models
 - {doc}`public_api` — `export_any` and `export_model` factory functions

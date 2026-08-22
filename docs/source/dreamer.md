@@ -391,7 +391,7 @@ graph TD
 
 ### Recurrent State-Space Model (RSSM)
 
-The core of Dreamer is the RSSM, defined in `world_models.models.dreamer_rssm.RSSM`.
+The core of Dreamer is the RSSM, defined in `torchwm.models.dreamer_rssm.RSSM`.
 It maintains a hybrid state with two components:
 
 **1. Deterministic state** `h_t` — a GRU hidden state that captures temporal
@@ -423,7 +423,7 @@ The model operates in two modes:
 Key insight: the prior learns to predict the posterior without seeing the
 observation. During imagination, the prior serves as the dynamics model.
 
-### CNN Encoder (`world_models.vision.dreamer_encoder.ConvEncoder`)
+### CNN Encoder (`torchwm.vision.dreamer_encoder.ConvEncoder`)
 
 Four-layer CNN with increasing channels (32 → 64 → 128 → 256) and ReLU
 activations. Strided convolutions (stride 2) halve spatial resolution at
@@ -439,7 +439,7 @@ Input:  (3, 64, 64)
 Output: embed_size-d vector
 ```
 
-### CNN Decoder (`world_models.vision.dreamer_decoder.ConvDecoder`)
+### CNN Decoder (`torchwm.vision.dreamer_decoder.ConvDecoder`)
 
 Mirrored transposed-CNN structure:
 
@@ -630,7 +630,8 @@ See {doc}`configs_reference` for the full DreamerConfig field reference with def
 | `model_learning_rate` | 6e-4 | 3e-4 | World model learning rate |
 | `train_seq_len` | 50 | 50 | Sequence length per batch |
 | `batch_size` | 50 | 16 | Sequences per batch |
-| `free_nats` | 3.0 | 3.0 | KL free bits threshold |
+| `free_nats` | 3.0 | 3.0 | KL free-nats floor, per Dreamer v1 Appendix A. Raw KL below this contributes zero gradient, so the floor caps how hard the KL compresses the posterior. Single shared field: both variants read `DreamerConfig.free_nats` |
+| `reward_scale` | 1.0 | 1.0 | Multiplier on replayed rewards. Raise/lower for envs outside DMC's `[0, 1]` per-step range |
 
 #### Actor-Critic
 
@@ -662,9 +663,15 @@ If the stochastic state is ignored by the dynamics, the model reduces to a
 deterministic RNN. Symptoms: good reconstruction but imagination diverges.
 
 **Fixes:**
-- Increase `kl_loss_coeff` or adjust `kl_alpha` (V2)
-- Decrease `free_nats`
+- Decrease `kl_loss_coeff` or adjust `kl_alpha` (V2)
+- Increase `free_nats`
 - Reduce `stoch_size`
+
+Both of the first two reduce the KL pressure that drives the posterior toward
+the prior. Free nats exist precisely to prevent collapse: raw KL below the
+floor is unpenalized, so raising `free_nats` lets the posterior carry more
+information. Lowering it (or raising `kl_loss_coeff`) tightens the squeeze and
+makes collapse worse.
 
 ### Imagination divergence
 

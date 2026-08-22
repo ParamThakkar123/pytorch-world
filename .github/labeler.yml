@@ -1,50 +1,50 @@
 config:
-  - world_models/configs/**
+  - torchwm/configs/**
 
 # Add 'environment' to any changes to environment files
 environment:
-  - world_models/envs/**
+  - torchwm/envs/**
 
 trainer:
-  - world_models/training/**
+  - torchwm/training/**
 
 controller:
-  - world_models/controller/**
+  - torchwm/controller/**
 
 helpers:
-  - world_models/helpers/**
+  - torchwm/helpers/**
 
 tokenizers:
-  - world_models/vision/video_tokenizer.py
-  - world_models/vision/vq_layer.py
+  - torchwm/vision/video_tokenizer.py
+  - torchwm/vision/vq_layer.py
 
 tests:
   - tests/**
-  - world_models/testing/**
+  - torchwm/testing/**
 
 models:
-  - world_models/models/**
+  - torchwm/models/**
 
 memory:
-  - world_models/memory/**
+  - torchwm/memory/**
 
 masks:
-  - world_models/masks/**
+  - torchwm/masks/**
 
 reward_functions:
-  - world_models/reward/**
+  - torchwm/reward/**
 
 observation_wrappers:
-  - world_models/observations/**
+  - torchwm/observations/**
 
 utilities:
-  - world_models/utils/**
+  - torchwm/utils/**
 
 vision:
-  - world_models/vision/**
+  - torchwm/vision/**
 
 transforms:
-  - world_models/transforms/**
+  - torchwm/transforms/**
 
 # Add 'CI/CD' to any changes to GitHub workflows and automation config
 CI/CD:

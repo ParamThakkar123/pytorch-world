@@ -10,8 +10,13 @@ requires-python = ">=3.11"
 license = "MIT"
 keywords = ["world-models", "pytorch", "mbrl"]
 classifiers = [
+    "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
 dependencies = [
@@ -38,15 +43,40 @@ gym = [
     "gymnasium[box2d]>=1.2.2",
     "huggingface-hub>=0.23.0",
     "pygame>=2.6.1",
+    # ALE itself, not just the ROM installer. `autorom` alone leaves
+    # `gym.make("ALE/Breakout-v5")` raising NamespaceNotFound, because the
+    # namespace is registered by `ale_py`, which every Atari path here
+    # (DIAMOND and IRIS) imports. ale-py >= 0.10 bundles the ROMs.
+    "ale-py>=0.10.1",
     "autorom>=0.6.1",
 ]
+# `protobuf` is deliberately *not* capped below 3.21 here. mlagents-envs 0.28
+# ships gencode from protoc 3.x, and the upstream pin it implies (`<3.21`) is
+# stuck on protobuf 3.20.3, which carries unpatched advisories with no fix in
+# the 3.x line. Newer mlagents-envs releases do not help: 1.1.0 still caps
+# `protobuf<3.21` and requires Python <= 3.10.12, so it cannot be installed on
+# the Python versions TorchWM supports. TorchWM therefore resolves a patched
+# protobuf; if you drive a Unity binary built against the legacy gencode and
+# hit "Descriptors cannot not be created directly", run with
+# `PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python` or pin `protobuf<3.21`
+# yourself, accepting that pin's known CVEs.
 ml-agents = [
     "mlagents-envs>=0.28.0,<0.29.0",
-    "protobuf>=3.20,<3.21",
+    "protobuf>=5.29.6",
 ]
 dmc = [
     "dm-control>=1.0.0",
     "gymnasium>=1.2.2",
+]
+# Genie's TinyWorlds clips are HDF5 files pulled from HuggingFace. Without
+# these, `torchwm.datasets.tinyworlds` imports fine but raises as soon as a
+# dataset is actually loaded, so Genie has no training data.
+genie = [
+    "h5py>=3.11.0",
+    "huggingface-hub>=0.23.0",
+    # scripts/train_genie_tinyworlds.py parses its key=value CLI with
+    # OmegaConf and imports it at module scope, so it cannot start without it.
+    "omegaconf>=2.3.0",
 ]
 mujoco = [
     "mujoco>=3.2.0",
@@ -65,17 +95,17 @@ procgen = [
 bsuite = [
     "bsuite>=0.3.5",
 ]
+# No `minerl` / `minedojo` extras: neither is installable on the Python versions
+# TorchWM supports. MineRL 1.x has no release compatible with Python >= 3.11,
+# and MineDojo pins `gym==0.21.0`, whose sdist no longer builds under modern
+# setuptools. Declaring them made `uv lock` unresolvable for the whole project.
+# `torchwm.envs.minecraft_env` still works - see docs/source/iris.md for the
+# manual, Python <= 3.10 install path.
 viz = [
     "opencv-python>=4.12.0.88",
     "umap-learn>=0.5.11",
     "scikit-learn>=1.8.0",
     "plotly>=6.5.0",
-    "fastapi[standard]>=0.116.0",
-    "uvicorn>=0.35.0",
-    "myst-parser>=2.0.0,<5.0.0",
-    "nbsphinx>=0.9.8",
-    "python-multipart>=0.0.27",
-    "starlette>=1.0.1",
 ]
 ml = [
     "torchaudio>=0.13.0",
@@ -87,15 +117,13 @@ dev = [
     "pytest>=9.0.3",
     "pytest-cov>=7.1.0",
     "pytest-timeout>=2.3.1",
+    "pytest-xdist>=3.6.0",
     "pre-commit>=4.5.0",
     "mypy>=1.19.1",
-    "gitpython>=3.1.49",
-]
-selenium = [
-    "selenium>=4.30.0",
+    "gitpython>=3.1.58",
 ]
 all = [
-    "torchwm[gym,dmc,viz,ml,ml-agents,mujoco,robotics,brax,procgen,bsuite,selenium,dev,docs]",
+    "torchwm[gym,dmc,viz,ml,ml-agents,mujoco,robotics,brax,procgen,bsuite,dev,docs]",
 ]
 docs = [
     "sphinx>=8.0.0,<9.0.0",
@@ -109,31 +137,53 @@ docs = [
     "sphinxext-opengraph>=0.13.0",
     "myst-parser>=2.0.0,<5.0.0",
     "nbsphinx>=0.9.8",
-    "mistune>=3.2.1",
+    "mistune>=3.3.0",
     "nbconvert>=7.17.1",
 ]
 
 [tool.setuptools.packages.find]
-include = ["world_models", "world_models.*", "torchwm", "torchwm.*", "tools", "tools.*"]
+include = ["torchwm", "torchwm.*", "tools", "tools.*"]
 
 [tool.setuptools.package-data]
+# PEP 561: ship the marker and the explicit stub for the lazy public surface.
 torchwm = ["py.typed", "__init__.pyi"]
 
-[tool.uv]
-index-url = "https://download.pytorch.org/whl/cu121"
-extra-index-url = ["https://pypi.org/simple"]
-index-strategy = "unsafe-best-match"
+# TorchWM resolves from PyPI, whose torch wheels work on every supported
+# platform. Making a CUDA-specific PyTorch index the default (as this used to)
+# routed *every* package through it and pinned contributors to one CUDA
+# version regardless of their hardware.
+#
+# To build against a specific CUDA/ROCm/CPU wheel set, add the index for your
+# platform from https://pytorch.org/get-started/locally/ , for example:
+#
+#     uv add torch torchvision torchaudio --index https://download.pytorch.org/whl/cu121
 
-[[tool.uv.index]]
-url = "https://download.pytorch.org/whl/cu121"
-default = true
+[tool.uv]
+# Security floors for packages TorchWM pulls in only transitively. Without
+# these, a future `uv lock` could resolve back onto a version with a published
+# advisory, because nothing in our own dependency tree requires the fixed
+# release. Each entry is the first patched version for the advisories GitHub
+# reports against `uv.lock`; raise an entry when a new advisory lands, and drop
+# one only once no dependency can select a vulnerable version any more.
+constraint-dependencies = [
+    "bleach>=6.4.0",
+    "gitpython>=3.1.58",
+    "mistune>=3.3.0",
+    "msgpack>=1.2.1",
+    "pillow>=12.3.0",
+    "protobuf>=5.29.6",
+    "pygments>=2.20.0",
+    "setuptools>=83.0.0",
+    "soupsieve>=2.8.4",
+    "tornado>=6.5.7",
+]
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel", "build"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.dynamic]
-version = {attr = "world_models._version.__version__"}
+version = {attr = "torchwm._version.__version__"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -141,6 +191,5 @@ markers = [
     "slow: tests that are expensive enough to skip in the default fast subset",
     "gpu: tests that require a CUDA-capable GPU",
     "integration: tests that exercise external services, optional backends, or cross-package workflows",
-    "selenium: tests that require Selenium WebDriver and a running web stack",
 ]
 

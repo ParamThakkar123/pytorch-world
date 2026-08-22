@@ -29,5 +29,6 @@ TorchWM uses `torch.load(weights_only=True)` by default and `subprocess.run(shel
 
 | Version | Supported |
 |---------|-----------|
-| latest  | Yes       |
+| 1.x     | Yes       |
+| 0.4.x   | Yes       |
 | < 0.4   | No        |

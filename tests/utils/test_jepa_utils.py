@@ -1,5 +1,5 @@
 import torch
-from world_models.utils.jepa_utils import (
+from torchwm.utils.jepa_utils import (
     trunc_normal_,
     repeat_interleave_batch,
     WarmupCosineSchedule,

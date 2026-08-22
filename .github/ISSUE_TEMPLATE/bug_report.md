@@ -23,6 +23,9 @@ A clear and concise description of what you expected to happen.
 - Python version: [e.g. 3.11, 3.13]
 - PyTorch version: [e.g. 2.1.0, 2.6.0]
 - TorchWM version: [e.g. 0.4.2]
+- Installed extras: [e.g. `pip install torchwm[gym,ml]`, or "base install"]
+- Environment backend: [e.g. gym, dmc, mujoco, atari, procgen, brax, bsuite, ml-agents, world-model]
+- Model / algorithm: [e.g. dreamer-v3, iris, diamond, genie — output of `torchwm.list_models()` if unsure]
 
 **Additional context**
 Add any other context about the problem here.

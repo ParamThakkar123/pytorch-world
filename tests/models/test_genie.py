@@ -1,8 +1,9 @@
 import pytest
+import numpy as np
 import torch
-from world_models.models import create_genie_small
-from world_models.vision import create_video_tokenizer
-from world_models.models.latent_action_model import create_latent_action_model
+from torchwm.models import create_genie_small
+from torchwm.vision import create_video_tokenizer
+from torchwm.models.latent_action_model import create_latent_action_model
 
 
 class TestVideoTokenizer:
@@ -180,7 +181,7 @@ class TestGenie:
 
 class TestGenieTraining:
     def test_training_step(self):
-        from world_models.training.train_genie import create_genie_trainer, GenieConfig
+        from torchwm.training.train_genie import create_genie_trainer, GenieConfig
 
         config = GenieConfig()
         config.max_steps = 1
@@ -200,6 +201,17 @@ class TestGenieTraining:
         losses = trainer.train_step(batch)
         assert "total_loss" in losses
         assert losses["total_loss"] > 0
+
+
+    def test_video_dataset_loads_npy_clips(self, tmp_path):
+        from torchwm.training.train_genie import VideoDataset
+
+        clip = np.random.rand(10, 48, 48, 3).astype(np.float32)
+        path = tmp_path / "clip.npy"
+        np.save(path, clip)
+        item = VideoDataset([path], num_frames=8, image_size=32)[0]
+        assert item.shape == (3, 8, 32, 32)
+        assert item.dtype == torch.float32
 
 
 class TestGenieGeneration:
@@ -312,7 +324,7 @@ class TestGenieInferActions:
 
 class TestGenieVideoTokenizer:
     def test_decode_indices(self):
-        from world_models.vision import create_video_tokenizer
+        from torchwm.vision import create_video_tokenizer
 
         tokenizer = create_video_tokenizer(
             num_frames=8,

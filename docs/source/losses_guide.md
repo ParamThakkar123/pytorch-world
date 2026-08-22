@@ -1,6 +1,6 @@
 # Loss Functions
 
-The `world_models.losses` module provides loss functions for the classic
+The `torchwm.losses` module provides loss functions for the classic
 World Models pipeline (VAE + MDNRNN). Both are importable from the top level:
 
 ```python

@@ -12,10 +12,10 @@ for world-model training.
 
 | Agent | Buffer class | Location | Storage |
 |---|---|---|---|
-| Dreamer (V1/V2/V3) | `ReplayBuffer` | `world_models.memory.dreamer_memory` | Ring buffer of individual transitions |
-| PlaNet / RSSM | `Memory` + `Episode` | `world_models.memory.planet_memory` | Deque of complete episodes |
-| IRIS | `IRISReplayBuffer` + `IRISOnPolicyBuffer` | `world_models.memory.iris_memory` | Ring buffer of individual transitions |
-| DIAMOND | `ReplayBuffer` + `SequenceDataset` | `world_models.datasets.diamond_dataset` | Ring buffer with next-observation + PyTorch Dataset wrapper |
+| Dreamer (V1/V2/V3) | `ReplayBuffer` | `torchwm.memory.dreamer_memory` | Ring buffer of individual transitions |
+| PlaNet / RSSM | `Memory` + `Episode` | `torchwm.memory.planet_memory` | Deque of complete episodes |
+| IRIS | `IRISReplayBuffer` + `IRISOnPolicyBuffer` | `torchwm.memory.iris_memory` | Ring buffer of individual transitions |
+| DIAMOND | `ReplayBuffer` + `SequenceDataset` | `torchwm.datasets.diamond_dataset` | Ring buffer with next-observation + PyTorch Dataset wrapper |
 
 All buffers are accessible from the top-level package:
 

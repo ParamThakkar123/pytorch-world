@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"
+     width="128" height="128" role="img" aria-label="TorchWM">
+  <title>TorchWM</title>
+  <defs>
+    <linearGradient id="tw-flame" x1="32" y1="20" x2="96" y2="110"
+                    gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFB661"/>
+      <stop offset="0.36" stop-color="#F97316"/>
+      <stop offset="0.72" stop-color="#EE4C2C"/>
+      <stop offset="1" stop-color="#C81E3A"/>
+    </linearGradient>
+    <linearGradient id="tw-core" x1="52" y1="64" x2="78" y2="102"
+                    gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF4D6" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#FFC46B" stop-opacity="0.30"/>
+    </linearGradient>
+    <linearGradient id="tw-front" x1="14" y1="100" x2="118" y2="52"
+                    gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="0.55" stop-color="#7B6BF5"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke-linecap="round">
+    <path d="M22.20 75.18C30.88 67.89 43.62 60.98 57.60 55.98C71.59 50.98 85.67 48.29 96.76 48.51C107.85 48.73 115.03 51.83 116.72 57.14C118.42 62.45 114.49 69.53 105.80 76.82" stroke="#6366F1" stroke-opacity="0.5"
+          stroke-width="6"/>
+    <path d="M64 14C68 28 80 42 89 51C95.5 61.5 98 68.5 98 76.5C98 95.5 82.8 111 64 111C45.2 111 30 95.5 30 76.5C30 68.5 32.5 61.5 39 51C48 42 60 28 64 14Z" fill="url(#tw-flame)" stroke="none"/>
+    <path d="M64 62C66 70 72 77 75.5 81.5C78 84.8 79 87.5 79 90.3C79 97.2 72.3 102.8 64 102.8C55.7 102.8 49 97.2 49 90.3C49 87.5 50 84.8 52.5 81.5C56 77 62 70 64 62Z" fill="url(#tw-core)" stroke="none"/>
+    <path d="M105.80 76.82C97.12 84.11 84.38 91.02 70.40 96.02C56.41 101.02 42.33 103.71 31.24 103.49C20.15 103.27 12.97 100.17 11.28 94.86C9.58 89.55 13.51 82.47 22.20 75.18" stroke="url(#tw-front)" stroke-width="6.5"/>
+  </g>
+  <circle cx="116.62" cy="56.85" r="12" fill="#8B5CF6" opacity="0.20"/>
+  <circle cx="116.62" cy="56.85" r="7" fill="#8B5CF6"/>
+</svg>

@@ -286,9 +286,9 @@ rssm = torchwm.create_modular_rssm(
 
 # Or import directly
 from torchwm import ModularRSSM, create_modular_rssm
+```
 
 ## See Also
 
 - {doc}`vision_guide` — available encoders (ConvEncoder, ViTEncoder, MLPEncoder) and decoders (ConvDecoder, MLPDecoder)
 - {doc}`dreamer` — using the ModularRSSM inside a full Dreamer training loop
-```

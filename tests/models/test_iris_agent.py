@@ -3,8 +3,8 @@ from unittest.mock import patch
 import pytest
 import torch
 
-from world_models.models.iris_agent import IRISAgent, compute_lambda_return
-from world_models.configs.iris_config import IRISConfig
+from torchwm.models.iris_agent import IRISAgent, compute_lambda_return
+from torchwm.configs.iris_config import IRISConfig
 
 
 class TestComputeLambdaReturn:
@@ -67,33 +67,119 @@ class TestIRISAgentImagineRollout:
 
     def test_imagine_rollout_reward_shape(self, agent):
         B, C, H, W = 2, 3, 64, 64
-        initial_frame = torch.randn(B, C, H, W)
+        initial_frame = torch.rand(B, C, H, W)
         horizon = 5
 
         with torch.no_grad():
-            trajectory = agent.imagine_rollout(initial_frame, horizon=horizon)
+            trajectory = agent.imagine_rollout(
+                initial_frame, horizon=horizon, stop_on_termination=False
+            )
 
         assert trajectory["rewards"].shape == (B, horizon)
 
     def test_imagine_rollout_frames_shape(self, agent):
         B, C, H, W = 2, 3, 64, 64
-        initial_frame = torch.randn(B, C, H, W)
+        initial_frame = torch.rand(B, C, H, W)
         horizon = 5
 
         with torch.no_grad():
-            trajectory = agent.imagine_rollout(initial_frame, horizon=horizon)
+            trajectory = agent.imagine_rollout(
+                initial_frame, horizon=horizon, stop_on_termination=False
+            )
 
         assert trajectory["frames"].shape == (B, horizon + 1, C, H, W)
 
     def test_imagine_rollout_actions_shape(self, agent):
         B, C, H, W = 2, 3, 64, 64
-        initial_frame = torch.randn(B, C, H, W)
+        initial_frame = torch.rand(B, C, H, W)
         horizon = 5
 
         with torch.no_grad():
-            trajectory = agent.imagine_rollout(initial_frame, horizon=horizon)
+            trajectory = agent.imagine_rollout(
+                initial_frame, horizon=horizon, stop_on_termination=False
+            )
 
         assert trajectory["actions"].shape == (B, horizon)
+
+    def test_imagine_rollout_stops_early_on_predicted_termination(self, agent):
+        """Paper 2.3: imagination stops if an episode end is predicted.
+
+        With the termination head forced to always predict "terminal", the very
+        first step should end the rollout, and every returned tensor must agree
+        on that shortened length.
+        """
+        B, C, H, W = 2, 3, 64, 64
+        initial_frame = torch.rand(B, C, H, W)
+
+        with torch.no_grad():
+            # logits [-inf-ish, +big] => argmax is class 1 (terminal).
+            agent.transformer.termination_head.weight.zero_()
+            agent.transformer.termination_head.bias.copy_(
+                torch.tensor([-10.0, 10.0])
+            )
+            trajectory = agent.imagine_rollout(initial_frame, horizon=5)
+
+        steps = trajectory["actions"].shape[1]
+        assert steps == 1, f"expected to stop after one step, got {steps}"
+        assert trajectory["rewards"].shape == (B, steps)
+        assert trajectory["continues"].shape == (B, steps)
+        assert trajectory["frames"].shape == (B, steps + 1, C, H, W)
+        # continues = 1 - P(terminal), which is ~0 for a confident termination.
+        assert torch.all(trajectory["continues"] < 1e-3)
+
+    @pytest.mark.parametrize("capacity_steps", [3, 5, 8])
+    def test_imagine_rollout_survives_context_overflow(self, agent, capacity_steps):
+        """A rollout longer than the Transformer's context must not crash.
+
+        When the KV cache fills, imagination rebuilds it from the most recent
+        timesteps. The retained window has to leave room for at least one more
+        (action + K tokens) block, or the rebuild overflows immediately.
+        """
+        K = agent.config.tokens_per_frame
+        agent.transformer.max_seq_len = K + capacity_steps * (K + 1)
+        # Never terminate, so the full horizon is always attempted.
+        agent.transformer.termination_head.bias.data.copy_(
+            torch.tensor([10.0, -10.0])
+        )
+
+        horizon = 14
+        with torch.no_grad():
+            trajectory = agent.imagine_rollout(
+                torch.rand(2, 3, 64, 64), horizon=horizon, stop_on_termination=False
+            )
+
+        assert trajectory["actions"].shape == (2, horizon)
+        assert torch.isfinite(trajectory["rewards"]).all()
+
+    def test_imagine_rollout_conditions_on_full_history(self, agent):
+        """The world model must see the whole imagined trajectory, not one frame.
+
+        Paper 2.3 conditions each new frame on (z_0, a_0, ..., z_t, a_t). The KV
+        cache should therefore hold one action plus K tokens per imagined step on
+        top of the initial frame's K tokens.
+        """
+        B = 2
+        K = agent.config.tokens_per_frame
+        horizon = 4
+
+        with torch.no_grad():
+            # Never terminate, so the rollout runs the full horizon.
+            agent.transformer.termination_head.weight.zero_()
+            agent.transformer.termination_head.bias.copy_(
+                torch.tensor([10.0, -10.0])
+            )
+            cache = agent.transformer.init_cache(B, torch.device("cpu"))
+            tokens = torch.randint(0, agent.config.vocab_size, (B, 1, K))
+            pos = agent.transformer.prime_cache(tokens, None, cache, start_pos=0)
+            assert pos == K
+
+            for step in range(horizon):
+                action = torch.zeros(B, dtype=torch.long)
+                _, _, _, pos = agent.transformer.generate_frame_cached(
+                    action, cache, start_pos=pos, sample=False
+                )
+                assert pos == K + (step + 1) * (K + 1)
+                assert cache.length == pos
 
     def test_update_actor_critic_with_imagined_trajectory(self, agent):
         B, T, C, H, W = 2, 5, 3, 64, 64
@@ -144,6 +230,7 @@ class TestIRISAgentCheckpointSecurity:
 
     def test_load_uses_weights_only_deserialization(self, agent):
         checkpoint = {
+            "checkpoint_format": IRISAgent.CHECKPOINT_FORMAT,
             "encoder": agent.encoder.state_dict(),
             "decoder": agent.decoder.state_dict(),
             "transformer": agent.transformer.state_dict(),
@@ -159,7 +246,7 @@ class TestIRISAgentCheckpointSecurity:
         }
 
         with patch(
-            "world_models.models.iris_agent.torch.load", return_value=checkpoint
+            "torchwm.models.iris_agent.torch.load", return_value=checkpoint
         ) as mock_load:
             agent.load("checkpoint.pt")
 
@@ -170,3 +257,25 @@ class TestIRISAgentCheckpointSecurity:
         )
         assert agent.global_step == 7
         assert agent.current_epoch == 3
+
+    def test_save_load_round_trip(self, agent, tmp_path):
+        path = tmp_path / "iris.pt"
+        agent.global_step = 11
+        agent.save(str(path))
+        agent.load(str(path))
+        assert agent.global_step == 11
+
+    def test_load_rejects_stale_checkpoint_format(self, agent):
+        """Pre-GPT-block checkpoints must fail loudly, not with missing keys.
+
+        The Transformer's module layout changed when KV caching was added, so
+        old weights cannot be mapped across. A checkpoint with no
+        ``checkpoint_format`` key predates the field and is therefore v1.
+        """
+        stale = {"encoder": agent.encoder.state_dict()}
+
+        with patch(
+            "torchwm.models.iris_agent.torch.load", return_value=stale
+        ):
+            with pytest.raises(RuntimeError, match="checkpoint format v1"):
+                agent.load("old.pt")

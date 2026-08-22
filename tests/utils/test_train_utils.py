@@ -2,7 +2,7 @@
 
 import torch
 import pytest
-from world_models.utils.train_utils import EarlyStopping, ReduceLROnPlateau
+from torchwm.utils.train_utils import EarlyStopping, ReduceLROnPlateau
 
 
 class TestEarlyStopping:

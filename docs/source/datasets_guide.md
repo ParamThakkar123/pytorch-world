@@ -2,7 +2,7 @@
 
 TorchWM provides dataset loaders for image, video, RL trajectory, and
 curated benchmark data. All major datasets are accessible through the
-top-level package or the `world_models.datasets` module.
+top-level package or the `torchwm.datasets` module.
 
 ```{contents} Contents
 :depth: 3

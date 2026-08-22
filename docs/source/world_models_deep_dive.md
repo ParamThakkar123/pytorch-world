@@ -28,9 +28,9 @@ graph LR
 
 | Stage | Component | Function | Trained With | File |
 |---|---|---|---|---|
-| **V** | ConvVAE | Encodes 64×64 RGB → 32-d latent `z` | Reconstruction loss (MSE + KL) | `world_models.vision.VAE.ConvVAE` |
-| **M** | MDN-RNN | Predicts next latent as Gaussian mixture `p(zₜ₊₁|aₜ,zₜ,hₜ)` | GMM NLL + BCE + MSE | `world_models.models.mdrnn` |
-| **C** | Linear Controller | Maps `(zₜ, hₜ)` → action `aₜ` | CMA-ES (reward maximization) | `world_models.models.controller` |
+| **V** | ConvVAE | Encodes 64×64 RGB → 32-d latent `z` | Reconstruction loss (MSE + KL) | `torchwm.vision.VAE.ConvVAE` |
+| **M** | MDN-RNN | Predicts next latent as Gaussian mixture `p(zₜ₊₁|aₜ,zₜ,hₜ)` | GMM NLL + BCE + MSE | `torchwm.models.mdrnn` |
+| **C** | Linear Controller | Maps `(zₜ, hₜ)` → action `aₜ` | CMA-ES (reward maximization) | `torchwm.models.controller` |
 
 ### Key design decisions
 
@@ -69,7 +69,7 @@ Encoder:                                                 Decoder:
   └─ Returns (mu, logsigma)                            └─ Sigmoid → 3×64×64 output
 ```
 
-Key classes in `world_models.vision.VAE.ConvVAE`:
+Key classes in `torchwm.vision.VAE.ConvVAE`:
 
 | Class | Purpose |
 |---|---|
@@ -79,7 +79,7 @@ Key classes in `world_models.vision.VAE.ConvVAE`:
 
 ### Loss function
 
-Defined in `world_models.losses.convae_loss`:
+Defined in `torchwm.losses.convae_loss`:
 
 ```{math}
 \mathcal{L}_{\text{VAE}} = \underbrace{\|x - \hat{x}\|^2}_{\text{MSE reconstruction}}
@@ -148,7 +148,7 @@ the split with `num_test_files > 0`.
 
 ### Training loop
 
-See `world_models.training.train_convvae.train_convae()`:
+See `torchwm.training.train_convvae.train_convae()`:
 
 1. Load pretrained VAE checkpoint if available (`noreload=False`).
 2. Create `ObservationDataset` with `A.Compose` transforms (resize + optional flip).
@@ -184,7 +184,7 @@ mixture weights, and `(μ_k, σ_k)` are the component parameters.
 
 ### MDRNN vs MDRNNCell
 
-The module `world_models.models.mdrnn` provides two variants:
+The module `torchwm.models.mdrnn` provides two variants:
 
 | Class | RNN Type | Use Case | Forward Signature |
 |---|---|---|---|
@@ -235,7 +235,7 @@ temporal memory.
 
 ### Loss function
 
-Computed in `world_models.training.train_mdn_rnn.get_loss()`:
+Computed in `torchwm.training.train_mdn_rnn.get_loss()`:
 
 ```{math}
 \mathcal{L}_{\text{MDRNN}} = \frac{1}{d+2}\left(
@@ -247,7 +247,7 @@ Computed in `world_models.training.train_mdn_rnn.get_loss()`:
 
 | Component | Description |
 |---|---|
-| **GMM loss** (`world_models.losses.gmm_loss`) | Negative log-likelihood of the observed next latent under the predicted Gaussian mixture. Uses numerically stable log-sum-exp: `\mathcal{L}_{\text{GMM}} = -\log\sum_k \pi_k \cdot \mathcal{N}(z_{t+1} \mid \mu_k, \sigma_k)` |
+| **GMM loss** (`torchwm.losses.gmm_loss`) | Negative log-likelihood of the observed next latent under the predicted Gaussian mixture. Uses numerically stable log-sum-exp: `\mathcal{L}_{\text{GMM}} = -\log\sum_k \pi_k \cdot \mathcal{N}(z_{t+1} \mid \mu_k, \sigma_k)` |
 | **BCE loss** | Binary cross-entropy for terminal flag prediction |
 | **MSE loss** | Mean squared error for reward prediction (only if `include_reward=True`) |
 | **Scaling factor** | Total loss divided by `latent_size + 2` (or `latent_size + 1` if reward excluded) to balance the GMM loss scale |
@@ -277,7 +277,7 @@ memory-intensive), `train_mdn_rnn.py` supports precomputed latents:
 
 ### Linear controller
 
-Defined in `world_models.models.controller.Controller`:
+Defined in `torchwm.models.controller.Controller`:
 
 ```python
 class Controller(nn.Module):
@@ -610,26 +610,26 @@ def test_differentiable(self):
 
 ## CLI Usage
 
-The unified training script `world_models.training.train_world_model` provides a
+The unified training script `torchwm.training.train_world_model` provides a
 complete CLI:
 
 ```bash
 # Generate data + train all 3 stages
-python -m world_models.training.train_world_model --env CarRacing-v2
+python -m torchwm.training.train_world_model --env CarRacing-v2
 
 # Train only specific stages
-python -m world_models.training.train_world_model --env CarRacing-v2 --stage vae
-python -m world_models.training.train_world_model --env CarRacing-v2 --stage rnn
-python -m world_models.training.train_world_model --env CarRacing-v2 --stage ctrl
+python -m torchwm.training.train_world_model --env CarRacing-v2 --stage vae
+python -m torchwm.training.train_world_model --env CarRacing-v2 --stage rnn
+python -m torchwm.training.train_world_model --env CarRacing-v2 --stage ctrl
 
 # Generate rollouts only
-python -m world_models.training.train_world_model --env CarRacing-v2 --generate_only
+python -m torchwm.training.train_world_model --env CarRacing-v2 --generate_only
 
 # Test a trained model
-python -m world_models.training.train_world_model --env CarRacing-v2 --test
+python -m torchwm.training.train_world_model --env CarRacing-v2 --test
 
 # With custom directories
-python -m world_models.training.train_world_model \
+python -m torchwm.training.train_world_model \
     --env CarRacing-v2 \
     --data_dir ./data/carracing \
     --logdir ./results/carracing \

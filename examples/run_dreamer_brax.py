@@ -36,7 +36,7 @@ def make_config(cli_cfg) -> DreamerConfig:
 def main():
     cli_cfg = OmegaConf.from_cli()
     logging.basicConfig(level=logging.INFO)
-    logging.getLogger("world_models").setLevel(logging.INFO)
+    logging.getLogger("torchwm").setLevel(logging.INFO)
 
     cfg = make_config(cli_cfg)
     logging.info(f"Running DreamerV1 on brax env='{cfg.env}' (jit={cfg.brax_jit})")

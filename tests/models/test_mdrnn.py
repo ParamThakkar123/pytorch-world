@@ -2,7 +2,7 @@
 
 import torch
 import pytest
-from world_models.models.mdrnn import MDRNN, MDRNNCell, _MDRNNBase
+from torchwm.models.mdrnn import MDRNN, MDRNNCell, _MDRNNBase
 
 
 class TestMDRNN:

@@ -2,7 +2,7 @@ import pytest
 import torch
 from unittest.mock import Mock
 
-from world_models.controller.rssm_policy import RSSMPolicy
+from torchwm.controller.rssm_policy import RSSMPolicy
 
 
 class TestRSSMPolicy:

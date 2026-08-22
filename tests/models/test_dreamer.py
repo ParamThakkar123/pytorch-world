@@ -4,9 +4,9 @@ from unittest.mock import Mock, patch
 
 gym = pytest.importorskip("gym")
 
-from world_models.models.dreamer import DreamerAgent  # noqa: E402
-from world_models.models.dreamer_rssm import RSSM  # noqa: E402
-from world_models.configs.dreamer_config import DreamerConfig  # noqa: E402
+from torchwm.models.dreamer import DreamerAgent  # noqa: E402
+from torchwm.models.dreamer_rssm import RSSM  # noqa: E402
+from torchwm.configs.dreamer_config import DreamerConfig  # noqa: E402
 
 
 class TestDreamerAgent:
@@ -22,8 +22,8 @@ class TestDreamerAgent:
         config.buffer_size = 10
         return config
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("torchwm.models.dreamer.make_env")
+    @patch("torchwm.models.dreamer.Logger")
     def test_initialization(self, mock_logger, mock_make_env, config):
         mock_env = Mock()
         mock_obs_space = Mock()
@@ -43,8 +43,8 @@ class TestDreamerAgent:
         assert agent.test_env == mock_env
         assert agent.logger == mock_logger.return_value
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("torchwm.models.dreamer.make_env")
+    @patch("torchwm.models.dreamer.Logger")
     def test_evaluate(self, mock_logger, mock_make_env, config):
         mock_env = Mock()
         mock_obs_space = Mock()
@@ -69,8 +69,8 @@ class TestDreamerAgent:
         mock_logger.return_value.dump_scalars_to_pickle.assert_called_once()
         mock_logger.return_value.log_videos.assert_called_once()
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("torchwm.models.dreamer.make_env")
+    @patch("torchwm.models.dreamer.Logger")
     def test_initialization_with_invalid_arg(self, mock_logger, mock_make_env, config):
         mock_env = Mock()
         mock_obs_space = Mock()
@@ -143,7 +143,7 @@ class TestDreamerEnvConfig:
 
 
 class TestDreamerFrameStackIntegration:
-    @patch("world_models.models.dreamer.Logger")
+    @patch("torchwm.models.dreamer.Logger")
     def test_collect_random_episodes_uses_stacked_frames_end_to_end(
         self, mock_logger, tmp_path
     ):
@@ -204,8 +204,8 @@ class TestDreamerConfigSerialization:
 
 
 class TestDreamerUXConstructors:
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("torchwm.models.dreamer.make_env")
+    @patch("torchwm.models.dreamer.Logger")
     def test_agent_from_config_yaml_and_summary(
         self, mock_logger, mock_make_env, tmp_path
     ):
@@ -226,8 +226,8 @@ class TestDreamerUXConstructors:
         assert "rssm" in summary["modules"]
         mock_logger.assert_called_once()
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("torchwm.models.dreamer.make_env")
+    @patch("torchwm.models.dreamer.Logger")
     def test_agent_save_and_from_pretrained_local_dir(
         self, mock_logger, mock_make_env, tmp_path
     ):
@@ -249,12 +249,12 @@ class TestDreamerUXConstructors:
             loaded.summary()["total_parameters"] == agent.summary()["total_parameters"]
         )
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("torchwm.models.dreamer.make_env")
+    @patch("torchwm.models.dreamer.Logger")
     def test_export_uses_dreamer_actor_default(
         self, mock_logger, mock_make_env, monkeypatch, tmp_path
     ):
-        import world_models.export as export_utils
+        import torchwm.export as export_utils
 
         mock_env = Mock()
         mock_obs_space = Mock()

@@ -29,13 +29,13 @@ pip install torchwm[gym,ml-agents,dev]
 | `gym` | Additional Gym environment dependencies (huggingface-hub, pygame, autorom) |
 | `ml-agents` | Unity ML-Agents support |
 | `ml` | TensorBoard, Weights & Biases, and logging tools |
-| `viz` | FastAPI, Uvicorn for visualization server |
+| `viz` | Latent-space visualization (opencv-python, umap-learn, scikit-learn, plotly) |
 | `docs` | Sphinx and documentation building tools |
 | `dev` | pytest, mypy, pre-commit for development |
 
 ### Core Dependencies
 
-The minimal installation includes: torch, torchvision, torchaudio, einops, pyyaml, tqdm, opencv-python, requests, gym, gymnasium, moviepy, h5py, plotly, ale-py, selenium, scikit-learn, umap-learn.
+The minimal installation includes only: torch, torchvision, click, einops, tqdm, and pyyaml. Everything else — environment backends, logging, and visualization — comes from the extras above.
 
 ## From Source
 
