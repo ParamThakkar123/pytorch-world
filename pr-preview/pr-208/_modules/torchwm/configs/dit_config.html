@@ -748,6 +748,20 @@ window.runMermaid = runMermaid;</script>
 
 
 
+<div class="viewcode-block" id="canonical_dit_key">
+<a class="viewcode-back" href="../../../api_reference.html#torchwm.canonical_dit_key">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">canonical_dit_key</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Map a snake_case alias to its UPPER_CASE field name.</span>
+
+<span class="sd">    ``DiTConfig`` keeps the original DiT codebase's UPPER_CASE field names, so</span>
+<span class="sd">    dot-list overrides composed by the training entrypoint have to be</span>
+<span class="sd">    translated before they reach the strict config loader. Names that are</span>
+<span class="sd">    already canonical (or unknown) are returned unchanged.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_SNAKE_TO_UPPER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="dit_preset_config">
 <a class="viewcode-back" href="../../../api_reference.html#torchwm.dit_preset_config">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">dit_preset_config</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">patch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DiTConfig</span><span class="p">:</span>

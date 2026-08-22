@@ -23581,6 +23581,24 @@ codebase. Snake-case aliases are accepted via <code class="docutils literal notr
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="torchwm.configs.dit_config.canonical_dit_key">
+<span class="sig-prename descclassname"><span class="pre">torchwm.configs.dit_config.</span></span><span class="sig-name descname"><span class="pre">canonical_dit_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/torchwm/configs/dit_config.html#canonical_dit_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchwm.configs.dit_config.canonical_dit_key" title="Link to this definition">#</a></dt>
+<dd><p>Map a snake_case alias to its UPPER_CASE field name.</p>
+<p><code class="docutils literal notranslate"><span class="pre">DiTConfig</span></code> keeps the original DiT codebase’s UPPER_CASE field names, so
+dot-list overrides composed by the training entrypoint have to be
+translated before they reach the strict config loader. Names that are
+already canonical (or unknown) are returned unchanged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="torchwm.configs.dit_config.dit_preset_config">
 <span class="sig-prename descclassname"><span class="pre">torchwm.configs.dit_config.</span></span><span class="sig-name descname"><span class="pre">dit_preset_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_size</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">overrides</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/torchwm/configs/dit_config.html#dit_preset_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchwm.configs.dit_config.dit_preset_config" title="Link to this definition">#</a></dt>
 <dd><p>Build a config for a named Table 1 model, e.g. <code class="docutils literal notranslate"><span class="pre">dit_preset_config(&quot;DiT-XL&quot;,</span> <span class="pre">2)</span></code>.</p>
@@ -33056,6 +33074,7 @@ along the batch dimension.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#torchwm.configs.dit_config.DiTConfig.ROOT_PATH"><code class="docutils literal notranslate"><span class="pre">DiTConfig.ROOT_PATH</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchwm.configs.dit_config.canonical_dit_key"><code class="docutils literal notranslate"><span class="pre">canonical_dit_key()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchwm.configs.dit_config.dit_preset_config"><code class="docutils literal notranslate"><span class="pre">dit_preset_config()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchwm.configs.dit_config.list_dit_presets"><code class="docutils literal notranslate"><span class="pre">list_dit_presets()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchwm.configs.dit_config.get_dit_config"><code class="docutils literal notranslate"><span class="pre">get_dit_config()</span></code></a></li>
