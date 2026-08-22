@@ -133,7 +133,12 @@ def main() -> int:
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    grid = to_uint8_grid(generated.squeeze(0), args.nrow)
+    # generate() returns (B, C, T, H, W), so dropping the batch leaves
+    # (C, T, H, W). to_uint8_grid tiles over the leading axis and expects
+    # (N, C, H, W), so time has to move in front of channels first -- otherwise
+    # it reads T as the channel count and builds a T-channel canvas that
+    # cv2.cvtColor rejects.
+    grid = to_uint8_grid(generated.squeeze(0).permute(1, 0, 2, 3), args.nrow)
     grid_path = out_dir / "genie_grid.png"
     _write_png(grid, grid_path)
     print(f"Wrote {grid_path}")

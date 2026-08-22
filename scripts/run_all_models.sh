@@ -53,6 +53,9 @@ RUN_TRAIN=1
 RUN_INFER=1
 DEVICE=""
 STEPS="120"
+EPOCHS=""
+TRAIN_STEPS=""
+TRAIN_ARGS=()
 SEED="0"
 TIMEOUT="0"
 DRY_RUN=0
@@ -83,6 +86,14 @@ Selection:
 Stages:
   --train-only         Train, skip inference.
   --infer-only         Skip training; use whatever checkpoints already exist.
+
+Training length (override the preset, for real runs):
+  --epochs N           Training epochs, for the models counted in epochs:
+                       diamond, iris, jepa, world-model.
+  --train-steps N      Training steps, for the models counted in steps:
+                       dreamer, genie.
+  --train-arg ARG      Append ARG verbatim to the training command (repeatable).
+                       Model-specific, so pair it with a single --models.
 
 Run control:
   --device NAME        cpu / cuda / cuda:0. Passed to every model that takes one.
@@ -139,6 +150,12 @@ while [ "$#" -gt 0 ]; do
         --device=*)        DEVICE="${1#*=}"; shift ;;
         --steps)           need_value "$1" "$#"; STEPS="$2"; shift 2 ;;
         --steps=*)         STEPS="${1#*=}"; shift ;;
+        --epochs)          need_value "$1" "$#"; EPOCHS="$2"; shift 2 ;;
+        --epochs=*)        EPOCHS="${1#*=}"; shift ;;
+        --train-steps)     need_value "$1" "$#"; TRAIN_STEPS="$2"; shift 2 ;;
+        --train-steps=*)   TRAIN_STEPS="${1#*=}"; shift ;;
+        --train-arg)       need_value "$1" "$#"; TRAIN_ARGS+=("$2"); shift 2 ;;
+        --train-arg=*)     TRAIN_ARGS+=("${1#*=}"); shift ;;
         --seed)            need_value "$1" "$#"; SEED="$2"; shift 2 ;;
         --seed=*)          SEED="${1#*=}"; shift ;;
         --timeout)         need_value "$1" "$#"; TIMEOUT="$2"; shift 2 ;;
@@ -247,6 +264,42 @@ missing_requirement() {
     fi
     SKIP_REASON="${extra} is not installed -- reinstall with --extra gym, or: uv pip install ale-py"
     return 1
+}
+
+# --epochs / --train-steps, translated to whatever each trainer calls its
+# duration knob. Appended after the preset so the later value wins: both the
+# OmegaConf dot-list and IRIS's runtime dict take the last occurrence of a key.
+append_duration_overrides() {
+    local model="$1"
+
+    if [ -n "${EPOCHS}" ]; then
+        case "${model}" in
+            diamond)     CMD+=("num_epochs=${EPOCHS}") ;;
+            iris)        CMD+=("epochs=${EPOCHS}") ;;
+            jepa)        CMD+=("optimization.epochs=${EPOCHS}") ;;
+            world-model) CMD+=(--vae_epochs "${EPOCHS}" --rnn_epochs "${EPOCHS}") ;;
+            *)           NOTE="${NOTE:+${NOTE}; }--epochs does not apply to ${model}" ;;
+        esac
+    fi
+
+    if [ -n "${TRAIN_STEPS}" ]; then
+        case "${model}" in
+            dreamer) CMD+=("total_steps=${TRAIN_STEPS}") ;;
+            genie)
+                # The dataset path takes key=value, the dry-run path a flag.
+                if [ -n "${GENIE_DATASET}" ]; then
+                    CMD+=("max_steps=${TRAIN_STEPS}")
+                else
+                    CMD+=(--max-steps "${TRAIN_STEPS}")
+                fi
+                ;;
+            *) NOTE="${NOTE:+${NOTE}; }--train-steps does not apply to ${model}" ;;
+        esac
+    fi
+
+    if [ "${#TRAIN_ARGS[@]}" -gt 0 ]; then
+        CMD+=("${TRAIN_ARGS[@]}")
+    fi
 }
 
 build_train_cmd() {
@@ -413,6 +466,9 @@ build_train_cmd() {
             SKIP_REASON="unknown model"
             ;;
     esac
+
+    [ -z "${SKIP_REASON}" ] && append_duration_overrides "${model}"
+    return 0
 }
 
 # Newest existing file among the arguments, or empty.

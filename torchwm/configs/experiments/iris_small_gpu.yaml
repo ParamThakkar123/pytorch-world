@@ -58,7 +58,12 @@ td_lambda: 0.95
 entropy_coef: 0.001
 
 # Training loop: same 100k env-step budget, smaller batches and fewer steps.
-total_epochs: 300
+# Collection runs for the first `collection_epochs` epochs, so total_epochs must
+# stay above it or the run is cut short mid-collection: at total_epochs=300 the
+# loop stopped after 300 * 200 = 60k env steps, silently training on 60% of the
+# Atari 100k budget the comment below claims. 550 keeps the full 100k and cuts
+# only the post-collection epochs (paper: 600, i.e. 100 of them).
+total_epochs: 550            # paper: 600
 collection_epochs: 500       # 500 * 200 = 100k env steps (unchanged budget)
 env_steps_per_epoch: 200
 training_steps_per_epoch: 100        # paper: 200 (autoencoder)
