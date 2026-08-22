@@ -687,6 +687,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.utils.jepa_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">repeat_interleave_batch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.imagenet1k</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_imagenet1k</span><span class="p">,</span> <span class="n">make_imagefolder</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.cifar10</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_cifar10</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.utils.train_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarlyStopping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.helpers.jepa_helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint</span><span class="p">,</span> <span class="n">init_model</span><span class="p">,</span> <span class="n">init_opt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.transforms.image</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_transforms</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.configs.jepa_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">JEPAConfig</span>
@@ -991,6 +992,48 @@ window.runMermaid = runMermaid;</script>
             <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">val_split</span><span class="o">=</span><span class="n">val_split</span><span class="p">,</span>
         <span class="p">)</span>
+    <span class="c1"># Held-out loader for early stopping. Built with the same mask collator, so</span>
+    <span class="c1"># the validation loss is the exact objective being trained, just on data the</span>
+    <span class="c1"># encoder never sees.</span>
+    <span class="n">early_stopping</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"optimization"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"early_stopping"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">val_loader</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">early_stopping</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dataset_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"cifar10"</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_cifar10</span><span class="p">(</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
+                <span class="n">pin_mem</span><span class="o">=</span><span class="n">pin_mem</span><span class="p">,</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
+                <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+                <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
+                <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">download</span><span class="o">=</span><span class="n">download</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">val_split</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"optimization.early_stopping needs data.val_split &gt; 0 so "</span>
+                    <span class="s2">"there is held-out data to measure; pass e.g. "</span>
+                    <span class="s2">"data.val_split=0.05"</span>
+                <span class="p">)</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_imagefolder</span><span class="p">(</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
+                <span class="n">pin_mem</span><span class="o">=</span><span class="n">pin_mem</span><span class="p">,</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
+                <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+                <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
+                <span class="n">image_folder</span><span class="o">=</span><span class="n">image_folder</span><span class="p">,</span>
+                <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">val_split</span><span class="o">=</span><span class="n">val_split</span><span class="p">,</span>
+                <span class="n">split</span><span class="o">=</span><span class="s2">"val"</span><span class="p">,</span>
+            <span class="p">)</span>
+
     <span class="n">ipe</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unsupervised_loader</span><span class="p">)</span>
 
     <span class="c1"># -- init optimizer and scheduler</span>
@@ -1066,6 +1109,44 @@ window.runMermaid = runMermaid;</script>
             <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_dict</span><span class="p">,</span> <span class="n">latest_path</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">checkpoint_freq</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_dict</span><span class="p">,</span> <span class="n">save_path</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">epoch</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">epoch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Mean held-out loss, using the same objective the epoch just trained."""</span>
+        <span class="k">if</span> <span class="n">val_loader</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"validate() called without a held-out loader"</span><span class="p">)</span>
+        <span class="n">encoder</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">predictor</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">total</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">udata</span><span class="p">,</span> <span class="n">masks_enc</span><span class="p">,</span> <span class="n">masks_pred</span> <span class="ow">in</span> <span class="n">val_loader</span><span class="p">:</span>
+            <span class="n">imgs</span> <span class="o">=</span> <span class="n">udata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">masks_enc</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">masks_enc</span><span class="p">]</span>
+            <span class="n">masks_pred</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">masks_pred</span><span class="p">]</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">autocast</span><span class="p">(</span>
+                <span class="n">device_type</span><span class="o">=</span><span class="n">device</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">,</span>
+                <span class="n">enabled</span><span class="o">=</span><span class="n">use_bfloat16</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="n">target_encoder</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">layer_norm</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),))</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="n">apply_masks</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">masks_pred</span><span class="p">)</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="n">repeat_interleave_batch</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">masks_enc</span><span class="p">))</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">predictor</span><span class="p">(</span><span class="n">encoder</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">masks_enc</span><span class="p">),</span> <span class="n">masks_enc</span><span class="p">,</span> <span class="n">masks_pred</span><span class="p">)</span>
+                <span class="n">batch_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">h</span><span class="p">))</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="n">batch_loss</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>
+        <span class="n">encoder</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="n">predictor</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">total</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">stopper</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">best_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">early_stopping</span><span class="p">:</span>
+        <span class="n">stopper</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">"min"</span><span class="p">,</span>
+            <span class="n">patience</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="s2">"optimization"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"patience"</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="s2">"optimization"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"min_delta"</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">),</span>
+        <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_epoch</span><span class="p">,</span> <span class="n">num_epochs</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Epoch </span><span class="si">%d</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
@@ -1205,7 +1286,29 @@ window.runMermaid = runMermaid;</script>
             <span class="k">assert</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">loss</span><span class="p">),</span> <span class="s2">"loss is nan"</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"avg. loss </span><span class="si">%.3f</span><span class="s2">"</span> <span class="o">%</span> <span class="n">loss_meter</span><span class="o">.</span><span class="n">avg</span><span class="p">)</span>
-        <span class="n">save_checkpoint</span><span class="p">(</span><span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
+        <span class="n">save_checkpoint</span><span class="p">(</span><span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">stopper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">val_loss</span> <span class="o">=</span> <span class="n">validate</span><span class="p">()</span>
+            <span class="n">stopper</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">val_loss</span><span class="p">)</span>
+            <span class="n">improved</span> <span class="o">=</span> <span class="n">val_loss</span> <span class="o">&lt;</span> <span class="n">best_val</span>
+            <span class="k">if</span> <span class="n">improved</span><span class="p">:</span>
+                <span class="n">best_val</span> <span class="o">=</span> <span class="n">val_loss</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">"epoch </span><span class="si">%d</span><span class="s2"> val loss </span><span class="si">%.4f</span><span class="s2"> (best </span><span class="si">%.4f%s</span><span class="s2">)"</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">val_loss</span><span class="p">,</span> <span class="n">best_val</span><span class="p">,</span> <span class="s2">"*"</span> <span class="k">if</span> <span class="n">improved</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">stopper</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">"Early stopping at epoch </span><span class="si">%d</span><span class="s2">: held-out loss has not improved "</span>
+                    <span class="s2">"by </span><span class="si">%s</span><span class="s2"> for </span><span class="si">%s</span><span class="s2"> epochs."</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                        <span class="n">args</span><span class="p">[</span><span class="s2">"optimization"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"min_delta"</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">),</span>
+                        <span class="n">args</span><span class="p">[</span><span class="s2">"optimization"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"patience"</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">break</span></div>
 
 
 

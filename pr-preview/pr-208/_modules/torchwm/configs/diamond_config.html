@@ -811,7 +811,16 @@ window.runMermaid = runMermaid;</script>
     <span class="c1"># Logging</span>
     <span class="n">log_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
     <span class="n">eval_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span>
-    <span class="n">save_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span></div>
+    <span class="n">save_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+
+    <span class="c1"># Stop once evaluation return stops improving, rather than running the full</span>
+    <span class="c1"># epoch budget. Off by default: the published configuration is a fixed-length</span>
+    <span class="c1"># run, and stopping early would change what the numbers mean. When on, the</span>
+    <span class="c1"># epoch count becomes a ceiling. Return, not loss, is the signal here -- the</span>
+    <span class="c1"># world-model loss keeps falling long after the agent stops getting better.</span>
+    <span class="n">early_stopping</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">patience</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">min_delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span></div>
 
 
 

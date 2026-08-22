@@ -977,6 +977,9 @@ window.runMermaid = runMermaid;</script>
         <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">download</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">data_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">val_split</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">split</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"train"</span><span class="p">,</span>
+        <span class="n">split_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TinyWorldsDataset</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">]:</span>
         <span class="n">dataset</span> <span class="o">=</span> <span class="n">TinyWorldsDataset</span><span class="p">(</span>
             <span class="n">dataset_name</span><span class="o">=</span><span class="n">dataset_name</span><span class="p">,</span>
@@ -987,8 +990,30 @@ window.runMermaid = runMermaid;</script>
             <span class="n">data_file</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span>
         <span class="p">)</span>
 
+        <span class="c1"># ``TinyWorldsDataset`` carries a ``split`` attribute but never divided</span>
+        <span class="c1"># the clips on it, so every "split" saw the whole dataset. Partition</span>
+        <span class="c1"># here instead, seeded so that the train and val calls agree and stay</span>
+        <span class="c1"># disjoint.</span>
+        <span class="n">subset</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">dataset</span>
+        <span class="k">if</span> <span class="n">val_split</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">split</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"train"</span><span class="p">,</span> <span class="s2">"val"</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"split must be 'train' or 'val', got </span><span class="si">{</span><span class="n">split</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">val_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span> <span class="o">*</span> <span class="n">val_split</span><span class="p">)</span>
+            <span class="n">train_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span> <span class="o">-</span> <span class="n">val_size</span>
+            <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">train_size</span><span class="p">,</span> <span class="n">val_size</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"val_split=</span><span class="si">{</span><span class="n">val_split</span><span class="si">}</span><span class="s2"> leaves </span><span class="si">{</span><span class="n">train_size</span><span class="si">}</span><span class="s2"> train / </span><span class="si">{</span><span class="n">val_size</span><span class="si">}</span><span class="s2"> "</span>
+                    <span class="sa">f</span><span class="s2">"val clips out of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="si">}</span><span class="s2">; pick a fraction that gives "</span>
+                    <span class="sa">f</span><span class="s2">"both sides at least one clip"</span>
+                <span class="p">)</span>
+            <span class="n">generator</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Generator</span><span class="p">()</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">split_seed</span><span class="p">)</span>
+            <span class="n">train_subset</span><span class="p">,</span> <span class="n">val_subset</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">random_split</span><span class="p">(</span>
+                <span class="n">dataset</span><span class="p">,</span> <span class="p">[</span><span class="n">train_size</span><span class="p">,</span> <span class="n">val_size</span><span class="p">],</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span>
+            <span class="p">)</span>
+            <span class="n">subset</span> <span class="o">=</span> <span class="n">val_subset</span> <span class="k">if</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">"val"</span> <span class="k">else</span> <span class="n">train_subset</span>
+
         <span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-            <span class="n">dataset</span><span class="p">,</span>
+            <span class="n">subset</span><span class="p">,</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
             <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
@@ -1002,7 +1027,7 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"Created </span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s2"> dataloader: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="si">}</span><span class="s2"> samples, "</span>
+            <span class="sa">f</span><span class="s2">"Created </span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2"> dataloader: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span><span class="si">}</span><span class="s2"> samples, "</span>
             <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span><span class="si">}</span><span class="s2"> batches, batch_size=</span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
 
@@ -1044,6 +1069,9 @@ window.runMermaid = runMermaid;</script>
     <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">download</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">data_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">val_split</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">split</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"train"</span><span class="p">,</span>
+    <span class="n">split_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TinyWorldsDataset</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">]:</span>
     <span class="k">return</span> <span class="n">TinyWorldsDataLoader</span><span class="o">.</span><span class="n">create_dataloader</span><span class="p">(</span>
         <span class="n">dataset_name</span><span class="o">=</span><span class="n">dataset_name</span><span class="p">,</span>
@@ -1055,6 +1083,9 @@ window.runMermaid = runMermaid;</script>
         <span class="n">cache_dir</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">,</span>
         <span class="n">download</span><span class="o">=</span><span class="n">download</span><span class="p">,</span>
         <span class="n">data_file</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span>
+        <span class="n">val_split</span><span class="o">=</span><span class="n">val_split</span><span class="p">,</span>
+        <span class="n">split</span><span class="o">=</span><span class="n">split</span><span class="p">,</span>
+        <span class="n">split_seed</span><span class="o">=</span><span class="n">split_seed</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 

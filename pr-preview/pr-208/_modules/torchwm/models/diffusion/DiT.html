@@ -673,6 +673,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.imagenet1k</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_imagenet1k</span><span class="p">,</span> <span class="n">make_imagefolder</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomHorizontalFlip</span><span class="p">,</span> <span class="n">Compose</span><span class="p">,</span> <span class="n">ToTensor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.transforms.image</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_transforms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.utils.train_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarlyStopping</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_image</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -1440,11 +1441,15 @@ window.runMermaid = runMermaid;</script>
         <span class="n">workdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"./dit_demo"</span><span class="p">,</span>
         <span class="n">root_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"./data"</span><span class="p">,</span>
         <span class="n">image_folder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">crop_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">224</span><span class="p">,</span>
+        <span class="n">crop_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
         <span class="n">download</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">copy_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">subset_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">val_split</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">early_stopping</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">patience</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">min_delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
             <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">)</span>
@@ -1455,8 +1460,12 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">dataset</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"cifar10"</span><span class="p">:</span>
             <span class="n">transform</span> <span class="o">=</span> <span class="n">Compose</span><span class="p">([</span><span class="n">RandomHorizontalFlip</span><span class="p">(),</span> <span class="n">ToTensor</span><span class="p">()])</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Default the crop to the model's own input size. These are two</span>
+            <span class="c1"># independent knobs, and a mismatch does not fail until the first</span>
+            <span class="c1"># forward pass, as a bare shape error naming neither of them.</span>
+            <span class="n">resolved_crop</span> <span class="o">=</span> <span class="n">crop_size</span> <span class="k">if</span> <span class="n">crop_size</span> <span class="k">else</span> <span class="n">img_size</span>
             <span class="n">transform</span> <span class="o">=</span> <span class="n">make_transforms</span><span class="p">(</span>
-                <span class="n">crop_size</span><span class="o">=</span><span class="n">crop_size</span><span class="p">,</span>
+                <span class="n">crop_size</span><span class="o">=</span><span class="n">resolved_crop</span><span class="p">,</span>
                 <span class="n">crop_scale</span><span class="o">=</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
                 <span class="n">color_jitter</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
                 <span class="n">horizontal_flip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -1465,13 +1474,18 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">normalization</span><span class="o">=</span><span class="p">((</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">)),</span>
             <span class="p">)</span>
 
+        <span class="c1"># Held-out loader, built only when early stopping needs one. Training</span>
+        <span class="c1"># loss cannot drive it: it keeps falling well past the point where</span>
+        <span class="c1"># samples stop improving, so a plateau on it never arrives.</span>
+        <span class="n">val_loader</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="k">if</span> <span class="n">dataset</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"cifar10"</span><span class="p">:</span>
             <span class="n">_</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_cifar10</span><span class="p">(</span>
                 <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
                 <span class="n">collator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">pin_mem</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
                 <span class="n">world_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="n">rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
@@ -1479,13 +1493,29 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">download</span><span class="o">=</span><span class="n">download</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="n">early_stopping</span><span class="p">:</span>
+                <span class="c1"># CIFAR-10 ships a test split, so nothing has to come out of</span>
+                <span class="c1"># the training set.</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_cifar10</span><span class="p">(</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">collator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">pin_mem</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                    <span class="n">world_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
+                    <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">download</span><span class="o">=</span><span class="n">download</span><span class="p">,</span>
+                <span class="p">)</span>
         <span class="k">elif</span> <span class="n">dataset</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"imagenet"</span><span class="p">:</span>
             <span class="n">_</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_imagenet1k</span><span class="p">(</span>
                 <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
                 <span class="n">collator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">pin_mem</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
                 <span class="n">world_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="n">rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
@@ -1495,20 +1525,59 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">subset_file</span><span class="o">=</span><span class="n">subset_file</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="n">early_stopping</span><span class="p">:</span>
+                <span class="c1"># ImageNet's own validation split; `training=False` selects it.</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_imagenet1k</span><span class="p">(</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">collator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">pin_mem</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                    <span class="n">world_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
+                    <span class="n">image_folder</span><span class="o">=</span><span class="n">image_folder</span><span class="p">,</span>
+                    <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">copy_data</span><span class="o">=</span><span class="n">copy_data</span><span class="p">,</span>
+                    <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">subset_file</span><span class="o">=</span><span class="n">subset_file</span><span class="p">,</span>
+                <span class="p">)</span>
         <span class="k">elif</span> <span class="n">dataset</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"imagefolder"</span><span class="p">:</span>
             <span class="n">_</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_imagefolder</span><span class="p">(</span>
                 <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
                 <span class="n">collator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">pin_mem</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
                 <span class="n">world_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="n">rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
                 <span class="n">image_folder</span><span class="o">=</span><span class="n">image_folder</span><span class="p">,</span>
                 <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">val_split</span><span class="o">=</span><span class="n">val_split</span><span class="p">,</span>
+                <span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="n">early_stopping</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">val_split</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">"early_stopping on an imagefolder needs val_split &gt; 0 "</span>
+                        <span class="s2">"so there is held-out data to measure; pass e.g. "</span>
+                        <span class="s2">"val_split=0.05"</span>
+                    <span class="p">)</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_imagefolder</span><span class="p">(</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">collator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">pin_mem</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                    <span class="n">world_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
+                    <span class="n">image_folder</span><span class="o">=</span><span class="n">image_folder</span><span class="p">,</span>
+                    <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">val_split</span><span class="o">=</span><span class="n">val_split</span><span class="p">,</span>
+                    <span class="n">split</span><span class="o">=</span><span class="s2">"val"</span><span class="p">,</span>
+                <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Unsupported dataset: </span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">. Supported: cifar10, imagenet, imagefolder"</span>
@@ -1561,6 +1630,57 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># Paper 4: constant learning rate, no weight decay, no warmup.</span>
         <span class="n">opt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">AdamW</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 
+        <span class="n">stopper</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">best_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">)</span>
+        <span class="n">best_state</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">early_stopping</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">val_loader</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"early_stopping is on but no held-out loader was built for "</span>
+                    <span class="sa">f</span><span class="s2">"dataset=</span><span class="si">{</span><span class="n">dataset</span><span class="si">!r}</span><span class="s2">"</span>
+                <span class="p">)</span>
+            <span class="n">stopper</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">"min"</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="n">patience</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">min_delta</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">diffusion_loss</span><span class="p">(</span><span class="n">batch_images</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">"""L_simple on one batch, identical to the training objective."""</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">batch_images</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">t_b</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">timesteps</span><span class="p">,</span> <span class="p">(</span><span class="n">b</span><span class="p">,),</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+            <span class="n">noise_b</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn_like</span><span class="p">(</span><span class="n">batch_images</span><span class="p">)</span>
+            <span class="n">x_t_b</span> <span class="o">=</span> <span class="n">ddpm</span><span class="o">.</span><span class="n">q_sample</span><span class="p">(</span><span class="n">batch_images</span><span class="p">,</span> <span class="n">t_b</span><span class="p">,</span> <span class="n">noise_b</span><span class="p">)</span>
+            <span class="n">y_b</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">y_embedder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">y_b</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x_t_b</span><span class="p">,</span> <span class="n">t_b</span><span class="p">,</span> <span class="n">y_b</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">learn_sigma</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,</span> <span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">in_channels</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">noise_b</span><span class="p">)</span>
+
+        <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">"""Mean held-out L_simple.</span>
+
+<span class="sd">            The timestep and noise are resampled per batch, so this is a noisy</span>
+<span class="sd">            estimator; the seed is fixed per call to keep successive epochs</span>
+<span class="sd">            comparable, which is what the plateau test needs.</span>
+<span class="sd">            """</span>
+            <span class="n">loader</span> <span class="o">=</span> <span class="n">val_loader</span>
+            <span class="k">if</span> <span class="n">loader</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"validate() called without a held-out loader"</span><span class="p">)</span>
+            <span class="n">was_training</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">training</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">generator_state</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">get_rng_state</span><span class="p">()</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">total</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">val_imgs</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
+                <span class="n">val_imgs</span> <span class="o">=</span> <span class="n">val_imgs</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">total</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">diffusion_loss</span><span class="p">(</span><span class="n">val_imgs</span><span class="p">))</span> <span class="o">*</span> <span class="n">val_imgs</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="n">val_imgs</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_rng_state</span><span class="p">(</span><span class="n">generator_state</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">was_training</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">total</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
         <span class="n">global_step</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 
@@ -1603,11 +1723,39 @@ window.runMermaid = runMermaid;</script>
                     <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
                 <span class="n">global_step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="n">stopper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">val_loss</span> <span class="o">=</span> <span class="n">validate</span><span class="p">()</span>
+                <span class="n">stopper</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">val_loss</span><span class="p">)</span>
+                <span class="n">improved</span> <span class="o">=</span> <span class="n">val_loss</span> <span class="o">&lt;</span> <span class="n">best_val</span>
+                <span class="k">if</span> <span class="n">improved</span><span class="p">:</span>
+                    <span class="n">best_val</span> <span class="o">=</span> <span class="n">val_loss</span>
+                    <span class="c1"># Keep the best weights, not the last: on a plateau the run</span>
+                    <span class="c1"># ends `patience` epochs past the best model, so saving the</span>
+                    <span class="c1"># final state would ship a worse one.</span>
+                    <span class="n">source</span> <span class="o">=</span> <span class="n">ema_model</span> <span class="k">if</span> <span class="n">ema_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">model</span>
+                    <span class="n">best_state</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">source</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                    <span class="p">}</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Epoch [</span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">epochs</span><span class="si">}</span><span class="s2">] val_loss: </span><span class="si">{</span><span class="n">val_loss</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> "</span>
+                    <span class="sa">f</span><span class="s2">"(best </span><span class="si">{</span><span class="n">best_val</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}{</span><span class="s1">'*'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">improved</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2">)"</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">stopper</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Early stopping at epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">: held-out loss has not "</span>
+                        <span class="sa">f</span><span class="s2">"improved by </span><span class="si">{</span><span class="n">min_delta</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">patience</span><span class="si">}</span><span class="s2"> epochs."</span>
+                    <span class="p">)</span>
+                    <span class="k">break</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">"Training Complete."</span><span class="p">)</span>
 
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">model_to_save</span> <span class="o">=</span> <span class="n">ema_model</span> <span class="k">if</span> <span class="n">ema_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">model</span>
+        <span class="k">if</span> <span class="n">best_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">model_to_save</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">best_state</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Restored the best held-out checkpoint (val_loss </span><span class="si">{</span><span class="n">best_val</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
         <span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"dit_model.pth"</span>
         <span class="n">train_config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span>
             <span class="n">DATASET</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>

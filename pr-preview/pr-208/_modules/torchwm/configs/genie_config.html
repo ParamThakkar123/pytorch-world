@@ -704,7 +704,16 @@ window.runMermaid = runMermaid;</script>
     <span class="c1"># Off by default to match DreamerConfig: enabling autocast changes a run's</span>
     <span class="c1"># numerics, so it is an explicit opt-in rather than a silent default.</span>
     <span class="c1"># bfloat16 is preferred where the device supports it, and needs no scaler.</span>
-    <span class="n">use_amp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+    <span class="n">use_amp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># Stop once held-out reconstruction loss stops improving, rather than at a</span>
+    <span class="c1"># fixed max_steps. Off by default so existing runs keep their exact length;</span>
+    <span class="c1"># max_steps then bounds the run instead of defining it.</span>
+    <span class="n">early_stopping</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">patience</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">min_delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span>
+    <span class="c1"># Fraction of clips held out to measure that loss on.</span>
+    <span class="n">val_split</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span></div>
 
 
 
@@ -753,7 +762,16 @@ window.runMermaid = runMermaid;</script>
     <span class="c1"># Off by default to match DreamerConfig: enabling autocast changes a run's</span>
     <span class="c1"># numerics, so it is an explicit opt-in rather than a silent default.</span>
     <span class="c1"># bfloat16 is preferred where the device supports it, and needs no scaler.</span>
-    <span class="n">use_amp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+    <span class="n">use_amp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># Stop once held-out reconstruction loss stops improving, rather than at a</span>
+    <span class="c1"># fixed max_steps. Off by default so existing runs keep their exact length;</span>
+    <span class="c1"># max_steps then bounds the run instead of defining it.</span>
+    <span class="n">early_stopping</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">patience</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">min_delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span>
+    <span class="c1"># Fraction of clips held out to measure that loss on.</span>
+    <span class="n">val_split</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span></div>
 
 
 

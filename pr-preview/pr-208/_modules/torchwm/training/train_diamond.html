@@ -682,6 +682,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">parse_experiment_args</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.envs.diamond_atari</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_diamond_atari_env</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.utils.train_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarlyStopping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium.spaces</span><span class="w"> </span><span class="kn">import</span> <span class="n">Discrete</span><span class="p">,</span> <span class="n">Box</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.datasets.diamond_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ReplayBuffer</span><span class="p">,</span>
@@ -1391,6 +1392,16 @@ window.runMermaid = runMermaid;</script>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Device: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Action space: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">action_dim</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
+        <span class="c1"># Return, not loss: the diffusion loss keeps falling long after the</span>
+        <span class="c1"># policy stops improving, so a loss plateau never arrives.</span>
+        <span class="n">stopper</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="s2">"early_stopping"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">stopper</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">"max"</span><span class="p">,</span>
+                <span class="n">patience</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="p">,</span>
+                <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">min_delta</span><span class="p">,</span>
+            <span class="p">)</span>
+
         <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">"Training"</span><span class="p">):</span>
             <span class="n">collected_rewards</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collect_experience</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">environment_steps_per_epoch</span>
@@ -1463,6 +1474,17 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">eval_reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
                 <span class="n">hns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_human_normalized_score</span><span class="p">(</span><span class="n">eval_reward</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Eval reward: </span><span class="si">{</span><span class="n">eval_reward</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, HNS: </span><span class="si">{</span><span class="n">hns</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">stopper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">stopper</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">eval_reward</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">stopper</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"  Early stopping at epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">: evaluation reward "</span>
+                            <span class="sa">f</span><span class="s2">"has not improved by </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">min_delta</span><span class="si">}</span><span class="s2"> for "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="si">}</span><span class="s2"> evaluations."</span>
+                        <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">save_checkpoint</span><span class="p">(</span><span class="sa">f</span><span class="s2">"checkpoint_</span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">.pt"</span><span class="p">)</span>
+                        <span class="k">break</span>
 
             <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">save_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">save_checkpoint</span><span class="p">(</span><span class="sa">f</span><span class="s2">"checkpoint_</span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">.pt"</span><span class="p">)</span></div>

@@ -807,6 +807,13 @@ window.runMermaid = runMermaid;</script>
     <span class="n">video_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"gif"</span>  <span class="c1"># "gif" or "mp4"</span>
     <span class="n">video_fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span>
     <span class="n">checkpoint_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="c1"># Stop once evaluation return stops improving, rather than running the full</span>
+    <span class="c1"># total_steps budget, which then acts as a ceiling. Off by default so</span>
+    <span class="c1"># existing runs keep their exact length. Return, not loss: the world-model</span>
+    <span class="c1"># loss keeps falling long after the policy stops improving.</span>
+    <span class="n">early_stopping</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">patience</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">min_delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span>
     <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
     <span class="n">restore</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">experience_replay</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>

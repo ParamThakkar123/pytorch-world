@@ -667,6 +667,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.models.genie</span><span class="w"> </span><span class="kn">import</span> <span class="n">Genie</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.models.model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_config_next_to_checkpoint</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.utils.memory_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">enable_performance_defaults</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.utils.train_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarlyStopping</span>
 
 
 <div class="viewcode-block" id="GenieConfig">
@@ -707,7 +708,17 @@ window.runMermaid = runMermaid;</script>
     <span class="n">mask_prob_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
 
     <span class="n">sample_temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span>
-    <span class="n">maskgit_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span></div>
+    <span class="n">maskgit_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span>
+
+    <span class="c1"># Stop once held-out reconstruction loss stops improving, rather than at a</span>
+    <span class="c1"># fixed max_steps, which then bounds the run instead of defining it. Off by</span>
+    <span class="c1"># default so existing runs keep their exact length. Mirrors the same fields</span>
+    <span class="c1"># on torchwm.configs.genie_config.GenieConfig/GenieSmallConfig, either of</span>
+    <span class="c1"># which may be handed to the trainer instead of this one.</span>
+    <span class="n">early_stopping</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">patience</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">min_delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span>
+    <span class="n">val_split</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span></div>
 
 
 
@@ -998,6 +1009,26 @@ window.runMermaid = runMermaid;</script>
             <span class="p">}</span></div>
 
 
+<div class="viewcode-block" id="GenieTrainer.validate_epoch">
+<a class="viewcode-back" href="../../../api_reference.html#torchwm.training.train_genie.GenieTrainer.validate_epoch">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val_dataloader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Mean held-out reconstruction loss over the whole validation loader.</span>
+
+<span class="sd">        ``validate`` scores a single batch, which is far too noisy to drive a</span>
+<span class="sd">        plateau test -- the batch-to-batch spread swamps the epoch-to-epoch</span>
+<span class="sd">        trend, so early stopping on it would fire on noise. Averaging over the</span>
+<span class="sd">        loader gives a comparable number per validation.</span>
+<span class="sd">        """</span>
+        <span class="n">total</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">val_batch</span> <span class="ow">in</span> <span class="n">val_dataloader</span><span class="p">:</span>
+            <span class="n">val_batch</span> <span class="o">=</span> <span class="n">val_batch</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">val_batch</span><span class="p">)</span>
+            <span class="n">batch_size</span> <span class="o">=</span> <span class="n">val_batch</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="s2">"val_recon_loss"</span><span class="p">])</span> <span class="o">*</span> <span class="n">batch_size</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="n">batch_size</span>
+        <span class="k">return</span> <span class="n">total</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="GenieTrainer.train">
 <a class="viewcode-back" href="../../../api_reference.html#torchwm.training.train_genie.GenieTrainer.train">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span>
@@ -1019,6 +1050,20 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="n">num_steps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">num_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_steps</span>
+
+        <span class="n">stopper</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">best_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="s2">"early_stopping"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">val_dataloader</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"early_stopping needs a val_dataloader; build one with "</span>
+                    <span class="s2">"create_tinyworlds_dataloader(val_split=..., split='val')"</span>
+                <span class="p">)</span>
+            <span class="n">stopper</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">"min"</span><span class="p">,</span>
+                <span class="n">patience</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="p">,</span>
+                <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">min_delta</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="n">train_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">train_dataloader</span><span class="p">)</span>
 
@@ -1044,11 +1089,24 @@ window.runMermaid = runMermaid;</script>
                 <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">val_dataloader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_step</span> <span class="o">%</span> <span class="n">val_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">val_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">val_dataloader</span><span class="p">)</span>
-                <span class="n">val_batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">val_iter</span><span class="p">)</span>
-                <span class="n">val_batch</span> <span class="o">=</span> <span class="n">val_batch</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-                <span class="n">val_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">val_batch</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Validation: </span><span class="si">{</span><span class="n">val_metrics</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="n">val_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_epoch</span><span class="p">(</span><span class="n">val_dataloader</span><span class="p">)</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Validation: val_recon_loss=</span><span class="si">{</span><span class="n">val_loss</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span>
+                <span class="k">if</span> <span class="n">stopper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">stopper</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">val_loss</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">val_loss</span> <span class="o">&lt;</span> <span class="n">best_val</span><span class="p">:</span>
+                        <span class="n">best_val</span> <span class="o">=</span> <span class="n">val_loss</span>
+                        <span class="n">message</span> <span class="o">+=</span> <span class="s2">" (best)"</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">stopper</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"Early stopping at step </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">global_step</span><span class="si">}</span><span class="s2">: held-out "</span>
+                            <span class="sa">f</span><span class="s2">"reconstruction loss has not improved by "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">min_delta</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="si">}</span><span class="s2"> "</span>
+                            <span class="sa">f</span><span class="s2">"validations."</span>
+                        <span class="p">)</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s2">"Training complete!"</span><span class="p">)</span></div>
 

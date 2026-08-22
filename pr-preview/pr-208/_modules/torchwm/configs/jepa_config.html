@@ -732,6 +732,12 @@ window.runMermaid = runMermaid;</script>
     <span class="c1"># are scaled linearly with the effective batch size. Set to ``None`` to use</span>
     <span class="c1"># the configured learning rates verbatim.</span>
     <span class="n">lr_reference_batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">2048</span>
+    <span class="c1"># Stop once held-out loss stops improving, rather than running all `epochs`,</span>
+    <span class="c1"># which then acts as a ceiling. Off by default so existing runs keep their</span>
+    <span class="c1"># exact length. Needs `val_split` (imagefolder) or CIFAR-10's test split.</span>
+    <span class="n">early_stopping</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">patience</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">min_delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span>
 
     <span class="c1"># logging</span>
     <span class="n">folder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"results/jepa"</span>
@@ -794,6 +800,9 @@ window.runMermaid = runMermaid;</script>
                     <span class="s2">"lr"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">,</span>
                     <span class="s2">"final_lr"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_lr</span><span class="p">,</span>
                     <span class="s2">"lr_reference_batch_size"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_reference_batch_size</span><span class="p">,</span>
+                    <span class="s2">"early_stopping"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">early_stopping</span><span class="p">,</span>
+                    <span class="s2">"patience"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">patience</span><span class="p">,</span>
+                    <span class="s2">"min_delta"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_delta</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="s2">"logging"</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s2">"folder"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">folder</span><span class="p">,</span>

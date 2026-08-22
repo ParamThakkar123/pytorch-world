@@ -677,6 +677,12 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"ema_decay"</span><span class="p">:</span> <span class="s2">"EMA_DECAY"</span><span class="p">,</span>
     <span class="s2">"workdir"</span><span class="p">:</span> <span class="s2">"WORKDIR"</span><span class="p">,</span>
     <span class="s2">"root_path"</span><span class="p">:</span> <span class="s2">"ROOT_PATH"</span><span class="p">,</span>
+    <span class="s2">"early_stopping"</span><span class="p">:</span> <span class="s2">"EARLY_STOPPING"</span><span class="p">,</span>
+    <span class="s2">"patience"</span><span class="p">:</span> <span class="s2">"PATIENCE"</span><span class="p">,</span>
+    <span class="s2">"min_delta"</span><span class="p">:</span> <span class="s2">"MIN_DELTA"</span><span class="p">,</span>
+    <span class="s2">"val_split"</span><span class="p">:</span> <span class="s2">"VAL_SPLIT"</span><span class="p">,</span>
+    <span class="s2">"crop_size"</span><span class="p">:</span> <span class="s2">"CROP_SIZE"</span><span class="p">,</span>
+    <span class="s2">"num_workers"</span><span class="p">:</span> <span class="s2">"NUM_WORKERS"</span><span class="p">,</span>
     <span class="s2">"num_classes"</span><span class="p">:</span> <span class="s2">"NUM_CLASSES"</span><span class="p">,</span>
     <span class="s2">"class_dropout_prob"</span><span class="p">:</span> <span class="s2">"CLASS_DROPOUT_PROB"</span><span class="p">,</span>
     <span class="s2">"learn_sigma"</span><span class="p">:</span> <span class="s2">"LEARN_SIGMA"</span><span class="p">,</span>
@@ -735,6 +741,19 @@ window.runMermaid = runMermaid;</script>
     <span class="n">EMA_DECAY</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9999</span>  <span class="c1"># paper 4</span>
     <span class="n">WORKDIR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"./dit_demo"</span>
     <span class="n">ROOT_PATH</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"./data"</span>
+    <span class="c1"># Stop once held-out loss stops improving, instead of at a fixed EPOCHS.</span>
+    <span class="c1"># Off by default so existing runs keep their exact length; EPOCHS then acts</span>
+    <span class="c1"># as the ceiling rather than the target.</span>
+    <span class="n">EARLY_STOPPING</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">PATIENCE</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">MIN_DELTA</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span>
+    <span class="c1"># Held-out fraction for imagefolder/imagenet. CIFAR-10 has its own test</span>
+    <span class="c1"># split, which is used instead.</span>
+    <span class="n">VAL_SPLIT</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="c1"># Transform resolution for imagenet/imagefolder. None follows IMG_SIZE, so</span>
+    <span class="c1"># the data and the model agree by default. Unused for CIFAR-10.</span>
+    <span class="n">CROP_SIZE</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">NUM_WORKERS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="n">upper</span> <span class="o">=</span> <span class="n">_SNAKE_TO_UPPER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>

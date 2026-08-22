@@ -674,6 +674,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.models.iris_agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISAgent</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.memory.iris_memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISReplayBuffer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.envs.ale_atari_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_atari_env</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchwm.utils.train_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarlyStopping</span>
 
 <span class="c1"># Optional OpenCV import at module scope (avoid function-local imports)</span>
 <span class="n">cv2</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1207,6 +1208,16 @@ window.runMermaid = runMermaid;</script>
 
         <span class="n">best_eval_return</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"-inf"</span><span class="p">)</span>
 
+        <span class="c1"># Return, not loss: the autoencoder and transformer losses keep falling</span>
+        <span class="c1"># well after the policy stops improving, so a loss plateau never comes.</span>
+        <span class="n">stopper</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="s2">"early_stopping"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">stopper</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">"max"</span><span class="p">,</span>
+                <span class="n">patience</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="p">,</span>
+                <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">min_delta</span><span class="p">,</span>
+            <span class="p">)</span>
+
         <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">total_epochs</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">"Training"</span><span class="p">):</span>
             <span class="c1"># Train one epoch</span>
             <span class="n">metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_epoch</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
@@ -1242,6 +1253,17 @@ window.runMermaid = runMermaid;</script>
                     <span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
                     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Saved best model: </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">stopper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">stopper</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">eval_metrics</span><span class="p">[</span><span class="s2">"eval_mean_return"</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">stopper</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Early stopping at epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">: evaluation return "</span>
+                            <span class="sa">f</span><span class="s2">"has not improved by </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">min_delta</span><span class="si">}</span><span class="s2"> for "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="si">}</span><span class="s2"> evaluations "</span>
+                            <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">eval_interval</span><span class="si">}</span><span class="s2"> epochs)."</span>
+                        <span class="p">)</span>
+                        <span class="k">break</span>
 
             <span class="c1"># Checkpoint periodically</span>
             <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">checkpoint_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>

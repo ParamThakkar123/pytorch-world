@@ -962,6 +962,8 @@ window.runMermaid = runMermaid;</script>
     <span class="n">image_folder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">drop_last</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">val_split</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">split</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"train"</span><span class="p">,</span>
+    <span class="n">split_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span>
     <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span>
     <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">,</span>
@@ -971,6 +973,13 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    Supports optional train/validation split and distributed sampling, making</span>
 <span class="sd">    it a drop-in replacement for ImageNet loaders in training scripts.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        val_split: Fraction held out for validation. ``None`` uses everything.</span>
+<span class="sd">        split: Which side of that split to return, ``"train"`` or ``"val"``.</span>
+<span class="sd">            Call twice with the same ``val_split`` and ``split_seed`` to get the</span>
+<span class="sd">            two disjoint halves.</span>
+<span class="sd">        split_seed: Seed for the partition, so both calls agree on it.</span>
 <span class="sd">    """</span>
     <span class="c1"># Build a string root path for ImageFolder; coerce None -&gt; empty string</span>
     <span class="k">if</span> <span class="n">image_folder</span><span class="p">:</span>
@@ -985,7 +994,17 @@ window.runMermaid = runMermaid;</script>
     <span class="k">if</span> <span class="n">val_split</span><span class="p">:</span>
         <span class="n">val_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span> <span class="o">*</span> <span class="n">val_split</span><span class="p">)</span>
         <span class="n">train_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span> <span class="o">-</span> <span class="n">val_size</span>
-        <span class="n">dataset</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">random_split</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="p">[</span><span class="n">train_size</span><span class="p">,</span> <span class="n">val_size</span><span class="p">])</span>
+        <span class="c1"># Seed the split so that the "train" and "val" calls partition the same</span>
+        <span class="c1"># dataset the same way. Without a fixed generator the two calls would</span>
+        <span class="c1"># draw independent splits and the validation set would overlap the</span>
+        <span class="c1"># training set, which makes a held-out loss meaningless.</span>
+        <span class="n">generator</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Generator</span><span class="p">()</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">split_seed</span><span class="p">)</span>
+        <span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span> <span class="o">=</span> <span class="n">random_split</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="p">,</span> <span class="p">[</span><span class="n">train_size</span><span class="p">,</span> <span class="n">val_size</span><span class="p">],</span> <span class="n">generator</span><span class="o">=</span><span class="n">generator</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">split</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"train"</span><span class="p">,</span> <span class="s2">"val"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"split must be 'train' or 'val', got </span><span class="si">{</span><span class="n">split</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">val_dataset</span> <span class="k">if</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">"val"</span> <span class="k">else</span> <span class="n">train_dataset</span>
     <span class="n">dist_sampler</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">DistributedSampler</span>
     <span class="n">dist_sampler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">DistributedSampler</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">num_replicas</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="n">rank</span>
