@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -61,9 +62,18 @@ def infer_architecture(state_dict: dict[str, Any]) -> dict[str, int]:
         side = int(round(math.sqrt(int(pos.shape[1]))))
         shape["IMG_SIZE"] = side * shape["PATCH"]
 
-    depth = sum(1 for key in state_dict if key.endswith(".attn.qkv.weight"))
-    if depth:
-        shape["DEPTH"] = depth
+    # Count the blocks themselves rather than any one weight inside them: this
+    # DiT keeps separate W_q/W_k/W_v projections, so the fused ".attn.qkv"
+    # tensor this used to look for never exists and depth silently came back 0,
+    # leaving DiTConfig's default of 12. Anything but a 12-block checkpoint then
+    # failed to load.
+    blocks = {
+        int(match.group(1))
+        for key in state_dict
+        if (match := re.match(r"transformer_blocks\.(\d+)\.", key)) is not None
+    }
+    if blocks:
+        shape["DEPTH"] = max(blocks) + 1
 
     return shape
 

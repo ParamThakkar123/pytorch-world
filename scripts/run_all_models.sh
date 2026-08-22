@@ -55,6 +55,7 @@ DEVICE=""
 STEPS="120"
 EPOCHS=""
 TRAIN_STEPS=""
+ENV_STEPS=""
 TRAIN_ARGS=()
 SEED="0"
 TIMEOUT="0"
@@ -68,7 +69,8 @@ SYNC_EXTRAS=()
 CKPT_ROOT="${REPO_ROOT}/checkpoints"
 OUT_DIR="${REPO_ROOT}/results/model_runs"
 JEPA_DATA="${TORCHWM_JEPA_DATA:-${IMAGENET_ROOT:-}}"
-GENIE_DATASET=""
+GENIE_DATASET="SONIC"
+GENIE_DRY_RUN=0
 GENIE_DATA_FILE=""
 WM_ENV="Pendulum-v1"
 
@@ -92,6 +94,12 @@ Training length (override the preset, for real runs):
                        diamond, iris, jepa, world-model.
   --train-steps N      Training steps, for the models counted in steps:
                        dreamer, genie.
+  --env-steps N        Environment-step (data) budget for the Atari agents,
+                       diamond and iris. Prefer this over --epochs for those
+                       two: their epoch counts ARE the data budget (paper:
+                       100000 = Atari 100k), so raising epochs alone makes IRIS
+                       spin on a frozen replay buffer instead of seeing more
+                       data. Assumes the config's per-epoch step counts.
   --train-arg ARG      Append ARG verbatim to the training command (repeatable).
                        Model-specific, so pair it with a single --models.
 
@@ -107,12 +115,17 @@ Run control:
 
 Data (models whose training needs a dataset):
   --jepa-data PATH     Image folder for I-JEPA. Also read from TORCHWM_JEPA_DATA
-                       or IMAGENET_ROOT. Without it, JEPA training is skipped.
-  --genie-dataset NAME TinyWorlds dataset for Genie (e.g. SONIC). Without it,
-                       Genie training only validates trainer construction.
+                       or IMAGENET_ROOT. Without it JEPA trains on CIFAR-10,
+                       which downloads itself.
+  --genie-dataset NAME TinyWorlds dataset for Genie: SONIC (default), ZELDA or
+                       POLE_POSITION. Downloads from HuggingFace on first use.
+  --genie-dry-run      Only build the Genie trainer and exit, touching no
+                       dataset. Use when you want no download.
   --genie-data-file PATH
                        Local TinyWorlds HDF5 file; avoids the download.
   --wm-env NAME        Gym env for the world-model trainer (default: Pendulum-v1).
+
+DiT trains on CIFAR-10, which also downloads itself; it needs no data flag.
 
 Output:
   --ckpt-root PATH     Where checkpoints are written (default: ./checkpoints).
@@ -154,6 +167,8 @@ while [ "$#" -gt 0 ]; do
         --epochs=*)        EPOCHS="${1#*=}"; shift ;;
         --train-steps)     need_value "$1" "$#"; TRAIN_STEPS="$2"; shift 2 ;;
         --train-steps=*)   TRAIN_STEPS="${1#*=}"; shift ;;
+        --env-steps)       need_value "$1" "$#"; ENV_STEPS="$2"; shift 2 ;;
+        --env-steps=*)     ENV_STEPS="${1#*=}"; shift ;;
         --train-arg)       need_value "$1" "$#"; TRAIN_ARGS+=("$2"); shift 2 ;;
         --train-arg=*)     TRAIN_ARGS+=("${1#*=}"); shift ;;
         --seed)            need_value "$1" "$#"; SEED="$2"; shift 2 ;;
@@ -164,6 +179,7 @@ while [ "$#" -gt 0 ]; do
         --dry-run)         DRY_RUN=1; shift ;;
         --jepa-data)       need_value "$1" "$#"; JEPA_DATA="$2"; shift 2 ;;
         --jepa-data=*)     JEPA_DATA="${1#*=}"; shift ;;
+        --genie-dry-run)   GENIE_DRY_RUN=1; shift ;;
         --genie-dataset)   need_value "$1" "$#"; GENIE_DATASET="$2"; shift 2 ;;
         --genie-dataset=*) GENIE_DATASET="${1#*=}"; shift ;;
         --genie-data-file) need_value "$1" "$#"; GENIE_DATA_FILE="$2"; shift 2 ;;
@@ -213,8 +229,7 @@ known_model() {
     esac
 }
 
-# DiT is the only model here with no training entrypoint of its own.
-can_train() { [ "$1" != "dit" ]; }
+can_train() { [ -n "$1" ]; }
 
 can_infer() {
     case " ${ALL_MODELS} " in
@@ -272,6 +287,30 @@ missing_requirement() {
 append_duration_overrides() {
     local model="$1"
 
+    # --env-steps first, so an explicit --epochs below still wins on the total.
+    if [ -n "${ENV_STEPS}" ]; then
+        case "${model}" in
+            diamond)
+                # DIAMOND collects environment_steps_per_epoch every epoch with
+                # no cap, so epochs x 100 IS the env-step budget (paper: 1000 x
+                # 100 = 100k).
+                CMD+=("num_epochs=$(( (ENV_STEPS + 99) / 100 ))")
+                ;;
+            iris)
+                # IRIS collects only for the first collection_epochs, then keeps
+                # training on what it gathered (paper: 500 x 200 = 100k, then
+                # 100 more epochs). Move both, plus the hard cap, together.
+                local collection=$(( (ENV_STEPS + 199) / 200 ))
+                CMD+=("collection_epochs=${collection}"
+                      "max_env_steps=${ENV_STEPS}"
+                      "epochs=$(( collection + 100 ))")
+                ;;
+            *)
+                NOTE="${NOTE:+${NOTE}; }--env-steps does not apply to ${model}"
+                ;;
+        esac
+    fi
+
     if [ -n "${EPOCHS}" ]; then
         case "${model}" in
             diamond)     CMD+=("num_epochs=${EPOCHS}") ;;
@@ -287,7 +326,7 @@ append_duration_overrides() {
             dreamer) CMD+=("total_steps=${TRAIN_STEPS}") ;;
             genie)
                 # The dataset path takes key=value, the dry-run path a flag.
-                if [ -n "${GENIE_DATASET}" ]; then
+                if [ "${GENIE_DRY_RUN}" -eq 0 ]; then
                     CMD+=("max_steps=${TRAIN_STEPS}")
                 else
                     CMD+=(--max-steps "${TRAIN_STEPS}")
@@ -384,7 +423,7 @@ build_train_cmd() {
             ;;
 
         genie)
-            if [ -n "${GENIE_DATASET}" ]; then
+            if [ "${GENIE_DRY_RUN}" -eq 0 ]; then
                 CMD=("${RUNNER[@]}" "${SCRIPT_DIR}/train_genie_tinyworlds.py"
                      "dataset=${GENIE_DATASET}"
                      "checkpoint_dir=${CKPT_ROOT}/genie")
@@ -403,32 +442,47 @@ build_train_cmd() {
                 fi
                 [ -n "${DEVICE}" ] && CMD+=("device=${DEVICE}")
             else
-                # No dataset: validate that the trainer builds, and stop there.
+                # Only reachable via --genie-dry-run now: build the trainer and
+                # stop, without touching a dataset.
                 CMD=("${RUNNER[@]}" -m torchwm.training.train_genie --dry-run)
                 [ "${PRESET}" = "tiny" ] && CMD+=(--max-steps 20)
                 [ -n "${DEVICE}" ] && CMD+=(--device "${DEVICE}")
-                NOTE="trainer construction only; pass --genie-dataset to train"
+                NOTE="trainer construction only (--genie-dry-run)"
             fi
             ;;
 
         jepa)
-            if [ -z "${JEPA_DATA}" ]; then
-                SKIP_REASON="no image dataset (--jepa-data PATH, TORCHWM_JEPA_DATA or IMAGENET_ROOT)"
-                return
-            fi
             CMD=("${RUNNER[@]}" -m torchwm.training.train_jepa)
             case "${PRESET}" in
                 tiny)
                     CMD+=(meta.model_name=vit_tiny meta.use_bfloat16=false
                           data.batch_size=2 data.num_workers=0
                           optimization.epochs=1 optimization.warmup=0)
-                    NOTE="one epoch over ${JEPA_DATA}; bound it with --timeout"
+                    NOTE="one epoch over ${JEPA_DATA:-the dataset}; bound it with --timeout"
                     ;;
                 small) CMD+=(--config "${EXP_DIR}/jepa_small_gpu.yaml") ;;
                 paper) CMD+=(--config "${EXP_DIR}/jepa.yaml") ;;
             esac
             # After --config so these win over the file.
-            CMD+=("data.root_path=${JEPA_DATA}" "logging.folder=${CKPT_ROOT}/jepa")
+            CMD+=("logging.folder=${CKPT_ROOT}/jepa")
+            if [ -n "${JEPA_DATA}" ]; then
+                CMD+=("data.dataset=imagefolder" "data.root_path=${JEPA_DATA}")
+            else
+                # No image folder given: CIFAR-10 downloads itself, so JEPA
+                # trains rather than skipping. 32x32 images need a crop and
+                # patch size to match -- the paper's 224/16 would upsample
+                # every image 7x.
+                #
+                # min_keep has to drop with them. That 32/4 crop leaves an 8x8
+                # grid, on which a (0.15, 0.2)-scale target block is 8 to 12
+                # patches; measured over 500 batches, the paper's min_keep of 10
+                # rejects 40% of them and the sampler raises. 4 clears the
+                # smallest block with margin.
+                CMD+=("data.dataset=cifar10" "data.download=true"
+                      "data.root_path=${REPO_ROOT}/data"
+                      "data.crop_size=32" "mask.patch_size=4" "mask.min_keep=4")
+                NOTE="${NOTE:+${NOTE}; }CIFAR-10 at 32px, min_keep=4 (not paper geometry); pass --jepa-data for your own images"
+            fi
             ;;
 
         planet|rssm)
@@ -459,7 +513,17 @@ build_train_cmd() {
             ;;
 
         dit)
-            SKIP_REASON="no training entrypoint (inference-only model)"
+            # CIFAR-10 downloads itself into ROOT_PATH, so this needs no
+            # dataset flag. DiT.fit picks its own device; there is no override.
+            CMD=("${RUNNER[@]}" -m torchwm.training.train_dit
+                 "WORKDIR=${CKPT_ROOT}/dit"
+                 "ROOT_PATH=${REPO_ROOT}/data")
+            case "${PRESET}" in
+                tiny)  CMD+=(EPOCHS=1 BATCH=32 WIDTH=128 DEPTH=4 HEADS=4 EMA=false) ;;
+                small) CMD+=(EPOCHS=50 BATCH=128) ;;
+                paper) CMD+=(EPOCHS=400) ;;
+            esac
+            [ -n "${DEVICE}" ] && NOTE="DiT.fit selects its own device; --device ignored"
             ;;
 
         *)
@@ -507,6 +571,11 @@ find_checkpoint() {
         jepa)
             found="$(newest_match "${CKPT_ROOT}"/jepa/*.pth.tar \
                                   "${CKPT_ROOT}"/jepa/*.pt)"
+            ;;
+        dit)
+            # DiT.fit writes dit_model.pth (the EMA weights when EMA is on).
+            found="$(newest_match "${CKPT_ROOT}"/dit/dit_model.pth \
+                                  "${CKPT_ROOT}"/dit/*.pth)"
             ;;
     esac
     shopt -u nullglob
@@ -573,8 +642,15 @@ if [ "${LIST_ONLY}" -eq 1 ]; then
         can_train "${model}" || { trainable="no"; notes="inference only"; }
         can_infer "${model}" || { inferable="no"; notes="train only"; }
         case "${model}" in
-            jepa)  [ -z "${JEPA_DATA}" ] && notes="needs --jepa-data" ;;
-            genie) [ -z "${GENIE_DATASET}" ] && notes="dry-run without --genie-dataset" ;;
+            jepa)  [ -z "${JEPA_DATA}" ] && notes="CIFAR-10 (downloads)" ;;
+            dit)   notes="CIFAR-10 (downloads)" ;;
+            genie)
+                if [ "${GENIE_DRY_RUN}" -eq 1 ]; then
+                    notes="dry-run: builds the trainer only"
+                else
+                    notes="TinyWorlds ${GENIE_DATASET} (downloads)"
+                fi
+                ;;
             planet|rssm) notes="fixed length; use --timeout" ;;
         esac
         printf '%-14s %-7s %-7s %s\n' "${model}" "${trainable}" "${inferable}" "${notes}"

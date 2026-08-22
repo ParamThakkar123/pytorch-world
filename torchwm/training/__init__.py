@@ -24,6 +24,10 @@ def __getattr__(name: str) -> Any:
         from torchwm.training.train_diamond import train_diamond
 
         return train_diamond
+    if name == "train_dit":
+        from torchwm.training.train_dit import train_dit
+
+        return train_dit
     if name == "train_dreamer":
         from torchwm.training.train_dreamer import train_dreamer
 
@@ -64,6 +68,7 @@ __all__ = [
     "train_convae",
     "train_controller",
     "train_diamond",
+    "train_dit",
     "train_dreamer",
     "train_mdn_rnn",
     "train_planet",

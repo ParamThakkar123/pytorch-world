@@ -90,6 +90,17 @@ class DiTConfig(SerializableConfigMixin):
         super().__setattr__(upper, value)
 
 
+def canonical_dit_key(name: str) -> str:
+    """Map a snake_case alias to its UPPER_CASE field name.
+
+    ``DiTConfig`` keeps the original DiT codebase's UPPER_CASE field names, so
+    dot-list overrides composed by the training entrypoint have to be
+    translated before they reach the strict config loader. Names that are
+    already canonical (or unknown) are returned unchanged.
+    """
+    return _SNAKE_TO_UPPER.get(name, name)
+
+
 def dit_preset_config(name: str, patch_size: int, **overrides: Any) -> DiTConfig:
     """Build a config for a named Table 1 model, e.g. ``dit_preset_config("DiT-XL", 2)``.
 
