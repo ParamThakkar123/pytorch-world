@@ -1,7 +1,7 @@
 PYTHON ?= python
 export PYTHONPYCACHEPREFIX ?= build/__pycache__
 
-.PHONY: test lint format bench bench-all bench-infer bench-play
+.PHONY: test lint format bench bench-all bench-infer bench-play run-all run-all-train run-all-infer
 
 test:
 	$(PYTHON) -m pytest
@@ -31,3 +31,15 @@ bench-infer:
 bench-play:
 	bash scripts/benchmark_models.sh --play $(BENCH_ARGS)
 
+# Train, then record inference, for every model in sequence. Preset scales the
+# training runs: tiny (default, minutes on CPU), small (single-GPU configs),
+# paper (published configs). Pass extra flags with RUN_ARGS.
+# Example: make run-all RUN_ARGS="--preset small --device cuda"
+run-all:
+	bash scripts/run_all_models.sh $(RUN_ARGS)
+
+run-all-train:
+	bash scripts/run_all_models.sh --train-only $(RUN_ARGS)
+
+run-all-infer:
+	bash scripts/run_all_models.sh --infer-only $(RUN_ARGS)
